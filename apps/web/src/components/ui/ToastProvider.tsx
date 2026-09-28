@@ -1,5 +1,5 @@
 import { Toast } from 'radix-ui';
-import { CircleAlert, CircleCheck, Info, X } from 'lucide-react';
+import { CircleAlert, CircleCheck, Info, TriangleAlert, X } from 'lucide-react';
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { cn } from '@/utils/cn';
 import { ToastContext, type ToastApi, type ToastOptions, type ToastTone } from './toast-context';
@@ -13,6 +13,10 @@ const toneStyles: Record<ToastTone, { icon: ReactNode; bar: string }> = {
   success: { icon: <CircleCheck aria-hidden="true" className="text-success" />, bar: 'bg-success' },
   error: { icon: <CircleAlert aria-hidden="true" className="text-danger" />, bar: 'bg-danger' },
   info: { icon: <Info aria-hidden="true" className="text-info" />, bar: 'bg-info' },
+  warning: {
+    icon: <TriangleAlert aria-hidden="true" className="text-warning" />,
+    bar: 'bg-warning',
+  },
 };
 
 let nextId = 1;
@@ -51,8 +55,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <Toast.Root
               key={t.id}
               open={t.open}
-              type={tone === 'error' ? 'foreground' : 'background'}
-              duration={tone === 'error' ? 8000 : 4500}
+              type={tone === 'error' || tone === 'warning' ? 'foreground' : 'background'}
+              duration={tone === 'error' || tone === 'warning' ? 8000 : 4500}
               onOpenChange={(open) => (open ? undefined : close(t.id))}
               onAnimationEnd={() => !t.open && remove(t.id)}
               className={cn(

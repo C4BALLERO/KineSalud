@@ -18,6 +18,7 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ListSkeleton, LoadingRegion, Skeleton } from '@/components/ui/Skeleton';
 import { Stat } from '@/components/ui/StatCard';
 import { useRequiredSession } from '@/features/auth/session';
+import { useExceptions } from '@/features/staff/api/staff';
 import { useNow } from '@/hooks/useNow';
 import { usePermissionScope } from '@/hooks/usePermission';
 import { capitalizeFirst, formatDayLong, greetingFor } from '@/utils/format';
@@ -64,6 +65,7 @@ export function DashboardPage() {
   const appointments = useAppointmentsBetween(scope, isSunday ? today : monday, addDays(today, 7));
   const treatments = useActiveTreatments(scope);
   const professionals = useProfessionals(clinicWide);
+  const exceptions = useExceptions(null, today, clinicWide);
   const clientsCount = useActiveClientsCount(scope);
 
   const firstName = session.displayName.replace(/^Lic\.\s*/, '').split(' ')[0];
@@ -104,7 +106,13 @@ export function DashboardPage() {
   }, [appointments, treatments, today, monday, now, onlyMine, session.professionalId]);
 
   const team =
-    professionals.status === 'success' ? availableToday(professionals.data, today) : null;
+    professionals.status === 'success'
+      ? availableToday(
+          professionals.data,
+          today,
+          exceptions.status === 'success' ? exceptions.data : [],
+        )
+      : null;
 
   return (
     <>

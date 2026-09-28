@@ -11,7 +11,8 @@ import { parseInput, requirePermission } from '../../core/guards';
 import { auditActor } from '../audit';
 import type { StoredUser, UsersGateway } from './usersGateway';
 
-function claimsOf(user: StoredUser): AuthClaims {
+/** Claims del token a partir del perfil almacenado. */
+export function claimsOf(user: StoredUser): AuthClaims {
   return {
     role: user.role,
     active: user.active,

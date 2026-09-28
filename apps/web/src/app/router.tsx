@@ -116,14 +116,30 @@ const appRoutes: RouteObject[] = [
   },
   {
     path: 'personal',
-    element: (
-      <RequirePermission permission="staff.read">
-        <ModulePlaceholder
-          title="Personal"
-          description="Profesionales, especialidades, horarios y disponibilidad."
-          phase={9}
-        />
-      </RequirePermission>
+    lazy: guarded(
+      'staff.read',
+      async () => (await import('@/features/staff/pages/StaffPage')).StaffPage,
+    ),
+  },
+  {
+    path: 'personal/nuevo',
+    lazy: guarded(
+      'staff.manage',
+      async () => (await import('@/features/staff/pages/StaffCreatePage')).StaffCreatePage,
+    ),
+  },
+  {
+    path: 'personal/:professionalId',
+    lazy: guarded(
+      'staff.read',
+      async () => (await import('@/features/staff/pages/StaffProfilePage')).StaffProfilePage,
+    ),
+  },
+  {
+    path: 'personal/:professionalId/editar',
+    lazy: guarded(
+      'staff.manage',
+      async () => (await import('@/features/staff/pages/StaffEditPage')).StaffEditPage,
     ),
   },
   {
@@ -165,14 +181,9 @@ const appRoutes: RouteObject[] = [
   },
   {
     path: 'configuracion',
-    element: (
-      <RequirePermission permission="settings.manage">
-        <ModulePlaceholder
-          title="Configuración"
-          description="Horario del consultorio, espacios y catálogo de servicios."
-          phase={9}
-        />
-      </RequirePermission>
+    lazy: guarded(
+      'settings.manage',
+      async () => (await import('@/features/settings/pages/SettingsPage')).SettingsPage,
     ),
   },
   {

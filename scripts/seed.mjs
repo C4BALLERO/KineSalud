@@ -111,6 +111,7 @@ async function seedOperationalData(db) {
     rooms: data.rooms,
     services: data.services,
     professionals: data.professionals,
+    professionalExceptions: data.professionalExceptions,
     clients: data.clients,
     clientCiIndex: data.clientCiIndex,
     treatments: data.treatments,

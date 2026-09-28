@@ -11,7 +11,8 @@ import type {
   TreatmentStatus,
 } from './enums';
 import type { CiExtension } from './clients';
-import { weekdayOf, type DateKey, type Weekday } from './time';
+import { dayAvailability, type ProfessionalExceptionDoc, type ProfessionalTitle } from './staff';
+import type { DateKey, Weekday } from './time';
 
 /** Tramo horario local "HH:mm"–"HH:mm". */
 export interface TimeRange {
@@ -25,6 +26,7 @@ export const APPOINTMENT_SOURCES = ['WEB', 'CHATBOT', 'SYSTEM'] as const;
 export type AppointmentSource = (typeof APPOINTMENT_SOURCES)[number];
 
 export interface ProfessionalDoc {
+  title: ProfessionalTitle | null;
   firstName: string;
   lastName: string;
   /** Nombre para mostrar, p. ej. "Lic. Diego Pérez". */
@@ -116,16 +118,13 @@ export interface TreatmentDoc<Ts = unknown> {
   lastSessionAt: Ts | null;
 }
 
-/**
- * ¿El profesional atiende ese día según su horario semanal? Las excepciones
- * (vacaciones, permisos) se incorporan con el módulo Personal (Fase 9).
- */
+/** ¿El profesional atiende ese día? Considera su horario semanal y sus ausencias. */
 export function worksOn(
   professional: Pick<ProfessionalDoc, 'active' | 'weeklySchedule'>,
   day: DateKey,
+  exceptions: readonly Pick<ProfessionalExceptionDoc, 'dateFrom' | 'dateTo' | 'type'>[] = [],
 ): boolean {
-  if (!professional.active) return false;
-  return (professional.weeklySchedule[weekdayOf(day)]?.length ?? 0) > 0;
+  return dayAvailability(professional, exceptions, day).kind === 'working';
 }
 
 /** Sesiones que faltan para completar un tratamiento. */

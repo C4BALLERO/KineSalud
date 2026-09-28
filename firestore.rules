@@ -43,6 +43,11 @@ service cloud.firestore {
       allow read: if isActive();
       allow write: if false;
     }
+    // Ausencias: la agenda de todo el personal las necesita para mostrar disponibilidad.
+    match /professionalExceptions/{exceptionId} {
+      allow read: if isActive();
+      allow write: if false;
+    }
     match /rooms/{roomId} {
       allow read: if isActive();
       allow write: if false;

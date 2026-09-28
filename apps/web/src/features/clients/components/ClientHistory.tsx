@@ -1,15 +1,15 @@
 import { TREATMENT_STATUS_LABELS } from '@kinesalud/shared';
-import { CalendarX2, HeartPulse } from 'lucide-react';
+import { HeartPulse } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { AppointmentRow } from '@/components/domain/AppointmentRow';
+import { AppointmentDayList } from '@/components/domain/AppointmentDayList';
 import { CategoryTag } from '@/components/domain/CategoryTag';
 import { EmptyState } from '@/components/feedback/States';
 import { Badge } from '@/components/ui/Badge';
 import { SessionProgress } from '@/components/ui/Progress';
-import { capitalizeFirst, formatDayLong } from '@/utils/format';
+import { formatDayLong } from '@/utils/format';
 import type { ClientAppointment, ClientTreatment } from '../api/clients';
 
-/** Citas agrupadas por día (más recientes primero). */
+/** Citas del cliente agrupadas por día (más recientes primero). */
 export function AppointmentHistory({
   appointments,
   now,
@@ -19,38 +19,16 @@ export function AppointmentHistory({
   now: Date;
   emptyAction?: ReactNode;
 }) {
-  if (appointments.length === 0) {
-    return (
-      <EmptyState
-        size="compact"
-        icon={<CalendarX2 />}
-        title="Sin citas registradas"
-        description="Las citas del cliente aparecerán aquí."
-        action={emptyAction}
-      />
-    );
-  }
-
-  const groups = new Map<string, ClientAppointment[]>();
-  for (const a of appointments) groups.set(a.date, [...(groups.get(a.date) ?? []), a]);
-
   return (
-    <div className="flex flex-col">
-      {[...groups.entries()].map(([date, items]) => (
-        <section key={date} aria-label={formatDayLong(date)}>
-          <h3 className="border-y border-border bg-surface-muted px-4 py-1.5 text-caption font-semibold text-fg-muted first:border-t-0 md:px-5">
-            {capitalizeFirst(formatDayLong(date))}
-          </h3>
-          <ul className="divide-y divide-border">
-            {items.map((a) => (
-              <li key={a.id}>
-                <AppointmentRow appointment={a} now={now} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-    </div>
+    <AppointmentDayList
+      appointments={appointments}
+      now={now}
+      empty={{
+        title: 'Sin citas registradas',
+        description: 'Las citas del cliente aparecerán aquí.',
+        action: emptyAction,
+      }}
+    />
   );
 }
 

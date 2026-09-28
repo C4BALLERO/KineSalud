@@ -150,37 +150,40 @@ const afternoon = [{ start: '14:30', end: '18:30' }];
 
 export const PROFESSIONALS = {
   'prof-ana': {
+    title: 'Lic.',
     firstName: 'Ana',
     lastName: 'Gutiérrez',
     displayName: 'Lic. Ana Gutiérrez',
     specialties: ['Fisioterapia'],
     categories: ['FISIOTERAPIA'],
     serviceIds: ['srv-fisio-lumbar', 'srv-fisio-cervical'],
-    phone: '+591 70712345',
+    phone: '70712345',
     active: true,
     userId: 'demo-admin',
     weeklySchedule: { mon: morning, tue: morning, wed: morning, thu: morning, fri: morning },
   },
   'prof-diego': {
+    title: 'Lic.',
     firstName: 'Diego',
     lastName: 'Pérez',
     displayName: 'Lic. Diego Pérez',
     specialties: ['Fisioterapia', 'Rehabilitación'],
     categories: ['FISIOTERAPIA', 'REHABILITACION'],
     serviceIds: ['srv-fisio-lumbar', 'srv-fisio-cervical', 'srv-rehab-rodilla', 'srv-rehab-hombro'],
-    phone: '+591 71234567',
+    phone: '71234567',
     active: true,
     userId: 'demo-fisio',
     weeklySchedule: { mon: full, tue: full, wed: full, thu: full, fri: full, sat: morning },
   },
   'prof-carla': {
+    title: 'Lic.',
     firstName: 'Carla',
     lastName: 'Vargas',
     displayName: 'Lic. Carla Vargas',
     specialties: ['Estética'],
     categories: ['ESTETICA'],
     serviceIds: ['srv-est-facial', 'srv-est-drenaje', 'srv-est-reductor'],
-    phone: '+591 76543210',
+    phone: '76543210',
     active: true,
     userId: 'demo-estetica',
     weeklySchedule: {
@@ -193,13 +196,14 @@ export const PROFESSIONALS = {
     },
   },
   'prof-jorge': {
+    title: 'Lic.',
     firstName: 'Jorge',
     lastName: 'Quispe',
     displayName: 'Lic. Jorge Quispe',
     specialties: ['Rehabilitación'],
     categories: ['REHABILITACION'],
     serviceIds: ['srv-rehab-rodilla', 'srv-rehab-hombro'],
-    phone: '+591 72345678',
+    phone: '72345678',
     active: true,
     userId: null,
     weeklySchedule: { mon: afternoon, wed: afternoon, fri: afternoon },
@@ -449,11 +453,34 @@ export function buildDemoData(now = new Date()) {
     },
   };
 
+  // Ausencias futuras (después del rango de citas generado, para no dejar citas en conflicto).
+  const professionalExceptions = {
+    'exc-jorge-vacaciones': {
+      professionalId: 'prof-jorge',
+      type: 'VACACIONES',
+      dateFrom: addDays(today, 10),
+      dateTo: addDays(today, 16),
+      note: 'Vacaciones de fin de gestión',
+      createdAt: now,
+      createdBy: 'demo-admin',
+    },
+    'exc-carla-permiso': {
+      professionalId: 'prof-carla',
+      type: 'PERMISO',
+      dateFrom: addDays(today, 9),
+      dateTo: addDays(today, 9),
+      note: 'Capacitación en drenaje linfático',
+      createdAt: now,
+      createdBy: 'demo-admin',
+    },
+  };
+
   return {
     settings,
     rooms: ROOMS,
     services: SERVICES,
     professionals: PROFESSIONALS,
+    professionalExceptions,
     clients,
     clientCiIndex,
     treatments,

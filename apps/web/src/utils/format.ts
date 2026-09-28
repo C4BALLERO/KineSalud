@@ -91,6 +91,26 @@ export function formatDayShort(key: string): string {
   return dayShortFormat.format(dateKeyToDate(key)).replace(/[.,]/g, '');
 }
 
+const dayMonthFormat = new Intl.DateTimeFormat(CLINIC_LOCALE, {
+  timeZone: CLINIC_TIMEZONE,
+  day: 'numeric',
+  month: 'long',
+});
+
+/** "5 de octubre". */
+export function formatDayMonth(key: string): string {
+  return dayMonthFormat.format(dateKeyToDate(key));
+}
+
+/** "7 de octubre", "5 al 9 de octubre" o "28 de septiembre al 2 de octubre". */
+export function formatDateRange(from: string, to: string): string {
+  if (from === to) return formatDayMonth(from);
+  if (from.slice(0, 7) === to.slice(0, 7)) {
+    return `${Number(from.slice(8))} al ${formatDayMonth(to)}`;
+  }
+  return `${formatDayMonth(from)} al ${formatDayMonth(to)}`;
+}
+
 /** Saludo según la hora local del consultorio. */
 export function greetingFor(now: Date): string {
   const hour = Number(

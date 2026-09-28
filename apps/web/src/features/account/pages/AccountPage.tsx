@@ -1,7 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ROLE_DESCRIPTIONS } from '@kinesalud/shared';
+import { CalendarClock } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Link } from 'react-router';
 import type { z } from 'zod';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Avatar } from '@/components/ui/Avatar';
@@ -91,6 +93,14 @@ export function AccountPage() {
                 ? 'Puedes editar tu nombre desde la sección Usuarios.'
                 : 'Para cambiar tu nombre o tu rol, contacta al administrador del consultorio.'}
             </p>
+            {session.professionalId && (
+              <Button asChild variant="secondary" className="w-fit">
+                <Link to={`/personal/${session.professionalId}`}>
+                  <CalendarClock aria-hidden="true" />
+                  Ver mi ficha, horario y ausencias
+                </Link>
+              </Button>
+            )}
           </div>
         </Panel>
         <Panel

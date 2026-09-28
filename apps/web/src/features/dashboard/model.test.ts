@@ -138,4 +138,16 @@ describe('availableToday', () => {
     );
     expect(r).toEqual({ available: 1, total: 2 });
   });
+
+  it('descuenta a quien está de vacaciones o con permiso', () => {
+    const r = availableToday(
+      [
+        { id: 'p1', active: true, weeklySchedule: { mon: [{ start: '08:00', end: '12:00' }] } },
+        { id: 'p2', active: true, weeklySchedule: { mon: [{ start: '08:00', end: '12:00' }] } },
+      ],
+      '2026-09-28',
+      [{ professionalId: 'p2', dateFrom: '2026-09-25', dateTo: '2026-10-02', type: 'VACACIONES' }],
+    );
+    expect(r).toEqual({ available: 1, total: 2 });
+  });
 });

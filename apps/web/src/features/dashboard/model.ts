@@ -7,6 +7,7 @@ import {
   type AppointmentStatus,
   type DateKey,
   type ProfessionalDoc,
+  type ProfessionalExceptionDoc,
   type TreatmentCategory,
   type Weekday,
 } from '@kinesalud/shared';
@@ -174,11 +175,22 @@ export function buildAlerts({
   return alerts;
 }
 
-/** Profesionales activos que atienden hoy según su horario semanal. */
+/** Profesionales activos que atienden hoy según su horario semanal y sus ausencias. */
 export function availableToday(
-  professionals: Pick<ProfessionalDoc, 'active' | 'weeklySchedule'>[],
+  professionals: (Pick<ProfessionalDoc, 'active' | 'weeklySchedule'> & { id?: string })[],
   today: DateKey,
+  exceptions: readonly Pick<
+    ProfessionalExceptionDoc,
+    'professionalId' | 'dateFrom' | 'dateTo' | 'type'
+  >[] = [],
 ) {
   const active = professionals.filter((p) => p.active);
-  return { available: active.filter((p) => worksOn(p, today)).length, total: active.length };
+  const available = active.filter((p) =>
+    worksOn(
+      p,
+      today,
+      exceptions.filter((e) => e.professionalId === p.id),
+    ),
+  );
+  return { available: available.length, total: active.length };
 }

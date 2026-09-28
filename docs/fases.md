@@ -6,8 +6,8 @@
 | 5 · Layout principal                                    | ✅ Aprobada                             |
 | 6 · Autenticación                                       | ✅ Aprobada                             |
 | 7 · Dashboard                                           | ✅ Aprobada                             |
-| 8 · Clientes                                            | ✅ Completada — pendiente de revisión   |
-| 9 · Personal y configuración                            | ⏳                                      |
+| 8 · Clientes                                            | ✅ Aprobada                             |
+| 9 · Personal y configuración                            | ✅ Completada — pendiente de revisión   |
 | 10 · Agenda                                             | ⏳                                      |
 | 11 · Tratamientos                                       | ⏳                                      |
 | 12 · Seguimiento                                        | ⏳                                      |
@@ -168,3 +168,56 @@
 - **No se usa TanStack Table.** Las tablas son simples (sin orden por columna ni selección múltiple), y el orden y los filtros los resuelve Firestore. Un componente `DataTable` propio basta y pesa menos.
 - **Búsqueda sin servicio externo.** Se consulta el primer término con `array-contains` sobre `searchKeywords`, y los demás términos se filtran en el navegador. Alcanza para el volumen de un consultorio.
 - **Paginación por cursor** (`startAfter`) en lugar de páginas numeradas: Firestore no tiene `offset` eficiente.
+
+## Fase 9 — Personal y configuración
+
+**Entregado**
+
+- **Esquemas compartidos:**
+  - `schedule.ts`: horario semanal (tramos ordenados, sin superposiciones, máximo 4 por día) y utilidades como `daysOutsideHours` y `formatRanges`.
+  - `staff.ts`: ficha del profesional, ausencias y `dayAvailability` (inactivo, ausente, no atiende o atiende en ciertos tramos).
+  - `settings.ts`: consultorio, espacios, servicios y `compatibleRooms`.
+- **Comandos en el servidor**, solo para administración y todos auditados:
+  - `staff-create`, `staff-update` y `staff-setActive`. Los servicios asignados deben existir y pertenecer a las áreas del profesional.
+  - `staff-setSchedule`: el horario debe caber en el horario de atención del consultorio.
+  - `staff-addException` y `staff-removeException`: no se aceptan ausencias superpuestas ni ya terminadas, y se informa cuántas citas pendientes caen en esas fechas.
+  - `staff-linkAccount`: vincula o desvincula la cuenta de acceso y actualiza el claim `professionalId` de las cuentas afectadas.
+  - `settings-updateClinic`: avisa qué profesionales quedan fuera del nuevo horario.
+  - `settings-saveRoom`, `settings-saveService` y los cambios de estado: nombres únicos sin distinguir mayúsculas ni tildes. No se puede cambiar el área de un servicio que ofrece un profesional de otra área.
+- **Personal** (`/personal`):
+  - directorio con filtros por área y estado;
+  - disponibilidad de hoy con texto e icono ("Atiende hoy", "Vacaciones", "No atiende hoy");
+  - horas por semana y cuenta vinculada.
+- **Ficha** (`/personal/:id`), con pestañas:
+  - Resumen: hoy, próximos 7 días, datos y cuenta de acceso;
+  - Horario y ausencias: editor semanal y ausencias;
+  - Servicios;
+  - Próximas citas (14 días).
+- **Alta y edición:**
+  - áreas de atención con casillas y servicios agrupados por área;
+  - al quitar un área se quitan sus servicios;
+  - tras registrar, lleva a definir el horario.
+- **Editor de horario semanal** (`WeeklyScheduleEditor`), reutilizado para el consultorio y para cada profesional:
+  - toma el horario del consultorio como guía y bloquea los días en que está cerrado;
+  - incluye "Copiar el lunes de martes a viernes";
+  - valida por día y avisa de cambios sin guardar.
+- **Configuración** (`/configuracion`), con pestañas:
+  - Consultorio: nombre, intervalo de la agenda, anticipación del recordatorio y horario de atención;
+  - Espacios;
+  - Servicios: agrupados por área, con el aviso "Sin espacio compatible".
+- **El profesional** consulta su propia ficha desde "Mi cuenta" y no ve las de otros.
+- **Dashboard:** "Profesionales hoy" descuenta a quienes están ausentes.
+- **Datos de demostración:** títulos, teléfonos normalizados y dos ausencias futuras.
+- **Pruebas:**
+  - esquemas y disponibilidad (13);
+  - servicios de Personal y Configuración con gateways en memoria (17);
+  - editor de horario, disponibilidad y formulario del profesional (8);
+  - dashboard con ausencias (1);
+  - reglas de ausencias y catálogos (26 en total).
+
+**Decisiones**
+
+- **Ausencias en una colección raíz** (`professionalExceptions`) en lugar de una subcolección. Así el directorio, el dashboard y la agenda consultan las de todo el personal con una sola consulta (`dateTo >= hoy`), sin índices de grupo de colecciones.
+- **Ausencias por días completos.** Los bloqueos de pocas horas se resolverán en la agenda (Fase 10).
+- **Nombres históricos:** las citas guardan el nombre del profesional y del servicio con que se agendaron; renombrar no reescribe el historial.
+- **Toasts de advertencia:** nuevo tono para resultados que requieren una acción posterior, como una ausencia con citas pendientes.

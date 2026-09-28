@@ -92,6 +92,25 @@ describe('catálogos', () => {
 
   it('nadie los modifica desde la web', async () => {
     await assertFails(setDoc(doc(db('a', claims.admin), 'services', 's2'), { name: 'X' }));
+    await assertFails(
+      setDoc(doc(db('a', claims.admin), 'professionals', 'prof-diego'), { active: false }),
+    );
+    await assertFails(setDoc(doc(db('a', claims.admin), 'settings', 'clinic'), { name: 'X' }));
+  });
+
+  it('las ausencias del personal se leen para la agenda, pero solo las escribe el servidor', async () => {
+    const upcoming = query(
+      collection(db('r', claims.recep), 'professionalExceptions'),
+      where('dateTo', '>=', '2026-09-28'),
+    );
+    await assertSucceeds(getDocs(upcoming));
+    await assertSucceeds(getDocs(collection(db('d', claims.diego), 'professionalExceptions')));
+    await assertFails(getDocs(collection(db('x', claims.inactive), 'professionalExceptions')));
+    await assertFails(
+      setDoc(doc(db('a', claims.admin), 'professionalExceptions', 'e1'), {
+        professionalId: 'prof-diego',
+      }),
+    );
   });
 });
 

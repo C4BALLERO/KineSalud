@@ -77,7 +77,8 @@ export function searchTermFor(query: string): string | null {
 
 /* ---------- Validación (misma en la web y en Cloud Functions) ---------- */
 
-const optionalText = (max: number, message: string) =>
+/** Texto opcional: '' se guarda como null. */
+export const optionalText = (max: number, message: string) =>
   z
     .string()
     .trim()
@@ -86,7 +87,8 @@ const optionalText = (max: number, message: string) =>
     .nullable()
     .default(null);
 
-const nameSchema = (emptyMessage: string) =>
+/** Nombres o apellidos de una persona. */
+export const nameSchema = (emptyMessage: string) =>
   z
     .string({ error: emptyMessage })
     .trim()
