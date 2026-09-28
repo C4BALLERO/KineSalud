@@ -31,7 +31,13 @@ import { useRequiredSession } from '@/features/auth/session';
 import { useNow } from '@/hooks/useNow';
 import { usePermission, usePermissionScope } from '@/hooks/usePermission';
 import { toAppError } from '@/lib/errors';
-import { formatCi, formatDateTime, formatDayLong, formatPhone } from '@/utils/format';
+import {
+  formatCi,
+  formatDateLong,
+  formatDateTime,
+  formatDayLong,
+  formatPhone,
+} from '@/utils/format';
 import {
   useClient,
   useClientAppointments,
@@ -427,7 +433,7 @@ function PersonalData({ client: c }: { client: ClientDetail }) {
         { label: 'Expedido en', value: c.ciExt ? CI_EXTENSION_LABELS[c.ciExt] : null },
         {
           label: 'Fecha de nacimiento',
-          value: c.birthDate ? formatDayLong(c.birthDate).replace(/^\S+ /, '') : null,
+          value: c.birthDate ? formatDateLong(c.birthDate) : null,
         },
         { label: 'Teléfono', value: <span className="tabular">{formatPhone(c.phone)}</span> },
         { label: 'Correo electrónico', value: c.email },

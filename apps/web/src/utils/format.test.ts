@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatDateLong,
   formatDayLong,
   formatDayShort,
   formatRelative,
@@ -26,6 +27,7 @@ describe('formatos de fecha del consultorio', () => {
   });
   it('formatea días largos y cortos en español', () => {
     expect(formatDayLong('2026-09-28')).toBe('lunes 28 de septiembre');
+    expect(formatDateLong('1990-03-03')).toBe('3 de marzo de 1990');
     expect(formatDayShort('2026-09-28')).toMatch(/^lun 28$/);
   });
   it('saluda según la hora local', () => {

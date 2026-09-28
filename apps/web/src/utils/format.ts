@@ -63,6 +63,18 @@ export function formatDayLong(key: string): string {
   return dayLongFormat.format(dateKeyToDate(key)).replace(',', '');
 }
 
+const dateLongFormat = new Intl.DateTimeFormat(CLINIC_LOCALE, {
+  timeZone: CLINIC_TIMEZONE,
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+/** "3 de marzo de 1990", para fechas de nacimiento y documentos. */
+export function formatDateLong(key: string): string {
+  return dateLongFormat.format(dateKeyToDate(key));
+}
+
 /** Primera letra en mayúscula (no usar `capitalize` de CSS: afecta a cada palabra). */
 export function capitalizeFirst(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);

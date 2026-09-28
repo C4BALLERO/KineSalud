@@ -48,8 +48,9 @@ export function ClientsPage() {
   const [params, setParams] = useSearchParams();
 
   const search = params.get('q') ?? '';
-  const status = (params.get('estado') as ClientStatusFilter | null) ?? 'ACTIVO';
-  const sort = (params.get('orden') as ClientSort | null) ?? 'apellido';
+  // Valores de la URL validados: un enlace editado a mano no rompe la consulta.
+  const status = STATUS_OPTIONS.find((o) => o.value === params.get('estado'))?.value ?? 'ACTIVO';
+  const sort: ClientSort = params.get('orden') === 'recientes' ? 'recientes' : 'apellido';
 
   // El texto se escribe localmente y se sincroniza con la URL con retardo.
   const [searchText, setSearchText] = useState(search);
@@ -117,6 +118,7 @@ export function ClientsPage() {
   }, [clinicWide, list, patients, search, status, sort]);
 
   const hasFilters = search !== '' || status !== 'ACTIVO';
+  const canLoadMore = clinicWide && list.hasNextPage;
   const clearFilters = () => {
     setSearchText('');
     setParams(new URLSearchParams(), { replace: true });
@@ -280,7 +282,7 @@ export function ClientsPage() {
           {view.state === 'ready' && (
             <p aria-live="polite" className="text-body-sm text-fg-muted md:ml-auto">
               {view.rows.length} {view.rows.length === 1 ? 'cliente' : 'clientes'}
-              {clinicWide && list.hasNextPage ? ' (hay más)' : ''}
+              {canLoadMore ? ' (hay más)' : ''}
             </p>
           )}
         </div>
@@ -288,7 +290,7 @@ export function ClientsPage() {
         {view.state === 'loading' && <ListSkeleton rows={6} label="Cargando clientes…" />}
         {view.state === 'error' && <ErrorState description={view.message} onRetry={retry} />}
         {view.state === 'ready' &&
-          (view.rows.length === 0 ? (
+          (view.rows.length === 0 && !canLoadMore ? (
             hasFilters ? (
               <NoResultsState query={search || undefined} onClear={clearFilters} />
             ) : (
@@ -314,29 +316,36 @@ export function ClientsPage() {
             )
           ) : (
             <>
-              <DataTable
-                caption={clinicWide ? 'Clientes del consultorio' : 'Mis pacientes'}
-                rows={view.rows}
-                columns={columns}
-                getRowKey={(c) => c.id}
-                renderMobileRow={(c) => (
-                  <div className="flex items-start gap-3">
-                    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                      {identity(c)}
-                      <p className="tabular pl-11 text-caption text-fg-muted">
-                        CI {formatCi(c.ci, c.ciExt)} · {formatPhone(c.phone)}
-                      </p>
-                      {c.status !== 'ACTIVO' && (
-                        <div className="pl-11">
-                          <ClientStatusBadge status={c.status} />
-                        </div>
-                      )}
+              {view.rows.length === 0 ? (
+                <p className="p-6 text-center text-body-sm text-fg-muted">
+                  Ningún cliente de esta página coincide con todos los términos. Carga más
+                  resultados para seguir buscando.
+                </p>
+              ) : (
+                <DataTable
+                  caption={clinicWide ? 'Clientes del consultorio' : 'Mis pacientes'}
+                  rows={view.rows}
+                  columns={columns}
+                  getRowKey={(c) => c.id}
+                  renderMobileRow={(c) => (
+                    <div className="flex items-start gap-3">
+                      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                        {identity(c)}
+                        <p className="tabular pl-11 text-caption text-fg-muted">
+                          CI {formatCi(c.ci, c.ciExt)} · {formatPhone(c.phone)}
+                        </p>
+                        {c.status !== 'ACTIVO' && (
+                          <div className="pl-11">
+                            <ClientStatusBadge status={c.status} />
+                          </div>
+                        )}
+                      </div>
+                      {actions(c)}
                     </div>
-                    {actions(c)}
-                  </div>
-                )}
-              />
-              {clinicWide && list.hasNextPage && (
+                  )}
+                />
+              )}
+              {canLoadMore && (
                 <div className="flex justify-center border-t border-border p-4">
                   <Button
                     variant="secondary"
