@@ -1,7 +1,7 @@
 import { onIdTokenChanged, type User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { ROLES, type Role } from '@kinesalud/shared';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { queryClient } from '@/lib/queryClient';
 import { auth, db } from '@/lib/firebase';
 import { signOut as authSignOut } from './api/authApi';
@@ -60,6 +60,9 @@ async function stateFromUser(user: User): Promise<State> {
  */
 export function FirebaseSessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>({ ...SIGNED_OUT, status: 'loading' });
+  // Cierre de sesión voluntario: no se recuerda la página actual como destino,
+  // así la siguiente persona que ingrese empieza en su propio inicio.
+  const [explicitSignOut, setExplicitSignOut] = useState(false);
 
   useEffect(
     () =>
@@ -69,6 +72,7 @@ export function FirebaseSessionProvider({ children }: { children: ReactNode }) {
           setState(SIGNED_OUT);
           return;
         }
+        setExplicitSignOut(false);
         try {
           setState(await stateFromUser(user));
         } catch {
@@ -106,14 +110,20 @@ export function FirebaseSessionProvider({ children }: { children: ReactNode }) {
     );
   }, [uid, claimsVersion]);
 
+  const signOut = useCallback(async () => {
+    setExplicitSignOut(true);
+    await authSignOut();
+  }, []);
+
   const value = useMemo<SessionContextValue>(
     () => ({
       status: state.status,
       session: state.session,
       blockedReason: state.blockedReason,
-      signOut: authSignOut,
+      signedOutExplicitly: explicitSignOut,
+      signOut,
     }),
-    [state.status, state.session, state.blockedReason],
+    [state.status, state.session, state.blockedReason, explicitSignOut, signOut],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

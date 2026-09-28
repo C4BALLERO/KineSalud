@@ -29,9 +29,16 @@ function renderAt(path: string, role?: Role, value?: Partial<SessionContextValue
 }
 
 describe('guardias de ruta', () => {
-  it('sin sesión, una ruta privada lleva al login', () => {
-    renderAt('/clientes');
+  it('sin sesión, una ruta privada lleva al login recordando el destino', () => {
+    const router = renderAt('/clientes');
     expect(screen.getByRole('heading', { name: 'Login' })).toBeInTheDocument();
+    expect(router.state.location.state).toMatchObject({ from: { pathname: '/clientes' } });
+  });
+
+  it('tras "Cerrar sesión" no recuerda la página de la persona anterior', () => {
+    const router = renderAt('/clientes', undefined, { signedOutExplicitly: true });
+    expect(screen.getByRole('heading', { name: 'Login' })).toBeInTheDocument();
+    expect(router.state.location.state).toBeNull();
   });
 
   it('tras iniciar sesión vuelve a la ruta solicitada originalmente', () => {

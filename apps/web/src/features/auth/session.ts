@@ -23,6 +23,8 @@ export interface SessionContextValue {
   status: SessionStatus;
   session: Session | null;
   blockedReason: BlockedReason | null;
+  /** true si la sesión terminó por "Cerrar sesión" (no por expiración o desactivación). */
+  signedOutExplicitly: boolean;
   signOut: () => Promise<void>;
 }
 

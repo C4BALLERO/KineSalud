@@ -138,14 +138,14 @@ En móvil, los inputs usan 16 px para evitar el zoom automático de iOS.
 
 ## Componentes
 
-| Grupo        | Componentes                                                                                                                 |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| Acciones     | Button, IconButton, SegmentedControl                                                                                        |
-| Formularios  | FormField, Input, Textarea, Select, Checkbox, Switch, SearchInput                                                           |
-| Datos        | Badge, AppointmentStatusBadge, CategoryTag, Avatar, KeyValueList, Stat, ProgressBar, SessionProgress                        |
-| Contenedores | Panel, Tabs, Dialog, ConfirmDialog, Sheet, DropdownMenu, Tooltip                                                            |
-| Feedback     | Toast (`useToast`), Skeleton, ListSkeleton, Spinner, InlineAlert, EmptyState, NoResultsState, ErrorState, NoPermissionState |
-| Layout       | AppShell, Sidebar, Topbar, BottomNav, PageHeader, GlobalSearch, UserMenu, NotificationsButton                               |
-| Acceso       | Can, RequirePermission                                                                                                      |
+| Grupo        | Componentes                                                                                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Acciones     | Button, IconButton, SegmentedControl                                                                                                                                |
+| Formularios  | FormField, Input, Textarea, Select, Checkbox, Switch, SearchInput, PasswordInput (mostrar/ocultar y aviso de Bloq Mayús), RadioCardGroup (opciones con descripción) |
+| Datos        | Badge, AppointmentStatusBadge, CategoryTag, Avatar, KeyValueList, Stat, ProgressBar, SessionProgress, DataTable (tabla desde md, tarjetas en móvil)                 |
+| Contenedores | Panel, Tabs, Dialog, ConfirmDialog, Sheet, DropdownMenu, Tooltip                                                                                                    |
+| Feedback     | Toast (`useToast`), Skeleton, ListSkeleton, Spinner, InlineAlert, EmptyState, NoResultsState, ErrorState, NoPermissionState                                         |
+| Layout       | AppShell, Sidebar, Topbar, BottomNav, PageHeader, GlobalSearch, UserMenu, NotificationsButton                                                                       |
+| Acceso       | Can, RequirePermission                                                                                                                                              |
 
-Cada módulo agregará en su fase los componentes que necesite: DataTable, Combobox, DatePicker, SlotPicker, CalendarGrid, Timeline, Stepper y PainScaleInput.
+Cada módulo agregará en su fase los componentes que necesite: Combobox, DatePicker, SlotPicker, CalendarGrid, Timeline, Stepper y PainScaleInput. DataTable incorporará ordenamiento y paginación (TanStack Table) en el módulo de Clientes.

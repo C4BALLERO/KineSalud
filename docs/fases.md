@@ -3,8 +3,8 @@
 | Fase                                                    | Estado                                  |
 | ------------------------------------------------------- | --------------------------------------- |
 | 1–4 · Análisis, arquitectura, Design System, wireframes | ✅ Aprobada (ver documentos de `docs/`) |
-| 5 · Layout principal                                    | ✅ Completada — pendiente de revisión   |
-| 6 · Autenticación                                       | ⏳                                      |
+| 5 · Layout principal                                    | ✅ Aprobada                             |
+| 6 · Autenticación                                       | ✅ Completada — pendiente de revisión   |
 | 7 · Dashboard                                           | ⏳                                      |
 | 8 · Clientes                                            | ⏳                                      |
 | 9 · Personal y configuración                            | ⏳                                      |
@@ -37,6 +37,52 @@
 - **Catálogo del Design System** en `/dev/componentes`.
 - **Backend:** configuración de Firebase (emuladores, Hosting, reglas cerradas) y esqueleto de Functions con empaquetado esbuild.
 
-**Pendiente, trasladado a la Fase 6**
+## Fase 6 — Autenticación
 
-- **Script de datos semilla para los emuladores.** Necesita los usuarios de Auth por rol, que se crean en esa fase, y Java instalado para el emulador de Firestore.
+**Entregado**
+
+- **Firebase Authentication:**
+  - el rol, el estado y el vínculo con el profesional viajan como _custom claims_;
+  - el documento `users/{uid}` los refleja para la interfaz.
+- **Cloud Functions** (`users-create`, `users-update`, `users-setActive`):
+  - validación con esquemas compartidos y auditoría en `auditLogs`;
+  - reglas de negocio: debe existir al menos un administrador activo, nadie puede cambiar su propio rol ni desactivar su propia cuenta, y si falla una creación se revierte la cuenta en Auth.
+- **Sesión en la web:**
+  - un cambio de rol se aplica de inmediato en la sesión abierta (versión de claims `cv`);
+  - una desactivación cierra la sesión (tokens revocados más una escucha del propio documento).
+- **Pantallas:**
+  - login;
+  - recuperar contraseña (sin revelar qué correos existen);
+  - crear o restablecer contraseña (`/auth/accion`);
+  - cuenta bloqueada;
+  - "Mi cuenta", con cambio de contraseña que exige la actual;
+  - Usuarios: filtros, tabla responsive, creación, edición, envío del enlace de acceso y desactivación con confirmación.
+- **Flujo de alta segura:** el administrador nunca conoce ni asigna contraseñas. La cuenta nace sin contraseña y la persona crea la suya con el enlace que recibe por correo.
+- **Security Rules** para `users` y `auditLogs`:
+  - cada persona solo lee su propia cuenta y el administrador lee todas;
+  - desde la web solo se puede escribir el último acceso, y con la hora del servidor;
+  - todo lo demás está denegado.
+- **Datos de demostración:** `npm run seed` crea una cuenta por rol en los emuladores.
+- **Pruebas:**
+  - servicio de usuarios y guardias de Functions (18);
+  - esquemas compartidos (14);
+  - web: login, guardias de ruta, layout por rol, formatos y errores (30);
+  - Security Rules en el emulador (12).
+
+**Verificado en el navegador, contra los emuladores**
+
+- Login correcto e incorrecto.
+- Regreso a la página solicitada.
+- Crear cuenta: sin contraseña, con claims, correo de acceso y auditoría.
+- Crear contraseña desde el enlace, y rechazo del enlace ya usado.
+- Cambiar rol.
+- Desactivar cuenta y bloqueo de su login.
+- Acceso denegado a Usuarios para la recepcionista.
+- "Mi cuenta" y recuperación de contraseña.
+- Vista móvil.
+
+**Corregido durante la revisión**
+
+- Tras "Cerrar sesión", la siguiente persona que ingresaba era enviada a la última página de la anterior. Ahora un cierre de sesión voluntario no recuerda ningún destino.
+- Accesibilidad del selector de rol: cada opción tiene nombre y descripción asociados.
+- Mensajes: nombre vacío y error del rol con icono, y un texto de "Mi cuenta" adaptado al administrador.

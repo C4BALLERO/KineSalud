@@ -67,16 +67,22 @@ Es un monorepo con _npm workspaces_.
 | -------------------------------------- | ------------------------------------------------------------------------------------ |
 | Vite                                   | Build rápido para una SPA. No se necesita SSR en un panel privado                    |
 | React Router                           | Rutas anidadas, guardias por rol y enlaces profundos (`/agenda?fecha=…`)             |
-| TanStack Query _(Fase 6)_              | Caché, reintentos y estados de carga y error uniformes                               |
+| TanStack Query                         | Comandos (`useMutation`) con estados de carga y error uniformes; lecturas puntuales  |
 | Tailwind CSS 4                         | Los tokens del Design System se definen en `@theme` y son la única paleta disponible |
 | Radix UI                               | Primitivas accesibles (foco, teclado, ARIA) sin estilo impuesto                      |
 | lucide-react                           | Una única familia de iconos, SVG y _tree-shakeable_                                  |
 | clsx + tailwind-merge                  | Composición de clases sin conflictos                                                 |
-| react-hook-form + zod _(Fase 6)_       | Formularios con esquemas compartidos entre web y servidor                            |
+| react-hook-form + zod                  | Formularios con los mismos esquemas que valida el servidor                           |
 | date-fns _(Fase 10)_                   | Fechas en la zona `America/La_Paz`                                                   |
 | Recharts _(Fase 14)_                   | Gráficos simples y accesibles, solo en Dashboard y Reportes                          |
 | esbuild                                | Empaqueta Functions junto con `@kinesalud/shared` para el despliegue                 |
 | @fontsource-variable/plus-jakarta-sans | Tipografía auto-alojada, sin dependencias externas en tiempo de ejecución            |
+
+**Acceso a datos desde la web**
+
+- **Lecturas en tiempo real:** `useLiveQuery` ([`hooks/useLiveQuery.ts`](../apps/web/src/hooks/useLiveQuery.ts)), una suscripción `onSnapshot` con estados explícitos (carga, éxito y error) y reintento.
+- **Comandos:** `callFunction` ([`lib/callable.ts`](../apps/web/src/lib/callable.ts)) dentro de `useMutation`. Los errores se normalizan a `AppError`, con mensajes en español que vienen del dominio.
+- **Autenticación:** [`features/auth/api/authApi.ts`](../apps/web/src/features/auth/api/authApi.ts). Los componentes nunca importan Firebase directamente.
 
 **Lo que no se usa, y por qué**
 

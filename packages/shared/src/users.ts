@@ -29,6 +29,7 @@ export const PASSWORD_MIN_LENGTH = 8;
 export const displayNameSchema = z
   .string({ error: 'Ingresa el nombre completo.' })
   .trim()
+  .min(1, 'Ingresa el nombre completo.')
   .min(3, 'El nombre debe tener al menos 3 caracteres.')
   .max(80, 'El nombre no puede superar 80 caracteres.');
 

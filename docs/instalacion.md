@@ -33,20 +33,48 @@ Los valores de configuración web de Firebase son públicos por diseño. La segu
 
 ## Ejecución local
 
+En dos terminales:
+
 ```bash
-npm run dev            # Aplicación web en http://localhost:5173
-npm run emulators      # Auth, Firestore, Functions y la UI del emulador (http://localhost:4000)
+npm run emulators      # Terminal 1: compila Functions y levanta Auth, Firestore y Functions
+npm run dev            # Terminal 2: aplicación web en http://localhost:5173
 ```
 
-En la Fase 5 la aplicación funciona con una **sesión de vista previa**, solo en desarrollo. Desde el menú de usuario → "Vista previa de rol" se puede revisar la interfaz de cada rol. En la Fase 6 se reemplaza por Firebase Authentication.
+Con los emuladores en marcha, carga las cuentas de demostración (una por rol):
+
+```bash
+npm run seed
+```
+
+| Cuenta                     | Rol                             |
+| -------------------------- | ------------------------------- |
+| `admin@kinesalud.test`     | Administrador (también atiende) |
+| `recepcion@kinesalud.test` | Recepcionista                   |
+| `dperez@kinesalud.test`    | Profesional (fisioterapia)      |
+| `cvargas@kinesalud.test`   | Profesional (estética)          |
+
+La contraseña de estas cuentas es la constante `DEMO_PASSWORD` de [`scripts/seed.mjs`](../scripts/seed.mjs). Solo existe en los emuladores.
+
+- **UI del emulador:** <http://localhost:4000>. Ahí se ven las cuentas, los datos de Firestore y los **correos de restablecimiento**. En local no se envían correos reales: el enlace aparece en la pestaña Authentication y también en la consola del emulador.
+- En desarrollo la web se conecta a los emuladores por defecto. Para usar el proyecto real, define `VITE_USE_EMULATORS=false` en `.env.local`.
+
+### Nota para Windows
+
+`npm run emulators` y `npm run test:rules` usan [`scripts/firebase.mjs`](../scripts/firebase.mjs), que hace dos ajustes:
+
+1. Indica a Java una carpeta temporal simple. Sin eso, el JDK 21 falla con _"Unable to establish loopback connection"_ en algunas rutas de usuario.
+2. Amplía a 30 s el tiempo de carga de Functions. El primer arranque puede ser lento mientras el antivirus analiza `node_modules`.
+
+Si `java` no se reconoce después de instalarlo, abre una terminal nueva para que tome el PATH actualizado.
 
 ## Calidad
 
 ```bash
 npm run typecheck      # TypeScript estricto en todos los paquetes
 npm run lint           # ESLint (incluye reglas de accesibilidad jsx-a11y)
-npm test               # Vitest
-npm run check          # Los tres anteriores
+npm test               # Vitest (shared, web y functions)
+npm run test:rules     # Security Rules contra el emulador de Firestore (requiere Java)
+npm run check          # typecheck + lint + test
 npm run build          # Build de producción (web + functions)
 ```
 
@@ -58,7 +86,11 @@ Se completa en la Fase 16.
 
 1. Crear el proyecto en la consola de Firebase, activar el **plan Blaze** y configurar una **alerta de presupuesto**.
 2. Habilitar Authentication (correo/contraseña) y Firestore en la región `southamerica-east1`.
-3. Ejecutar `firebase use --add` con el ID del proyecto real.
-4. Ejecutar `npm run build` y luego `firebase deploy`.
+3. En Authentication → Plantillas → _Restablecimiento de contraseña_:
+   - traducir el correo al español;
+   - personalizar la **URL de acción** como `https://<dominio>/auth/accion`, para que el enlace abra la pantalla propia del sistema.
+4. Ejecutar `firebase use --add` con el ID del proyecto real.
+5. Ejecutar `npm run build` y luego `firebase deploy`.
+6. Crear la primera cuenta de administración. Se documentará en la Fase 16 con un script basado en el Admin SDK, porque solo un administrador puede crear usuarios desde el sistema.
 
 Se despliegan Hosting, Functions, las reglas y los índices.

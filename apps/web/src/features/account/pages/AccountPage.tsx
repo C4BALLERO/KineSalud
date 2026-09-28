@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ROLE_DESCRIPTIONS, ROLE_LABELS } from '@kinesalud/shared';
+import { ROLE_DESCRIPTIONS } from '@kinesalud/shared';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
@@ -86,8 +86,10 @@ export function AccountPage() {
               ]}
             />
             <p className="text-caption text-fg-subtle">
-              {ROLE_DESCRIPTIONS[session.role]} Para cambiar tu nombre o tu rol (
-              {ROLE_LABELS[session.role].toLowerCase()}), contacta al administrador.
+              {ROLE_DESCRIPTIONS[session.role]}{' '}
+              {session.role === 'ADMINISTRADOR'
+                ? 'Puedes editar tu nombre desde la sección Usuarios.'
+                : 'Para cambiar tu nombre o tu rol, contacta al administrador del consultorio.'}
             </p>
           </div>
         </Panel>

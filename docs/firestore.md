@@ -72,4 +72,12 @@ Los índices se agregan a `firestore.indexes.json` en la fase de cada módulo.
 
 ## Estado actual de las reglas
 
-En la Fase 5, `firestore.rules` **deniega todo**. Cada módulo agrega sus reglas explícitas junto con sus pruebas en el emulador.
+`firestore.rules` **deniega todo por defecto**. Cada módulo agrega sus reglas explícitas junto con sus pruebas en el emulador (`tests/rules/`, que se ejecutan con `npm run test:rules`).
+
+| Colección     | Lectura                                   | Escritura desde la web                              | Desde  |
+| ------------- | ----------------------------------------- | --------------------------------------------------- | ------ |
+| `users/{uid}` | la propia cuenta; el administrador, todas | solo `lastLoginAt` propio, con la hora del servidor | Fase 6 |
+| `auditLogs`   | solo el administrador                     | ninguna                                             | Fase 6 |
+| resto         | denegada                                  | denegada                                            | —      |
+
+Una cuenta desactivada pierde el acceso aunque su token siga vigente, porque las reglas exigen `active == true` en los claims.

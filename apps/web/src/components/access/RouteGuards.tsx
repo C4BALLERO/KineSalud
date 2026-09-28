@@ -3,13 +3,21 @@ import { AccountBlockedPage } from '@/features/auth/pages/AccountBlockedPage';
 import { useSession } from '@/features/auth/session';
 import { AppLoadingPage } from '@/pages/AppLoadingPage';
 
-/** Rutas privadas: exigen una sesión válida; si no, llevan al login recordando el destino. */
+/**
+ * Rutas privadas: exigen una sesión válida. Sin sesión llevan al login y
+ * recuerdan el destino (enlace directo o sesión expirada), salvo tras un
+ * "Cerrar sesión" voluntario.
+ */
 export function ProtectedRoute() {
-  const { status } = useSession();
+  const { status, signedOutExplicitly } = useSession();
   const location = useLocation();
 
   if (status === 'loading') return <AppLoadingPage />;
-  if (status === 'signed-out') return <Navigate to="/login" replace state={{ from: location }} />;
+  if (status === 'signed-out') {
+    return (
+      <Navigate to="/login" replace state={signedOutExplicitly ? undefined : { from: location }} />
+    );
+  }
   if (status === 'blocked') return <AccountBlockedPage />;
   return <Outlet />;
 }

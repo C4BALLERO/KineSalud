@@ -1,4 +1,5 @@
 import { RadioGroup } from 'radix-ui';
+import { CircleAlert } from 'lucide-react';
 import { useId, type ReactNode } from 'react';
 import { cn } from '@/utils/cn';
 
@@ -62,12 +63,14 @@ export function RadioCardGroup<T extends string>({
           <RadioGroup.Item
             key={o.value}
             value={o.value}
+            // Nombre = etiqueta; descripción aparte, para que se anuncie como ayuda.
+            aria-labelledby={`${id}-${o.value}-label`}
+            aria-describedby={o.description ? `${id}-${o.value}-desc` : undefined}
             className={cn(
               'group flex w-full cursor-pointer items-start gap-3 rounded-md border bg-surface p-3 text-left transition-colors duration-150',
               'border-border-strong hover:border-fg-subtle',
               'data-[state=checked]:border-primary data-[state=checked]:bg-primary-subtle',
               'disabled:cursor-not-allowed disabled:opacity-60',
-              error && 'border-danger',
             )}
           >
             <span
@@ -85,14 +88,21 @@ export function RadioCardGroup<T extends string>({
               </span>
             )}
             <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-body-sm font-semibold text-fg">{o.label}</span>
-              {o.description && <span className="text-caption text-fg-muted">{o.description}</span>}
+              <span id={`${id}-${o.value}-label`} className="text-body-sm font-semibold text-fg">
+                {o.label}
+              </span>
+              {o.description && (
+                <span id={`${id}-${o.value}-desc`} className="text-caption text-fg-muted">
+                  {o.description}
+                </span>
+              )}
             </span>
           </RadioGroup.Item>
         ))}
       </RadioGroup.Root>
       {error ? (
-        <p id={messageId} className="text-caption text-danger">
+        <p id={messageId} className="flex items-start gap-1.5 text-caption text-danger">
+          <CircleAlert aria-hidden="true" className="mt-px size-3.5 shrink-0" />
           {error}
         </p>
       ) : (

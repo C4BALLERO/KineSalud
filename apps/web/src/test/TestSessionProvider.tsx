@@ -19,6 +19,7 @@ export function TestSessionProvider({
     status: asRole ? 'signed-in' : 'signed-out',
     session: asRole ? TEST_USERS[asRole] : null,
     blockedReason: null,
+    signedOutExplicitly: false,
     signOut: async () => undefined,
     ...value,
   };
