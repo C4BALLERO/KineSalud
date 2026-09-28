@@ -11,4 +11,5 @@
  */
 import './core/config';
 
+export * as clients from './api/callable/clients';
 export * as users from './api/callable/users';

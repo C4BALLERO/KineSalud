@@ -273,10 +273,17 @@ export function buildDemoData(now = new Date()) {
           ...prefixes(phone),
         ]),
       ],
+      lastNameLower: normalize(`${lastName} ${firstName}`),
       stats: { lastVisitAt: null, activeTreatments: 0, noShowCount: 0 },
       createdAt: at(addDays(today, -60 + i * 2), '10:00'),
+      createdBy: 'demo-recepcion',
+      updatedAt: at(addDays(today, -60 + i * 2), '10:00'),
     };
   });
+  // Índice de CI único (el mismo que mantiene la Cloud Function).
+  const clientCiIndex = Object.fromEntries(
+    Object.entries(clients).map(([id, c]) => [c.ci, { clientId: id }]),
+  );
 
   const assign = (clientId, profId) => {
     const list = clients[clientId].assignedProfessionalIds;
@@ -448,6 +455,7 @@ export function buildDemoData(now = new Date()) {
     services: SERVICES,
     professionals: PROFESSIONALS,
     clients,
+    clientCiIndex,
     treatments,
     appointments,
   };

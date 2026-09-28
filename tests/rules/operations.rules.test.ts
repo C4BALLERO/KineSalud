@@ -149,6 +149,26 @@ describe('clientes y tratamientos', () => {
     await assertSucceeds(getCountFromServer(q));
   });
 
+  it('nadie escribe clientes directamente: CI único y auditoría pasan por Functions', async () => {
+    await assertFails(
+      setDoc(doc(db('r', claims.recep), 'clients', 'nuevo'), { firstName: 'X', status: 'ACTIVO' }),
+    );
+    await assertFails(
+      setDoc(
+        doc(db('a', claims.admin), 'clients', 'c-otro'),
+        { status: 'INACTIVO' },
+        { merge: true },
+      ),
+    );
+  });
+
+  it('el índice de carnets es privado del servidor', async () => {
+    await assertFails(getDoc(doc(db('a', claims.admin), 'clientCiIndex', '3400000')));
+    await assertFails(
+      setDoc(doc(db('r', claims.recep), 'clientCiIndex', '3400000'), { clientId: 'x' }),
+    );
+  });
+
   it('el PROFESIONAL solo lee sus tratamientos', async () => {
     await assertSucceeds(getDoc(doc(db('d', claims.diego), 'treatments', 't-diego')));
     await assertFails(getDoc(doc(db('d', claims.diego), 'treatments', 't-otro')));

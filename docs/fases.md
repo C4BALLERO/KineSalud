@@ -5,8 +5,8 @@
 | 1–4 · Análisis, arquitectura, Design System, wireframes | ✅ Aprobada (ver documentos de `docs/`) |
 | 5 · Layout principal                                    | ✅ Aprobada                             |
 | 6 · Autenticación                                       | ✅ Aprobada                             |
-| 7 · Dashboard                                           | ✅ Completada — pendiente de revisión   |
-| 8 · Clientes                                            | ⏳                                      |
+| 7 · Dashboard                                           | ✅ Aprobada                             |
+| 8 · Clientes                                            | ✅ Completada — pendiente de revisión   |
 | 9 · Personal y configuración                            | ⏳                                      |
 | 10 · Agenda                                             | ⏳                                      |
 | 11 · Tratamientos                                       | ⏳                                      |
@@ -126,3 +126,45 @@
 - **"Domingo 27 De Septiembre":** `capitalize` de CSS capitalizaba cada palabra.
 - **Seed:** un mismo cliente aparecía dos veces el mismo día.
 - **Color de la serie del gráfico:** validado con la guía de visualización de datos. El turquesa de la interfaz se leía gris en barras, así que se usa `chart-1` (`#008F99`).
+
+## Fase 8 — Clientes
+
+**Entregado**
+
+- **Esquemas compartidos** (`packages/shared/src/clients.ts`): validación de nombres, carnet (con complemento y expedición), teléfono boliviano, correo y fecha de nacimiento. La web y las Functions usan los mismos esquemas y los mismos normalizadores (`normalizeCi`, `normalizePhone`, `buildClientSearchKeywords`).
+- **Comandos en el servidor** (`clients-create`, `clients-update`, `clients-setStatus`):
+  - el carnet es único gracias a una transacción sobre `clientCiIndex/{ci}`; si ya existe, el error indica el campo y el cliente existente;
+  - cada cambio queda en `auditLogs`, y la edición registra solo los campos que cambiaron;
+  - solo administración y recepción pueden escribir.
+- **Listado** (`/clientes`):
+  - búsqueda por nombre, apellido, carnet o teléfono, con espera de 300 ms entre teclas;
+  - filtro por estado y orden por apellido o por fecha de registro;
+  - los filtros viven en la URL, así que se pueden compartir y sobreviven a "Atrás";
+  - paginación por cursor ("Cargar más clientes");
+  - en escritorio es una tabla y en móvil, una lista de tarjetas.
+- **"Mis pacientes":** el profesional ve solo los clientes que tiene asignados y los filtra en el navegador. Firestore admite una sola condición `array-contains` por consulta.
+- **Registrar y editar:**
+  - campos agrupados en Identificación, Contacto y Notas administrativas;
+  - edad calculada en vivo;
+  - aviso para no escribir datos clínicos en las notas;
+  - validación al salir de cada campo;
+  - aviso de cambios sin guardar al salir;
+  - acciones fijas al pie en móvil.
+  - Tras registrar, un aviso ofrece "Agendar cita".
+- **Perfil** (`/clientes/:id`):
+  - pestañas Resumen, Datos, Citas, Tratamientos e Historia clínica, enlazables con `?tab=`;
+  - desactivar y reactivar, con confirmación;
+  - un aviso cuando el cliente está inactivo;
+  - el profesional solo ve sus propias citas y tratamientos;
+  - la historia clínica muestra "restringida" a recepción y queda preparada para la Fase 12.
+- **Pruebas:**
+  - esquemas y normalización (shared);
+  - servicio de clientes con un gateway simulado (9);
+  - búsqueda, formatos y formulario: validación, datos normalizados y carnet duplicado (7);
+  - reglas: nadie escribe clientes desde la web y `clientCiIndex` es privado (2 nuevas, 25 en total).
+
+**Decisiones**
+
+- **No se usa TanStack Table.** Las tablas son simples (sin orden por columna ni selección múltiple), y el orden y los filtros los resuelve Firestore. Un componente `DataTable` propio basta y pesa menos.
+- **Búsqueda sin servicio externo.** Se consulta el primer término con `array-contains` sobre `searchKeywords`, y los demás términos se filtran en el navegador. Alcanza para el volumen de un consultorio.
+- **Paginación por cursor** (`startAfter`) en lugar de páginas numeradas: Firestore no tiene `offset` eficiente.

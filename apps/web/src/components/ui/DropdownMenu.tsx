@@ -1,5 +1,6 @@
 import { DropdownMenu as RadixMenu } from 'radix-ui';
 import type { ReactNode } from 'react';
+import { Link } from 'react-router';
 import { cn } from '@/utils/cn';
 
 export const DropdownMenu = RadixMenu.Root;
@@ -36,6 +37,8 @@ interface DropdownMenuItemProps {
   onSelect?: () => void;
   destructive?: boolean;
   disabled?: boolean;
+  /** Si se indica, el ítem es un enlace real (navegación accesible). */
+  asLink?: string;
 }
 
 export function DropdownMenuItem({
@@ -44,11 +47,13 @@ export function DropdownMenuItem({
   onSelect,
   destructive,
   disabled,
+  asLink,
 }: DropdownMenuItemProps) {
   return (
     <RadixMenu.Item
       onSelect={onSelect}
       disabled={disabled}
+      asChild={!!asLink}
       className={cn(
         'flex h-11 cursor-pointer items-center gap-2.5 rounded-sm px-2.5 text-body-sm outline-none select-none md:h-9',
         'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
@@ -57,8 +62,17 @@ export function DropdownMenuItem({
           : 'text-fg data-[highlighted]:bg-surface-muted',
       )}
     >
-      {icon}
-      {children}
+      {asLink ? (
+        <Link to={asLink}>
+          {icon}
+          {children}
+        </Link>
+      ) : (
+        <>
+          {icon}
+          {children}
+        </>
+      )}
     </RadixMenu.Item>
   );
 }

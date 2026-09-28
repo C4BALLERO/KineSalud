@@ -1,4 +1,6 @@
-import { CalendarPlus, UserPlus } from 'lucide-react';
+import type { Permission } from '@kinesalud/shared';
+import { CalendarPlus } from 'lucide-react';
+import type { ComponentType } from 'react';
 import { createBrowserRouter, Link, Navigate, type RouteObject } from 'react-router';
 import { RequirePermission } from '@/components/access/RequirePermission';
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/access/RouteGuards';
@@ -11,6 +13,20 @@ import { AppLoadingPage } from '@/pages/AppLoadingPage';
 import { ModulePlaceholder } from '@/pages/ModulePlaceholder';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { RouteErrorPage } from '@/pages/RouteErrorPage';
+
+/** Ruta cargada bajo demanda y protegida por permiso. */
+function guarded(permission: Permission, load: () => Promise<ComponentType>) {
+  return async () => {
+    const Page = await load();
+    return {
+      element: (
+        <RequirePermission permission={permission}>
+          <Page />
+        </RequirePermission>
+      ),
+    };
+  };
+}
 
 /**
  * Rutas de la aplicación. Cada módulo reemplaza su ModulePlaceholder en la
@@ -60,34 +76,30 @@ const appRoutes: RouteObject[] = [
   },
   {
     path: 'clientes',
-    element: (
-      <RequirePermission permission="clients.read">
-        <ModulePlaceholder
-          title="Clientes"
-          description="Registro, búsqueda y perfil de los clientes del consultorio."
-          phase={8}
-          actions={
-            <Button asChild>
-              <Link to="/clientes/nuevo">
-                <UserPlus aria-hidden="true" />
-                Registrar cliente
-              </Link>
-            </Button>
-          }
-        />
-      </RequirePermission>
+    lazy: guarded(
+      'clients.read',
+      async () => (await import('@/features/clients/pages/ClientsPage')).ClientsPage,
     ),
   },
   {
     path: 'clientes/nuevo',
-    element: (
-      <RequirePermission permission="clients.write">
-        <ModulePlaceholder
-          title="Registrar cliente"
-          description="Datos personales y de contacto."
-          phase={8}
-        />
-      </RequirePermission>
+    lazy: guarded(
+      'clients.write',
+      async () => (await import('@/features/clients/pages/ClientCreatePage')).ClientCreatePage,
+    ),
+  },
+  {
+    path: 'clientes/:clientId',
+    lazy: guarded(
+      'clients.read',
+      async () => (await import('@/features/clients/pages/ClientProfilePage')).ClientProfilePage,
+    ),
+  },
+  {
+    path: 'clientes/:clientId/editar',
+    lazy: guarded(
+      'clients.write',
+      async () => (await import('@/features/clients/pages/ClientEditPage')).ClientEditPage,
     ),
   },
   {

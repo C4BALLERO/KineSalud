@@ -3,9 +3,17 @@ export class AppError extends Error {
   constructor(
     readonly code: string,
     message: string,
+    /** Datos adicionales del dominio, p. ej. `{ field: 'ci', clientId }`. */
+    readonly details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = 'AppError';
+  }
+
+  /** Campo del formulario al que corresponde el error, si el servidor lo indicó. */
+  get field(): string | undefined {
+    const field = this.details?.field;
+    return typeof field === 'string' ? field : undefined;
   }
 }
 
@@ -13,7 +21,14 @@ const NETWORK_MESSAGE = 'No hay conexión con el servidor. Revisa tu internet e 
 const GENERIC_MESSAGE = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
 
 function codeOf(err: unknown): string {
-  return typeof err === 'object' && err !== null && 'code' in err ? String((err as { code: unknown }).code) : '';
+  return typeof err === 'object' && err !== null && 'code' in err
+    ? String((err as { code: unknown }).code)
+    : '';
+}
+
+function detailsOf(err: unknown): Record<string, unknown> | undefined {
+  const details = typeof err === 'object' && err !== null ? (err as { details?: unknown }).details : undefined;
+  return details && typeof details === 'object' ? (details as Record<string, unknown>) : undefined;
 }
 
 /**
@@ -31,7 +46,7 @@ export function toAppError(err: unknown): AppError {
     case 'functions/already-exists':
     case 'functions/failed-precondition':
     case 'functions/permission-denied':
-      return new AppError(code, message || GENERIC_MESSAGE);
+      return new AppError(code, message || GENERIC_MESSAGE, detailsOf(err));
     case 'functions/unauthenticated':
       return new AppError(code, 'Tu sesión expiró. Vuelve a iniciar sesión.');
     case 'functions/unavailable':

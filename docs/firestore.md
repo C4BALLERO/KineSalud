@@ -42,13 +42,17 @@
 
 Se consulta con `array-contains` y se ordena por `lastNameLower`.
 
+- Se guardan prefijos de hasta 15 caracteres. El carnet y el teléfono se normalizan antes (sin guiones, espacios ni prefijo 591).
+- Firestore admite un solo `array-contains` por consulta: se busca por el primer término y los demás se filtran en el navegador.
+- Para el profesional, la condición `array-contains` la ocupa `assignedProfessionalIds`, así que "Mis pacientes" carga sus clientes asignados y los filtra en el navegador.
+
 ## Índices compuestos previstos
 
 | Colección    | Campos                                                                                       |
 | ------------ | -------------------------------------------------------------------------------------------- |
 | appointments | (professionalId, date, startAt) · (roomId, date) · (clientId, startAt desc) · (date, status) |
 | treatments   | (clientId, status) · (professionalId, status)                                                |
-| clients      | (searchKeywords array, lastNameLower)                                                        |
+| clients      | (searchKeywords array, [status], lastNameLower \| createdAt desc) · (status, lastNameLower)  |
 | reminders    | (status, scheduledFor)                                                                       |
 
 Los índices se agregan a `firestore.indexes.json` en la fase de cada módulo.
@@ -79,7 +83,8 @@ Los índices se agregan a `firestore.indexes.json` en la fase de cada módulo.
 | `users/{uid}`                                    | la propia cuenta; el administrador, todas                                                            | solo `lastLoginAt` propio, con la hora del servidor | Fase 6 |
 | `auditLogs`                                      | solo el administrador                                                                                | ninguna                                             | Fase 6 |
 | `professionals`, `rooms`, `services`, `settings` | todo el personal activo                                                                              | ninguna                                             | Fase 7 |
-| `clients`                                        | administración y recepción; el profesional, solo los que tiene asignados (`assignedProfessionalIds`) | ninguna (vía Functions desde la Fase 8)             | Fase 7 |
+| `clients`                                        | administración y recepción; el profesional, solo los que tiene asignados (`assignedProfessionalIds`) | ninguna: `clients-create`, `-update`, `-setStatus`  | Fase 8 |
+| `clientCiIndex`                                  | denegada (solo el servidor)                                                                          | denegada                                            | Fase 8 |
 | `appointments`, `treatments`                     | administración y recepción; el profesional, solo los propios (`professionalId`)                      | ninguna (vía Functions)                             | Fase 7 |
 | resto                                            | denegada                                                                                             | denegada                                            | —      |
 

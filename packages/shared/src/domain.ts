@@ -10,6 +10,7 @@ import type {
   TreatmentCategory,
   TreatmentStatus,
 } from './enums';
+import type { CiExtension } from './clients';
 import { weekdayOf, type DateKey, type Weekday } from './time';
 
 /** Tramo horario local "HH:mm"–"HH:mm". */
@@ -59,8 +60,10 @@ export interface ServiceDoc {
 export interface ClientDoc<Ts = unknown> {
   firstName: string;
   lastName: string;
+  /** "apellidos nombres" normalizado: orden alfabético por apellido. */
+  lastNameLower: string;
   ci: string;
-  ciExt: string | null;
+  ciExt: CiExtension | null;
   phone: string;
   phoneE164: string;
   email: string | null;
@@ -72,6 +75,8 @@ export interface ClientDoc<Ts = unknown> {
   searchKeywords: string[];
   stats: { lastVisitAt: Ts | null; activeTreatments: number; noShowCount: number };
   createdAt: Ts;
+  createdBy: string | null;
+  updatedAt: Ts;
 }
 
 export interface AppointmentDoc<Ts = unknown> {

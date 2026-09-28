@@ -1,5 +1,17 @@
 import { CLINIC_LOCALE, CLINIC_TIMEZONE } from '@kinesalud/shared';
 
+/** "3400000 CB" (CI con su departamento de expedición). */
+export function formatCi(ci: string, ext: string | null): string {
+  return ext ? `${ci} ${ext}` : ci;
+}
+
+/** Celular "7123 4567", fijo "425 6789". */
+export function formatPhone(phone: string): string {
+  if (phone.length === 8) return `${phone.slice(0, 4)} ${phone.slice(4)}`;
+  if (phone.length === 7) return `${phone.slice(0, 3)} ${phone.slice(3)}`;
+  return phone;
+}
+
 /** Iniciales a partir del nombre completo: "Carla Rojas Vda." → "CR". */
 export function initialsOf(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
