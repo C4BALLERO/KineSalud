@@ -3,7 +3,8 @@ node_modules/
 
 # Builds
 dist/
-lib/
+# Solo el bundle de Functions (no ignorar carpetas de código llamadas lib, como apps/web/src/lib).
+/functions/lib/
 *.tsbuildinfo
 
 # Entorno (nunca subir credenciales)
