@@ -1,0 +1,134 @@
+/*
+ * Design System Kinesalud y Vida — tokens.
+ *
+ * Única fuente de verdad para color, tipografía, radios, sombras y movimiento.
+ * Los componentes NUNCA usan valores hex ni la paleta por defecto de Tailwind:
+ * las paletas por defecto se anulan con `initial` para que solo existan estos tokens.
+ * Contrastes verificados (WCAG 2.2 AA) en docs/design-system.md.
+ */
+@theme {
+  /* ---------- Reset de paletas por defecto ---------- */
+  --color-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --font-*: initial;
+
+  /* ---------- Básicos ---------- */
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* ---------- Marca ---------- */
+  --color-primary: #0f766e; /* teal — acción primaria, enlaces, foco (5.47:1 con blanco) */
+  --color-primary-hover: #115e59;
+  --color-primary-subtle: #f0fdfa; /* ítem activo, selección */
+  --color-primary-border: #ccfbf1;
+  --color-on-primary: #ffffff;
+
+  --color-secondary: #b34a33; /* arcilla — acento cálido de marca, uso puntual (5.32:1) */
+  --color-secondary-subtle: #fdf3f0;
+  --color-on-secondary: #ffffff;
+
+  /* ---------- Superficies ---------- */
+  --color-canvas: #f6f8f8; /* fondo de la aplicación */
+  --color-surface: #ffffff; /* paneles, tablas, formularios */
+  --color-surface-muted: #eef2f1; /* encabezados de tabla, hover, deshabilitado */
+  --color-overlay: rgb(20 33 31 / 0.45); /* fondo de diálogos */
+
+  /* ---------- Texto ---------- */
+  --color-fg: #14211f; /* principal — 16.6:1 */
+  --color-fg-muted: #51605e; /* secundario — 6.6:1 */
+  --color-fg-subtle: #62716f; /* metadatos, placeholder — ≥4.5:1 en todas las superficies */
+
+  /* ---------- Bordes ---------- */
+  --color-border: #dde4e3; /* divisores y contornos de paneles (decorativos) */
+  --color-border-strong: #c4cecc; /* separadores con énfasis */
+  --color-border-control: #808e8b; /* límites de controles: inputs, checkbox (3.4:1, WCAG 1.4.11) */
+
+  /* ---------- Semánticos ---------- */
+  --color-success: #15803d;
+  --color-success-subtle: #f0fdf4;
+  --color-success-border: #bbf7d0;
+  --color-warning: #b45309;
+  --color-warning-subtle: #fffbeb;
+  --color-warning-border: #fde68a;
+  --color-danger: #b91c1c;
+  --color-danger-hover: #991b1b;
+  --color-danger-subtle: #fef2f2;
+  --color-danger-border: #fecaca;
+  --color-info: #1d4ed8;
+  --color-info-subtle: #eff6ff;
+  --color-info-border: #bfdbfe;
+  --color-neutral: #51605e;
+  --color-neutral-subtle: #eef2f1;
+  --color-neutral-border: #dde4e3;
+
+  /* ---------- Dominio: categorías de tratamiento ---------- */
+  --color-cat-fisioterapia: #0369a1;
+  --color-cat-fisioterapia-subtle: #f0f9ff;
+  --color-cat-rehabilitacion: #4d7c0f;
+  --color-cat-rehabilitacion-subtle: #f7fee7;
+  --color-cat-estetica: #be185d;
+  --color-cat-estetica-subtle: #fdf2f8;
+
+  /* ---------- Tipografía ---------- */
+  --font-sans:
+    'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  --text-display: 1.875rem; /* 30 */
+  --text-display--line-height: 2.25rem;
+  --text-display--font-weight: 600;
+  --text-display--letter-spacing: -0.015em;
+
+  --text-h1: 1.5rem; /* 24 */
+  --text-h1--line-height: 2rem;
+  --text-h1--font-weight: 600;
+  --text-h1--letter-spacing: -0.01em;
+
+  --text-h2: 1.125rem; /* 18 */
+  --text-h2--line-height: 1.75rem;
+  --text-h2--font-weight: 600;
+
+  --text-h3: 1rem; /* 16 */
+  --text-h3--line-height: 1.5rem;
+  --text-h3--font-weight: 600;
+
+  --text-body: 0.9375rem; /* 15 */
+  --text-body--line-height: 1.5rem;
+
+  --text-body-sm: 0.875rem; /* 14 — tablas, metadatos, labels, botones */
+  --text-body-sm--line-height: 1.25rem;
+
+  --text-caption: 0.8125rem; /* 13 — ayudas y errores de campo */
+  --text-caption--line-height: 1.125rem;
+
+  --text-tab: 0.6875rem; /* 11 — solo etiquetas de la barra inferior móvil (siempre con icono) */
+  --text-tab--line-height: 0.875rem;
+  --text-tab--font-weight: 500;
+
+  --text-overline: 0.75rem; /* 12 — encabezados de grupo, siempre en mayúsculas */
+  --text-overline--line-height: 1rem;
+  --text-overline--letter-spacing: 0.06em;
+  --text-overline--font-weight: 600;
+
+  /* ---------- Radios ---------- */
+  --radius-sm: 6px; /* badges, chips */
+  --radius-md: 8px; /* inputs, botones */
+  --radius-lg: 12px; /* paneles, diálogos */
+
+  /* ---------- Sombras (solo tres niveles) ---------- */
+  --shadow-sm: 0 1px 2px rgb(20 33 31 / 0.06);
+  --shadow-md: 0 4px 12px -2px rgb(20 33 31 / 0.1), 0 2px 4px -2px rgb(20 33 31 / 0.06);
+  --shadow-lg: 0 16px 40px -8px rgb(20 33 31 / 0.18), 0 4px 12px -4px rgb(20 33 31 / 0.08);
+
+  /* ---------- Movimiento ---------- */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* ---------- Layout ---------- */
+  --container-content: 90rem; /* 1440 */
+  --container-form: 40rem; /* 640 */
+}

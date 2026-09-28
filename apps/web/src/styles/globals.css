@@ -1,0 +1,153 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/plus-jakarta-sans';
+@import './tokens.css';
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --sidebar-width: 15.5rem; /* 248 */
+    --rail-width: 4.5rem; /* 72 */
+    --topbar-height: 3.5rem; /* 56 */
+    --bottomnav-height: 4rem; /* 64 */
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-body text-fg antialiased;
+    min-height: 100dvh;
+  }
+
+  /* Cifras tabulares en horas, tablas y KPIs. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Foco visible y consistente en toda la app. Nunca se elimina. */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-primary-border);
+  }
+
+  /* Inputs a 16 px en móvil para evitar el zoom automático de iOS. */
+  @media (max-width: 47.99rem) {
+    input,
+    select,
+    textarea {
+      font-size: 1rem !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Respeta la zona segura inferior de iOS en la navegación móvil. */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Animaciones de overlays (Radix expone data-state). Sutiles y cortas. */
+@keyframes kv-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes kv-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes kv-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+}
+@keyframes kv-slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes kv-slide-out-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes kv-slide-in-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes kv-slide-out-down {
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes kv-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@utility animate-overlay {
+  &[data-state='open'] {
+    animation: kv-fade-in 200ms var(--ease-standard);
+  }
+  &[data-state='closed'] {
+    animation: kv-fade-out 150ms var(--ease-exit);
+  }
+}
+@utility animate-pop {
+  &[data-state='open'],
+  &[data-state='delayed-open'] {
+    animation: kv-pop-in 200ms var(--ease-standard);
+  }
+  &[data-state='closed'] {
+    animation: kv-fade-out 120ms var(--ease-exit);
+  }
+}
+@utility animate-sheet-right {
+  &[data-state='open'] {
+    animation: kv-slide-in-right 250ms var(--ease-standard);
+  }
+  &[data-state='closed'] {
+    animation: kv-slide-out-right 180ms var(--ease-exit);
+  }
+}
+@utility animate-sheet-bottom {
+  &[data-state='open'] {
+    animation: kv-slide-in-up 250ms var(--ease-standard);
+  }
+  &[data-state='closed'] {
+    animation: kv-slide-out-down 180ms var(--ease-exit);
+  }
+}
+@utility skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-muted) 25%,
+    var(--color-canvas) 50%,
+    var(--color-surface-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: kv-shimmer 1.4s linear infinite;
+}

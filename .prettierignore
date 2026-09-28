@@ -1,0 +1,6 @@
+node_modules
+dist
+lib
+coverage
+.emulator-data
+package-lock.json
