@@ -13,30 +13,32 @@ Los tokens están en [`apps/web/src/styles/tokens.css`](../apps/web/src/styles/t
 
 Los contrastes se midieron con la fórmula WCAG 2.x. Salvo que se indique otra cosa, están calculados sobre blanco.
 
-| Token            | Valor     | Uso                                            | Contraste                             |
-| ---------------- | --------- | ---------------------------------------------- | ------------------------------------- |
-| `primary`        | `#0F766E` | Acción primaria, enlaces, foco                 | 5.47:1                                |
-| `primary-hover`  | `#115E59` | Hover y activo                                 | 7.58:1                                |
-| `primary-subtle` | `#F0FDFA` | Ítem activo, selección                         | —                                     |
-| `secondary`      | `#B34A33` | Acento cálido de marca ("y Vida"), uso puntual | 5.32:1                                |
-| `canvas`         | `#F6F8F8` | Fondo de la aplicación                         | —                                     |
-| `surface`        | `#FFFFFF` | Paneles, tablas, formularios                   | —                                     |
-| `surface-muted`  | `#EEF2F1` | Encabezados de tabla, hover, deshabilitado     | —                                     |
-| `fg`             | `#14211F` | Texto principal                                | 16.57:1                               |
-| `fg-muted`       | `#51605E` | Texto secundario                               | 6.59:1                                |
-| `fg-subtle`      | `#62716F` | Metadatos y placeholders                       | 5.11:1 (4.53:1 sobre `surface-muted`) |
-| `border`         | `#DDE4E3` | Divisores (decorativo)                         | —                                     |
-| `border-strong`  | `#C4CECC` | Separadores con énfasis                        | —                                     |
-| `border-control` | `#808E8B` | Límites de inputs, checkbox y select           | 3.41:1 (WCAG 1.4.11)                  |
-| `success`        | `#15803D` | Atendida, guardado                             | 4.79:1 sobre `success-subtle`         |
-| `warning`        | `#B45309` | Pendiente, alertas                             | 4.84:1 sobre `warning-subtle`         |
-| `danger`         | `#B91C1C` | Error, no asistió, eliminar                    | 5.91:1 sobre `danger-subtle`          |
-| `info`           | `#1D4ED8` | Confirmada, avisos                             | 6.16:1 sobre `info-subtle`            |
+| Token            | Valor     | Uso                                                          | Contraste                             |
+| ---------------- | --------- | ------------------------------------------------------------ | ------------------------------------- |
+| `primary`        | `#28727A` | Turquesa de marca oscurecido: acción primaria, enlaces, foco | 5.56:1                                |
+| `brand-teal`     | `#55A8AD` | Turquesa exacto del logo, solo decorativo                    | 2.72:1 (no apto para texto)           |
+| `brand-sage`     | `#84C3A6` | Salvia exacto del logo, solo decorativo                      | 1.98:1 (no apto para texto)           |
+| `primary-hover`  | `#1E585C` | Hover y activo                                               | 8.06:1                                |
+| `primary-subtle` | `#EEF7F7` | Ítem activo, selección, panel de marca del login             | —                                     |
+| `secondary`      | `#3A775C` | Salvia de marca oscurecido: acento ("y Vida"), uso puntual   | 5.29:1                                |
+| `canvas`         | `#F6F8F8` | Fondo de la aplicación                                       | —                                     |
+| `surface`        | `#FFFFFF` | Paneles, tablas, formularios                                 | —                                     |
+| `surface-muted`  | `#EEF2F1` | Encabezados de tabla, hover, deshabilitado                   | —                                     |
+| `fg`             | `#14211F` | Texto principal                                              | 16.57:1                               |
+| `fg-muted`       | `#51605E` | Texto secundario                                             | 6.59:1                                |
+| `fg-subtle`      | `#62716F` | Metadatos y placeholders                                     | 5.11:1 (4.53:1 sobre `surface-muted`) |
+| `border`         | `#DDE4E3` | Divisores (decorativo)                                       | —                                     |
+| `border-strong`  | `#C4CECC` | Separadores con énfasis                                      | —                                     |
+| `border-control` | `#808E8B` | Límites de inputs, checkbox y select                         | 3.41:1 (WCAG 1.4.11)                  |
+| `success`        | `#15803D` | Atendida, guardado                                           | 4.79:1 sobre `success-subtle`         |
+| `warning`        | `#B45309` | Pendiente, alertas                                           | 4.84:1 sobre `warning-subtle`         |
+| `danger`         | `#B91C1C` | Error, no asistió, eliminar                                  | 5.91:1 sobre `danger-subtle`          |
+| `info`           | `#1D4ED8` | Confirmada, avisos                                           | 6.16:1 sobre `info-subtle`            |
 
 **Ajustes hechos al verificar el contraste**
 
 - `fg-subtle` cambió de `#6B7A78` (4.49:1, no cumplía) a `#62716F`.
-- `secondary` cambió de `#C2553D` (4.51:1, al límite) a `#B34A33`.
+- La paleta se alineó con el **logo oficial**. Sus colores exactos (turquesa `#55A8AD` y salvia `#84C3A6`) no alcanzan 4.5:1 sobre blanco, así que la interfaz usa versiones más oscuras del mismo tono (`primary` y `secondary`) y los colores exactos quedan como tokens decorativos (`brand-teal`, `brand-sage`).
 - Se agregó `border-control` porque el borde original de los inputs (1.61:1) no cumplía el mínimo de 3:1 para límites de controles.
 
 ### Colores de dominio
@@ -122,11 +124,14 @@ En móvil, los inputs usan 16 px para evitar el zoom automático de iOS.
 
 ## Logo
 
-- **Símbolo:** una figura humana en movimiento que forma una "K": el cuerpo, el brazo que se eleva (recuperación) y la pierna que avanza (movimiento). La cabeza va en un tono arcilla claro, que representa la "Vida".
-- **Variantes:**
-  - `full`: símbolo + nombre, para el sidebar y el login.
-  - `symbol`: solo el símbolo, para el riel y el favicon.
-- **Archivos:** [`Logo.tsx`](../apps/web/src/components/brand/Logo.tsx) y [`favicon.svg`](../apps/web/public/favicon.svg).
+- **Logo oficial** del consultorio: una figura en movimiento sobre una mano que la sostiene, con la columna vertebral como arco. Tipografía propia "KINE Salud y Vida".
+- **Variantes del componente `<Logo>`:**
+  - `brand`: logo oficial completo, para el login y las pantallas de marca. Siempre sobre fondos claros.
+  - `full`: símbolo más el nombre en la tipografía del sistema, para el sidebar y las barras (legible en tamaños pequeños).
+  - `symbol`: solo el símbolo, para el riel colapsado y la pantalla de carga.
+- **Archivos:**
+  - [`assets/brand/`](../apps/web/src/assets/brand/): `logo-completo.png` (960 px, optimizado desde el original de 2769 px) y `logo-icono.png` (256 px).
+  - `public/`: `favicon-64.png` y `apple-touch-icon.png` (180 px, con fondo blanco, porque iOS rellena la transparencia en negro).
 
 ## Layout responsive
 

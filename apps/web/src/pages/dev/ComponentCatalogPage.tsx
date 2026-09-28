@@ -58,11 +58,13 @@ const COLOR_GROUPS: {
   {
     title: 'Marca',
     tokens: [
-      { name: 'primary', className: 'bg-primary', note: '#0F766E · 5.5:1' },
-      { name: 'primary-hover', className: 'bg-primary-hover', note: '#115E59' },
-      { name: 'primary-subtle', className: 'bg-primary-subtle', note: '#F0FDFA' },
-      { name: 'secondary', className: 'bg-secondary', note: '#B34A33 · 5.3:1' },
-      { name: 'secondary-subtle', className: 'bg-secondary-subtle', note: '#FDF3F0' },
+      { name: 'primary', className: 'bg-primary', note: '#28727A · 5.6:1' },
+      { name: 'primary-hover', className: 'bg-primary-hover', note: '#1E585C' },
+      { name: 'primary-subtle', className: 'bg-primary-subtle', note: '#EEF7F7' },
+      { name: 'secondary', className: 'bg-secondary', note: '#3A775C · 5.3:1' },
+      { name: 'secondary-subtle', className: 'bg-secondary-subtle', note: '#EFF7F2' },
+      { name: 'brand-teal', className: 'bg-brand-teal', note: '#55A8AD · solo logo' },
+      { name: 'brand-sage', className: 'bg-brand-sage', note: '#84C3A6 · solo logo' },
     ],
   },
   {
@@ -181,6 +183,7 @@ export function ComponentCatalogPage() {
       <Section id="marca" title="Identidad">
         <Panel>
           <div className="flex flex-wrap items-center gap-8">
+            <Logo variant="brand" size="lg" />
             <Logo size="lg" />
             <Logo />
             <Logo size="sm" />

@@ -19,15 +19,21 @@
   --color-transparent: transparent;
   --color-current: currentColor;
 
-  /* ---------- Marca ---------- */
-  --color-primary: #0f766e; /* teal — acción primaria, enlaces, foco (5.47:1 con blanco) */
-  --color-primary-hover: #115e59;
-  --color-primary-subtle: #f0fdfa; /* ítem activo, selección */
-  --color-primary-border: #ccfbf1;
+  /* ---------- Marca (derivada del logo oficial) ----------
+   * Los colores exactos del logo (#55A8AD turquesa, #84C3A6 salvia) no alcanzan
+   * contraste para texto (2.7:1 y 2.0:1): se usan solo en el logo y en elementos
+   * decorativos. La interfaz usa versiones más oscuras del mismo tono. */
+  --color-brand-teal: #55a8ad; /* solo decorativo */
+  --color-brand-sage: #84c3a6; /* solo decorativo */
+
+  --color-primary: #28727a; /* turquesa de marca oscurecido — acción primaria, enlaces, foco (5.56:1) */
+  --color-primary-hover: #1e585c;
+  --color-primary-subtle: #eef7f7; /* ítem activo, selección */
+  --color-primary-border: #c6e3e4;
   --color-on-primary: #ffffff;
 
-  --color-secondary: #b34a33; /* arcilla — acento cálido de marca, uso puntual (5.32:1) */
-  --color-secondary-subtle: #fdf3f0;
+  --color-secondary: #3a775c; /* salvia de marca oscurecida — acento de marca, uso puntual (5.29:1) */
+  --color-secondary-subtle: #eff7f2;
   --color-on-secondary: #ffffff;
 
   /* ---------- Superficies ---------- */
