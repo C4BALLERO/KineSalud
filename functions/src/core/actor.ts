@@ -10,6 +10,8 @@ export interface Actor {
   uid?: string;
   role?: Role;
   professionalId?: string | null;
+  /** Nombre visible (claim `name` del token), para el historial de las citas. */
+  name?: string | null;
   /** Canal de origen, p. ej. "web" o, a futuro, "whatsapp". */
   channel: string;
 }

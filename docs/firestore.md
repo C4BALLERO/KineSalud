@@ -19,7 +19,8 @@
 | `clients/{id}`                                            | firstName, lastName, ci, ciExt?, phone, phoneE164, email?, birthDate, address?, adminNotes, status, assignedProfessionalIds[], searchKeywords[], stats{}, createdAt, createdBy                                           | Solo datos administrativos                                                                   |
 | `clientCiIndex/{ci}`                                      | clientId                                                                                                                                                                                                                 | Garantiza un CI único (se escribe en la misma transacción)                                   |
 | `appointments/{id}`                                       | clientId, clientName, professionalId, professionalName, roomId, serviceId, serviceName, category, treatmentId?, sessionNumber?, date, startAt, endAt, status, source, cancelReason?, reminderState, createdBy, updatedAt | Estados: PENDIENTE, CONFIRMADA, ATENDIDA, CANCELADA, NO_ASISTIO                              |
-| `appointments/{id}/events/{id}`                           | type, from, to, actor{type, uid, channel}, at                                                                                                                                                                            | Historial inmutable de cambios                                                               |
+| `appointments/{id}/events/{id}`                           | type, professionalId, from, to, reason, actor{type, uid, name, channel}, at                                                                                                                                              | Historial inmutable; lo escribe el servidor en la misma transacción que el cambio            |
+| `scheduleLocks/{fecha}`                                   | version, at                                                                                                                                                                                                              | Candado por día: serializa las reservas simultáneas (ver "Candado por día")                  |
 | `treatments/{id}`                                         | clientId, clientName, professionalId, serviceId, category, startDate, plannedSessions, completedSessions, status, nextAppointmentAt?, lastSessionAt?                                                                     | Resumen **no clínico**, visible para recepción                                               |
 | `treatments/{id}/sessions/{id}`                           | number, date, professionalId, appointmentId?, sessionType, status                                                                                                                                                        | Metadatos no clínicos para la línea de tiempo                                                |
 | `clinicalRecords/{clientId}`                              | background, clinicalAlerts, accessProfessionalIds[]                                                                                                                                                                      | **Privado**, solo vía Functions                                                              |
@@ -78,17 +79,31 @@ Los índices se agregan a `firestore.indexes.json` en la fase de cada módulo.
 
 `firestore.rules` **deniega todo por defecto**. Cada módulo agrega sus reglas explícitas junto con sus pruebas en el emulador (`tests/rules/`, que se ejecutan con `npm run test:rules`).
 
-| Colección                                        | Lectura                                                                                              | Escritura desde la web                                  | Desde  |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ------ |
-| `users/{uid}`                                    | la propia cuenta; el administrador, todas                                                            | solo `lastLoginAt` propio, con la hora del servidor     | Fase 6 |
-| `auditLogs`                                      | solo el administrador                                                                                | ninguna                                                 | Fase 6 |
-| `professionals`, `rooms`, `services`, `settings` | todo el personal activo                                                                              | ninguna: `staff-*` y `settings-*` (solo administración) | Fase 9 |
-| `professionalExceptions`                         | todo el personal activo (la agenda muestra quién está ausente)                                       | ninguna: `staff-addException`, `staff-removeException`  | Fase 9 |
-| `clients`                                        | administración y recepción; el profesional, solo los que tiene asignados (`assignedProfessionalIds`) | ninguna: `clients-create`, `-update`, `-setStatus`      | Fase 8 |
-| `clientCiIndex`                                  | denegada (solo el servidor)                                                                          | denegada                                                | Fase 8 |
-| `appointments`, `treatments`                     | administración y recepción; el profesional, solo los propios (`professionalId`)                      | ninguna (vía Functions)                                 | Fase 7 |
-| resto                                            | denegada                                                                                             | denegada                                                | —      |
+| Colección                                        | Lectura                                                                                              | Escritura desde la web                                                           | Desde   |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------- |
+| `users/{uid}`                                    | la propia cuenta; el administrador, todas                                                            | solo `lastLoginAt` propio, con la hora del servidor                              | Fase 6  |
+| `auditLogs`                                      | solo el administrador                                                                                | ninguna                                                                          | Fase 6  |
+| `professionals`, `rooms`, `services`, `settings` | todo el personal activo                                                                              | ninguna: `staff-*` y `settings-*` (solo administración)                          | Fase 9  |
+| `professionalExceptions`                         | todo el personal activo (la agenda muestra quién está ausente)                                       | ninguna: `staff-addException`, `staff-removeException`                           | Fase 9  |
+| `clients`                                        | administración y recepción; el profesional, solo los que tiene asignados (`assignedProfessionalIds`) | ninguna: `clients-create`, `-update`, `-setStatus`                               | Fase 8  |
+| `clientCiIndex`                                  | denegada (solo el servidor)                                                                          | denegada                                                                         | Fase 8  |
+| `appointments`                                   | administración y recepción; el profesional, solo las propias (`professionalId`)                      | ninguna: `appointments-create`, `-reschedule`, `-changeStatus`, `-correctStatus` | Fase 10 |
+| `appointments/{id}/events`                       | quien puede ver la cita (se consulta la cita padre)                                                  | ninguna                                                                          | Fase 10 |
+| `treatments`                                     | administración y recepción; el profesional, solo los propios (`professionalId`)                      | ninguna (vía Functions)                                                          | Fase 7  |
+| resto                                            | denegada                                                                                             | denegada                                                                         | —       |
 
 El profesional debe filtrar sus consultas por su propia ficha (`where('professionalId', '==', …)`): las reglas rechazan una consulta que pueda devolver documentos ajenos.
 
 Una cuenta desactivada pierde el acceso aunque su token siga vigente, porque las reglas exigen `active == true` en los claims.
+
+## Candado por día (implementado en la Fase 10)
+
+En Firestore, una consulta dentro de una transacción bloquea los documentos que devuelve, pero **no** impide que otra transacción inserte uno nuevo que también cumpla la consulta. Por eso dos reservas simultáneas podrían leer "horario libre" y guardar ambas.
+
+Para evitarlo, cada reserva (crear, reprogramar o reactivar una cita) lee y actualiza `scheduleLocks/{fecha}` en su transacción. Dos transacciones sobre el mismo día chocan en ese documento: Firestore reintenta la segunda, que ahora ve la cita de la primera y la rechaza con alternativas. La prueba `booking.emulator.test.ts` lo comprueba contra el emulador lanzando cinco reservas a la vez del mismo horario, y solo una se guarda.
+
+Se ejecuta con:
+
+```bash
+npm run test:integration
+```

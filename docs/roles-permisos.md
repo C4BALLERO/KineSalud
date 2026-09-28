@@ -29,6 +29,7 @@ Alcances:
 | `clients.write`        |      all      |      all      |      —      |
 | `appointments.read`    |      all      |      all      |     own     |
 | `appointments.manage`  |      all      |      all      |     own     |
+| `appointments.correct` |      all      |       —       |      —      |
 | `attendance.mark`      |      all      |      all      |     own     |
 | `treatments.read`      |      all      |      all      |     own     |
 | `treatments.manage`    |      all      |      all      |     own     |
@@ -65,3 +66,10 @@ La configuración está en [`apps/web/src/app/navigation.ts`](../apps/web/src/ap
 4. **Auditoría:** registra los accesos y cambios de datos clínicos.
 
 La UI nunca es la barrera de seguridad; solo mejora la experiencia.
+
+### Citas: qué puede hacer cada rol
+
+- **Agendar, reprogramar y cancelar** exige `appointments.manage` con alcance `all`: recepción y administración. El profesional (alcance `own`) no crea ni cancela citas.
+- **Confirmar** una cita: `appointments.manage` sobre esa cita. Lo hacen recepción, administración o el profesional de la cita.
+- **Registrar asistencia** (atendida o no asistió): `attendance.mark` sobre esa cita, desde la hora de inicio.
+- **Corregir un estado final** (`appointments.correct`): solo la administración, con motivo obligatorio que queda en el historial y en la auditoría.

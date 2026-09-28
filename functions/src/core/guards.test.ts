@@ -31,6 +31,7 @@ describe('actorFromAuth', () => {
       uid: 'u1',
       role: 'PROFESIONAL',
       professionalId: 'p1',
+      name: null,
       channel: 'web',
     });
   });

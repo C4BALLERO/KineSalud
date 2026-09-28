@@ -14,6 +14,8 @@ export const PERMISSIONS = [
   'clients.write',
   'appointments.read',
   'appointments.manage',
+  /** Corregir estados finales de una cita (con motivo). */
+  'appointments.correct',
   'attendance.mark',
   'treatments.read',
   'treatments.manage',
@@ -45,6 +47,7 @@ export const ROLE_PERMISSIONS: Record<Role, PermissionMap> = {
     'clients.write': 'all',
     'appointments.read': 'all',
     'appointments.manage': 'all',
+    'appointments.correct': 'all',
     'attendance.mark': 'all',
     'treatments.read': 'all',
     'treatments.manage': 'all',

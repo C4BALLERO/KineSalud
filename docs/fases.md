@@ -7,8 +7,8 @@
 | 6 · Autenticación                                       | ✅ Aprobada                             |
 | 7 · Dashboard                                           | ✅ Aprobada                             |
 | 8 · Clientes                                            | ✅ Aprobada                             |
-| 9 · Personal y configuración                            | ✅ Completada — pendiente de revisión   |
-| 10 · Agenda                                             | ⏳                                      |
+| 9 · Personal y configuración                            | ✅ Aprobada                             |
+| 10 · Agenda                                             | ✅ Completada — pendiente de revisión   |
 | 11 · Tratamientos                                       | ⏳                                      |
 | 12 · Seguimiento                                        | ⏳                                      |
 | 13 · Recordatorios                                      | ⏳                                      |
@@ -221,3 +221,68 @@
 - **Ausencias por días completos.** Los bloqueos de pocas horas se resolverán en la agenda (Fase 10).
 - **Nombres históricos:** las citas guardan el nombre del profesional y del servicio con que se agendaron; renombrar no reescribe el historial.
 - **Toasts de advertencia:** nuevo tono para resultados que requieren una acción posterior, como una ausencia con citas pendientes.
+
+## Fase 10 — Agenda
+
+**Entregado**
+
+- **Algoritmo de disponibilidad** (`packages/shared/src/availability.ts`), puro y compartido. Lo usa la web para ofrecer horarios y el servidor para validarlos. Considera:
+  - el horario del profesional recortado al del consultorio, y sus ausencias;
+  - los servicios que realiza cada profesional;
+  - los espacios compatibles y libres;
+  - la preparación posterior del servicio, que ocupa al profesional y al espacio pero no al cliente;
+  - que un cliente no tenga dos citas a la vez;
+  - los horarios que ya pasaron.
+
+  Ante un conflicto, sugiere las 3 alternativas libres más cercanas.
+
+- **Máquina de estados** (`appointments.ts`):
+  - PENDIENTE pasa a CONFIRMADA;
+  - una cita abierta pasa a ATENDIDA o NO_ASISTIO solo desde la hora de inicio;
+  - una cita abierta pasa a CANCELADA con motivo obligatorio;
+  - reprogramar la vuelve a PENDIENTE;
+  - la administración corrige los estados finales indicando un motivo.
+- **Comandos en el servidor:** `appointments-create`, `-reschedule`, `-changeStatus` y `-correctStatus`.
+  - Todos corren en una transacción con candado por día. Se probó contra el emulador: de cinco reservas simultáneas del mismo horario, solo una se guarda.
+  - Cada cambio queda en el historial inmutable de la cita (`appointments/{id}/events`) y en la auditoría.
+  - Al agendar, el cliente pasa a figurar entre los pacientes del profesional.
+  - Si la cita se vincula a un tratamiento, se numera la sesión y no se agendan más sesiones de las previstas.
+  - Al atender, se suma la sesión al tratamiento y se registra la última visita del cliente. Una inasistencia suma al contador del cliente, y las correcciones revierten esos contadores.
+- **Agenda** (`/agenda`):
+  - Vista día con una columna por profesional: sombrea las horas no disponibles, marca ausencias y muestra la línea de la hora actual. Un clic en un hueco libre abre "Nueva cita" con el profesional y la hora ya puestos.
+  - Vista semana con una columna por día.
+  - En móvil, lista por día y un selector de días de la semana.
+  - Filtros por profesional, área y estado, guardados en la URL junto con la cita abierta (`?cita=`).
+  - El profesional ve "Mi agenda" con solo sus citas.
+- **Detalle de la cita** en panel lateral:
+  - datos y enlace al cliente;
+  - acciones según el estado y el rol (confirmar, marcar atendida, no asistió, reprogramar, cancelar y corregir estado);
+  - la asistencia aparece deshabilitada antes de la hora, con el motivo;
+  - historial de cambios con quién hizo cada uno y cuándo.
+- **Nueva cita** (`/agenda/nueva`), asistente de 5 pasos con resumen lateral:
+  - cliente, con búsqueda y la opción de registrarlo y volver al asistente;
+  - servicio, o continuar un tratamiento activo;
+  - fecha y profesional (o "Cualquiera disponible");
+  - horario libre;
+  - confirmación, con estado inicial y una nota administrativa.
+
+  Si alguien ocupa el horario mientras tanto, se ofrecen alternativas sin perder lo ya elegido.
+
+- **Datos de demostración:**
+  - el horario del consultorio ahora cubre el de todo el personal (estética atiende hasta las 19:00);
+  - los espacios no se superponen, considerando la preparación;
+  - las citas incluyen la preparación y la nota.
+- **Pruebas:**
+  - disponibilidad y estados (14);
+  - servicio de citas con transacción en memoria (16);
+  - concurrencia contra el emulador (2);
+  - grilla, acciones, bloque de cita y selector de horarios (6);
+  - reglas del historial (27 en total).
+
+**Decisiones**
+
+- **Calendario propio** en lugar de FullCalendar: la vista con una columna por profesional es de pago en FullCalendar, y así se mantiene la identidad visual.
+- **Candado por día** (`scheduleLocks/{fecha}`) para serializar reservas; ver `docs/firestore.md`. Con el volumen de un consultorio no genera esperas perceptibles.
+- **Espacio asignado automáticamente:** el primero compatible y libre. Quien agenda no tiene que elegirlo, aunque el comando admite uno explícito.
+- **Asistencia y progreso del tratamiento:** marcar una cita como atendida suma la sesión al tratamiento. La Fase 12 agregará la nota clínica de esa sesión sin volver a contarla.
+- **Nuevo permiso `appointments.correct`**, solo para la administración (ver `docs/roles-permisos.md`).

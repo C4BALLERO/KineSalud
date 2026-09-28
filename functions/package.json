@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc --noEmit && node build.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "test:emulator": "vitest run --config vitest.emulator.config.ts"
   },
   "dependencies": {
     "firebase-admin": "^14.5.0",

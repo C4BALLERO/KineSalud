@@ -1,4 +1,11 @@
-import { hasPermission, ROLES, type Permission, type Role } from '@kinesalud/shared';
+import {
+  canAccessRecord,
+  hasPermission,
+  permissionScope,
+  ROLES,
+  type Permission,
+  type Role,
+} from '@kinesalud/shared';
 import type { z } from 'zod';
 import type { Actor } from './actor';
 import { DomainError } from './errors';
@@ -15,7 +22,7 @@ export interface TokenLike {
  */
 export function actorFromAuth(auth: TokenLike | undefined, channel = 'web'): Actor {
   if (!auth) throw new DomainError('unauthenticated', 'Tu sesión expiró. Vuelve a iniciar sesión.');
-  const { role, active, professionalId } = auth.token;
+  const { role, active, professionalId, name } = auth.token;
   if (typeof role !== 'string' || !(ROLES as readonly string[]).includes(role)) {
     throw new DomainError('permission-denied', 'Tu cuenta no tiene un rol asignado.');
   }
@@ -27,6 +34,7 @@ export function actorFromAuth(auth: TokenLike | undefined, channel = 'web'): Act
     uid: auth.uid,
     role: role as Role,
     professionalId: typeof professionalId === 'string' ? professionalId : null,
+    name: typeof name === 'string' ? name : null,
     channel,
   };
 }
@@ -37,6 +45,37 @@ export function requirePermission(actor: Actor, permission: Permission): void {
     !hasPermission({ role: actor.role, professionalId: actor.professionalId }, permission)
   ) {
     throw new DomainError('permission-denied', 'No tienes permiso para realizar esta acción.');
+  }
+}
+
+const DENIED = 'No tienes permiso para realizar esta acción.';
+
+/** Exige el permiso con alcance sobre todo el consultorio (no solo lo propio). */
+export function requireClinicWide(actor: Actor, permission: Permission, message = DENIED): void {
+  if (
+    !actor.role ||
+    permissionScope({ role: actor.role, professionalId: actor.professionalId }, permission) !==
+      'all'
+  ) {
+    throw new DomainError('permission-denied', message);
+  }
+}
+
+/** Exige el permiso sobre un registro concreto (con alcance propio, debe ser del profesional). */
+export function requireRecordAccess(
+  actor: Actor,
+  permission: Permission,
+  professionalIds: readonly string[],
+): void {
+  if (
+    !actor.role ||
+    !canAccessRecord(
+      { role: actor.role, professionalId: actor.professionalId },
+      permission,
+      professionalIds,
+    )
+  ) {
+    throw new DomainError('permission-denied', DENIED);
   }
 }
 

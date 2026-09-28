@@ -71,6 +71,15 @@ service cloud.firestore {
     match /appointments/{appointmentId} {
       allow read: if isFrontDesk() || ownsProfessionalRecord(resource.data.professionalId);
       allow write: if false;
+
+      // Historial inmutable: lo ve quien puede ver la cita (el profesional actual,
+      // aunque los eventos antiguos sean de antes de una reprogramación).
+      match /events/{eventId} {
+        allow read: if isFrontDesk()
+          || ownsProfessionalRecord(
+               get(/databases/$(database)/documents/appointments/$(appointmentId)).data.professionalId);
+        allow write: if false;
+      }
     }
     match /treatments/{treatmentId} {
       allow read: if isFrontDesk() || ownsProfessionalRecord(resource.data.professionalId);

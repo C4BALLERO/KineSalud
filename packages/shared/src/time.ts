@@ -65,3 +65,9 @@ export function startOfWeek(key: DateKey): DateKey {
 export function clinicDateTime(key: DateKey, time: string): Date {
   return new Date(`${key}T${time}:00-04:00`);
 }
+
+/** Minutos desde la medianoche local del consultorio para un instante (UTC−4 fijo). */
+export function clinicMinutesOf(instant: Date): number {
+  const local = new Date(instant.getTime() - 4 * 3600_000);
+  return local.getUTCHours() * 60 + local.getUTCMinutes();
+}

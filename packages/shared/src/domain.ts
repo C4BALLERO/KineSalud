@@ -100,6 +100,13 @@ export interface AppointmentDoc<Ts = unknown> {
   status: AppointmentStatus;
   source: AppointmentSource;
   cancelReason: string | null;
+  /** Preparación posterior del servicio al agendar (ocupa profesional y espacio). */
+  bufferMin: number;
+  /** Nota administrativa (p. ej. "trae estudios"); nunca información clínica. */
+  notes: string | null;
+  createdBy: string | null;
+  createdAt: Ts;
+  updatedAt: Ts;
 }
 
 export interface TreatmentDoc<Ts = unknown> {

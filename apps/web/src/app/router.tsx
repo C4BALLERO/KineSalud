@@ -1,11 +1,9 @@
 import type { Permission } from '@kinesalud/shared';
-import { CalendarPlus } from 'lucide-react';
 import type { ComponentType } from 'react';
-import { createBrowserRouter, Link, Navigate, type RouteObject } from 'react-router';
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { RequirePermission } from '@/components/access/RequirePermission';
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/access/RouteGuards';
 import { AppShell } from '@/components/layout/AppShell';
-import { Button } from '@/components/ui/Button';
 import { AuthActionPage } from '@/features/auth/pages/AuthActionPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
@@ -44,34 +42,17 @@ const appRoutes: RouteObject[] = [
   },
   {
     path: 'agenda',
-    element: (
-      <RequirePermission permission="appointments.read">
-        <ModulePlaceholder
-          title="Agenda"
-          description="Citas por día y semana, disponibilidad y estados."
-          phase={10}
-          actions={
-            <Button asChild>
-              <Link to="/agenda/nueva">
-                <CalendarPlus aria-hidden="true" />
-                Nueva cita
-              </Link>
-            </Button>
-          }
-        />
-      </RequirePermission>
+    lazy: guarded(
+      'appointments.read',
+      async () => (await import('@/features/appointments/pages/AgendaPage')).AgendaPage,
     ),
   },
   {
     path: 'agenda/nueva',
-    element: (
-      <RequirePermission permission="appointments.manage">
-        <ModulePlaceholder
-          title="Nueva cita"
-          description="Asistente de programación de citas."
-          phase={10}
-        />
-      </RequirePermission>
+    lazy: guarded(
+      'appointments.manage',
+      async () =>
+        (await import('@/features/appointments/pages/NewAppointmentPage')).NewAppointmentPage,
     ),
   },
   {

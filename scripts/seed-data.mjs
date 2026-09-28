@@ -352,7 +352,7 @@ export function buildDemoData(now = new Date()) {
   const monday = addDays(today, -WEEKDAYS.indexOf(weekdayOf(today)));
   const lastDay = addDays(today, 7);
   const appointments = {};
-  const busy = { room: new Set(), clientDay: new Set() };
+  const busy = { room: new Map(), clientDay: new Set() };
   const nowMs = now.getTime();
   let seq = 0;
 
@@ -380,16 +380,23 @@ export function buildDemoData(now = new Date()) {
           const endMin = t + s.durationMin;
           if (endMin > end) break;
 
-          const slotKey = (id) => `${id}|${day}|${fromMinutes(startMin)}`;
+          // El espacio queda ocupado durante la cita y su preparación.
+          const blockEnd = endMin + s.bufferMin;
+          const roomFree = (rid) =>
+            !(busy.room.get(`${rid}|${day}`) ?? []).some(([a, b]) => startMin < b && a < blockEnd);
           const room = Object.entries(ROOMS).find(
-            ([rid, r]) => s.roomKinds.includes(r.kind) && !busy.room.has(slotKey(rid)),
+            ([rid, r]) =>
+              s.roomKinds.includes(r.kind) &&
+              r.allowedCategories.includes(s.category) &&
+              roomFree(rid),
           );
           // Un cliente tiene como máximo una cita por día.
           if (!room || busy.clientDay.has(`${clientId}|${day}`)) {
             t += 60;
             continue;
           }
-          busy.room.add(slotKey(room[0]));
+          const roomKey = `${room[0]}|${day}`;
+          busy.room.set(roomKey, [...(busy.room.get(roomKey) ?? []), [startMin, blockEnd]]);
           busy.clientDay.add(`${clientId}|${day}`);
 
           const startAt = at(day, fromMinutes(startMin));
@@ -429,6 +436,11 @@ export function buildDemoData(now = new Date()) {
             status,
             source: 'WEB',
             cancelReason: status === 'CANCELADA' ? 'Solicitud del cliente' : null,
+            bufferMin: s.bufferMin,
+            notes: null,
+            createdBy: 'demo-recepcion',
+            createdAt: now,
+            updatedAt: now,
           };
           t += s.durationMin + s.bufferMin;
         }
@@ -436,18 +448,23 @@ export function buildDemoData(now = new Date()) {
     }
   }
 
+  const clinicDay = [
+    { start: '08:00', end: '13:00' },
+    { start: '14:30', end: '19:00' },
+  ];
   const settings = {
     clinic: {
       name: 'Kinesalud y Vida',
       timezone: 'America/La_Paz',
       slotMinutes: 15,
       reminderLeadHours: 24,
+      // Cubre los horarios de todo el personal (estética atiende hasta las 19:00).
       openingHours: {
-        mon: full,
-        tue: full,
-        wed: full,
-        thu: full,
-        fri: full,
+        mon: clinicDay,
+        tue: clinicDay,
+        wed: clinicDay,
+        thu: clinicDay,
+        fri: clinicDay,
         sat: [{ start: '08:00', end: '13:00' }],
       },
     },

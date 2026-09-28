@@ -150,6 +150,31 @@ describe('citas', () => {
       setDoc(doc(db('a', claims.admin), 'appointments', 'nueva'), { professionalId: 'prof-diego' }),
     );
   });
+
+  it('el historial de la cita lo ve quien puede ver la cita, y nadie lo modifica', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const fs = ctx.firestore();
+      // Evento anterior a una reprogramación: era de otro profesional.
+      await setDoc(doc(fs, 'appointments', 'a-diego', 'events', 'e1'), {
+        type: 'CREADA',
+        professionalId: 'prof-carla',
+      });
+      await setDoc(doc(fs, 'appointments', 'a-otro', 'events', 'e1'), { type: 'CREADA' });
+    });
+    await assertSucceeds(
+      getDocs(collection(db('d', claims.diego), 'appointments', 'a-diego', 'events')),
+    );
+    await assertFails(
+      getDocs(collection(db('d', claims.diego), 'appointments', 'a-otro', 'events')),
+    );
+    await assertSucceeds(
+      getDocs(collection(db('r', claims.recep), 'appointments', 'a-otro', 'events')),
+    );
+    await assertFails(
+      setDoc(doc(db('a', claims.admin), 'appointments', 'a-diego', 'events', 'e2'), { type: 'X' }),
+    );
+    await assertFails(getDoc(doc(db('a', claims.admin), 'scheduleLocks', '2026-09-28')));
+  });
 });
 
 describe('clientes y tratamientos', () => {
