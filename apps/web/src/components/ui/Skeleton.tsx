@@ -1,9 +1,15 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { cn } from '@/utils/cn';
 
 /** Bloque de carga. Siempre debe imitar la forma real del contenido. */
-export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden="true" className={cn('skeleton-shimmer rounded-sm', className)} />;
+export function Skeleton({ className, style }: { className?: string; style?: CSSProperties }) {
+  return (
+    <div
+      aria-hidden="true"
+      style={style}
+      className={cn('skeleton-shimmer rounded-sm', className)}
+    />
+  );
 }
 
 /** Contenedor accesible para un grupo de skeletons. */

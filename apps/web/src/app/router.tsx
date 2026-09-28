@@ -21,13 +21,10 @@ const appRoutes: RouteObject[] = [
   { index: true, element: <Navigate to="/inicio" replace /> },
   {
     path: 'inicio',
-    element: (
-      <ModulePlaceholder
-        title="Inicio"
-        description="Resumen del día, agenda de hoy y alertas del consultorio."
-        phase={7}
-      />
-    ),
+    lazy: async () => {
+      const { DashboardPage } = await import('@/features/dashboard/pages/DashboardPage');
+      return { Component: DashboardPage };
+    },
   },
   {
     path: 'agenda',

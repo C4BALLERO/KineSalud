@@ -40,7 +40,13 @@ npm run emulators      # Terminal 1: compila Functions y levanta Auth, Firestore
 npm run dev            # Terminal 2: aplicación web en http://localhost:5173
 ```
 
-Con los emuladores en marcha, carga las cuentas de demostración (una por rol):
+Con los emuladores en marcha, carga los datos de demostración:
+
+- una cuenta por rol;
+- profesionales, espacios, servicios, 16 clientes y 10 tratamientos;
+- dos semanas de citas relativas a la fecha actual.
+
+Se puede ejecutar las veces que haga falta: reemplaza los datos operativos y no cierra las sesiones abiertas.
 
 ```bash
 npm run seed

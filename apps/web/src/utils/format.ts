@@ -22,6 +22,65 @@ export function formatDateTime(date: Date): string {
   return dateTimeFormat.format(date);
 }
 
+const timeFormat = new Intl.DateTimeFormat(CLINIC_LOCALE, {
+  timeZone: CLINIC_TIMEZONE,
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
+
+/** "09:30" en la zona horaria del consultorio. */
+export function formatTime(date: Date): string {
+  return timeFormat.format(date);
+}
+
+/** Una fecha `YYYY-MM-DD` interpretada al mediodía local (evita saltos de día por zona horaria). */
+function dateKeyToDate(key: string): Date {
+  return new Date(`${key}T12:00:00-04:00`);
+}
+
+const dayLongFormat = new Intl.DateTimeFormat(CLINIC_LOCALE, {
+  timeZone: CLINIC_TIMEZONE,
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+});
+
+/** "lunes 28 de septiembre". */
+export function formatDayLong(key: string): string {
+  return dayLongFormat.format(dateKeyToDate(key)).replace(',', '');
+}
+
+/** Primera letra en mayúscula (no usar `capitalize` de CSS: afecta a cada palabra). */
+export function capitalizeFirst(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+const dayShortFormat = new Intl.DateTimeFormat(CLINIC_LOCALE, {
+  timeZone: CLINIC_TIMEZONE,
+  weekday: 'short',
+  day: 'numeric',
+});
+
+/** "lun 28". */
+export function formatDayShort(key: string): string {
+  return dayShortFormat.format(dateKeyToDate(key)).replace(/[.,]/g, '');
+}
+
+/** Saludo según la hora local del consultorio. */
+export function greetingFor(now: Date): string {
+  const hour = Number(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: CLINIC_TIMEZONE,
+      hour: '2-digit',
+      hour12: false,
+    }).format(now),
+  );
+  if (hour < 12) return 'Buenos días';
+  if (hour < 19) return 'Buenas tardes';
+  return 'Buenas noches';
+}
+
 const relativeFormat = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['year', 365 * 24 * 3600],

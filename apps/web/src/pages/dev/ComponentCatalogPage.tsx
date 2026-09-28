@@ -201,7 +201,7 @@ export function ComponentCatalogPage() {
         title="Color"
         description="Todos los colores provienen de tokens. Relación de contraste medida sobre blanco."
       >
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {COLOR_GROUPS.map((group) => (
             <Panel key={group.title} title={group.title}>
               <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -377,7 +377,7 @@ export function ComponentCatalogPage() {
             </Row>
           </div>
         </Panel>
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Panel title="Progreso del tratamiento">
             <div className="flex flex-col gap-6">
               <SessionProgress completed={4} planned={10} />
@@ -522,7 +522,7 @@ export function ComponentCatalogPage() {
         title="Estados de pantalla"
         description="Toda vista contempla carga, vacío, sin resultados, error y sin permiso."
       >
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Panel title="Cargando" flush>
             <ListSkeleton rows={3} label="Cargando clientes…" />
           </Panel>

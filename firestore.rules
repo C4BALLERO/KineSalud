@@ -26,6 +26,51 @@ service cloud.firestore {
     function onlyChanges(fields) {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
+    // Roles con alcance total sobre la operación del consultorio.
+    function isFrontDesk() {
+      return hasRole('ADMINISTRADOR') || hasRole('RECEPCIONISTA');
+    }
+    // Ficha de profesional de la sesión (PROFESIONAL, o ADMINISTRADOR que atiende).
+    function myProfessionalId() {
+      return request.auth.token.get('professionalId', null);
+    }
+    function ownsProfessionalRecord(professionalId) {
+      return isActive() && myProfessionalId() != null && professionalId == myProfessionalId();
+    }
+
+    // ---------- Catálogos (lectura para todo el personal; escritura vía Functions) ----------
+    match /professionals/{professionalId} {
+      allow read: if isActive();
+      allow write: if false;
+    }
+    match /rooms/{roomId} {
+      allow read: if isActive();
+      allow write: if false;
+    }
+    match /services/{serviceId} {
+      allow read: if isActive();
+      allow write: if false;
+    }
+    match /settings/{settingId} {
+      allow read: if isActive();
+      allow write: if false;
+    }
+
+    // ---------- Operación (datos administrativos, nunca clínicos) ----------
+    match /clients/{clientId} {
+      allow read: if isFrontDesk()
+        || (isActive() && myProfessionalId() != null
+            && myProfessionalId() in resource.data.assignedProfessionalIds);
+      allow write: if false;
+    }
+    match /appointments/{appointmentId} {
+      allow read: if isFrontDesk() || ownsProfessionalRecord(resource.data.professionalId);
+      allow write: if false;
+    }
+    match /treatments/{treatmentId} {
+      allow read: if isFrontDesk() || ownsProfessionalRecord(resource.data.professionalId);
+      allow write: if false;
+    }
 
     // ---------- Usuarios ----------
     match /users/{uid} {

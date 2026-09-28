@@ -4,12 +4,14 @@
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { buildDemoData } from './seed-data.mjs';
 
 process.env.FIREBASE_AUTH_EMULATOR_HOST ??= '127.0.0.1:9099';
 process.env.FIRESTORE_EMULATOR_HOST ??= '127.0.0.1:8080';
 const PROJECT_ID = 'demo-kinesalud';
 // Evita que el Admin SDK busque credenciales de Google Cloud en la red.
 process.env.GCLOUD_PROJECT ??= PROJECT_ID;
+process.env.METADATA_SERVER_DETECTION ??= 'none';
 
 /** Contraseña compartida de las cuentas de demostración (solo emuladores). */
 export const DEMO_PASSWORD = 'KineDemo2026';
@@ -68,12 +70,8 @@ async function main() {
   for (const u of USERS) {
     try {
       await auth.getUser(u.uid);
-      await auth.updateUser(u.uid, {
-        email: u.email,
-        displayName: u.displayName,
-        password: DEMO_PASSWORD,
-        disabled: false,
-      });
+      // Sin tocar la contraseña: cambiarla cerraría las sesiones abiertas.
+      await auth.updateUser(u.uid, { email: u.email, displayName: u.displayName, disabled: false });
     } catch {
       await auth.createUser({
         uid: u.uid,
@@ -98,9 +96,37 @@ async function main() {
     console.log(`✓ ${u.role.padEnd(13)} ${u.email}`);
   }
 
+  await seedOperationalData(db);
+
   console.log(
     `\nCuentas de demostración listas. Contraseña: la constante DEMO_PASSWORD de scripts/seed.mjs`,
   );
+}
+
+/** Catálogos, clientes, tratamientos y citas. Se reemplazan en cada ejecución. */
+async function seedOperationalData(db) {
+  const data = buildDemoData();
+  const collections = {
+    settings: data.settings,
+    rooms: data.rooms,
+    services: data.services,
+    professionals: data.professionals,
+    clients: data.clients,
+    treatments: data.treatments,
+    appointments: data.appointments,
+  };
+
+  for (const [name, docs] of Object.entries(collections)) {
+    await db.recursiveDelete(db.collection(name));
+    const entries = Object.entries(docs);
+    for (let i = 0; i < entries.length; i += 400) {
+      const batch = db.batch();
+      for (const [id, doc] of entries.slice(i, i + 400))
+        batch.set(db.collection(name).doc(id), doc);
+      await batch.commit();
+    }
+    console.log(`✓ ${name.padEnd(13)} ${entries.length}`);
+  }
 }
 
 main().catch((err) => {

@@ -17,6 +17,9 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    // Hilos en lugar de procesos: en Windows el primer arranque de los procesos
+    // puede superar el tiempo de espera mientras el antivirus analiza node_modules.
+    pool: 'threads',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
   },

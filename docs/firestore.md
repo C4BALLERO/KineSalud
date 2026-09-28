@@ -74,10 +74,15 @@ Los índices se agregan a `firestore.indexes.json` en la fase de cada módulo.
 
 `firestore.rules` **deniega todo por defecto**. Cada módulo agrega sus reglas explícitas junto con sus pruebas en el emulador (`tests/rules/`, que se ejecutan con `npm run test:rules`).
 
-| Colección     | Lectura                                   | Escritura desde la web                              | Desde  |
-| ------------- | ----------------------------------------- | --------------------------------------------------- | ------ |
-| `users/{uid}` | la propia cuenta; el administrador, todas | solo `lastLoginAt` propio, con la hora del servidor | Fase 6 |
-| `auditLogs`   | solo el administrador                     | ninguna                                             | Fase 6 |
-| resto         | denegada                                  | denegada                                            | —      |
+| Colección                                        | Lectura                                                                                              | Escritura desde la web                              | Desde  |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ------ |
+| `users/{uid}`                                    | la propia cuenta; el administrador, todas                                                            | solo `lastLoginAt` propio, con la hora del servidor | Fase 6 |
+| `auditLogs`                                      | solo el administrador                                                                                | ninguna                                             | Fase 6 |
+| `professionals`, `rooms`, `services`, `settings` | todo el personal activo                                                                              | ninguna                                             | Fase 7 |
+| `clients`                                        | administración y recepción; el profesional, solo los que tiene asignados (`assignedProfessionalIds`) | ninguna (vía Functions desde la Fase 8)             | Fase 7 |
+| `appointments`, `treatments`                     | administración y recepción; el profesional, solo los propios (`professionalId`)                      | ninguna (vía Functions)                             | Fase 7 |
+| resto                                            | denegada                                                                                             | denegada                                            | —      |
+
+El profesional debe filtrar sus consultas por su propia ficha (`where('professionalId', '==', …)`): las reglas rechazan una consulta que pueda devolver documentos ajenos.
 
 Una cuenta desactivada pierde el acceso aunque su token siga vigente, porque las reglas exigen `active == true` en los claims.

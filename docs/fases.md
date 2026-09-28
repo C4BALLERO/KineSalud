@@ -4,8 +4,8 @@
 | ------------------------------------------------------- | --------------------------------------- |
 | 1–4 · Análisis, arquitectura, Design System, wireframes | ✅ Aprobada (ver documentos de `docs/`) |
 | 5 · Layout principal                                    | ✅ Aprobada                             |
-| 6 · Autenticación                                       | ✅ Completada — pendiente de revisión   |
-| 7 · Dashboard                                           | ⏳                                      |
+| 6 · Autenticación                                       | ✅ Aprobada                             |
+| 7 · Dashboard                                           | ✅ Completada — pendiente de revisión   |
 | 8 · Clientes                                            | ⏳                                      |
 | 9 · Personal y configuración                            | ⏳                                      |
 | 10 · Agenda                                             | ⏳                                      |
@@ -86,3 +86,43 @@
 - Tras "Cerrar sesión", la siguiente persona que ingresaba era enviada a la última página de la anterior. Ahora un cierre de sesión voluntario no recuerda ningún destino.
 - Accesibilidad del selector de rol: cada opción tiene nombre y descripción asociados.
 - Mensajes: nombre vacío y error del rol con icono, y un texto de "Mi cuenta" adaptado al administrador.
+
+## Fase 7 — Dashboard
+
+**Entregado**
+
+- **Modelo de datos compartido** (`packages/shared/src/domain.ts`): profesionales, espacios, servicios, clientes, citas y tratamientos, más utilidades de fecha en `America/La_Paz` (`toDateKey`, `startOfWeek`, `clinicDateTime`…).
+- **Security Rules de lectura** para la operación:
+  - administración y recepción leen todo;
+  - el profesional solo lee sus citas, sus tratamientos y los clientes que tiene asignados;
+  - los catálogos los lee todo el personal activo;
+  - las escrituras siguen cerradas hasta que cada módulo tenga sus comandos en el servidor.
+- **Índices compuestos** para las consultas del dashboard (`firestore.indexes.json`).
+- **Dashboard por rol:**
+  - administración y recepción ven todo el consultorio;
+  - el profesional ve "Mi día";
+  - un administrador que también atiende puede filtrar la agenda con "Todas / Mías".
+- **Secciones:**
+  - resumen del día en una sola franja (barra por estado con leyenda de texto e icono);
+  - indicadores (clientes activos, tratamientos activos y profesionales que atienden hoy);
+  - agenda de hoy, con la cita en curso resaltada;
+  - alertas accionables (citas sin registrar asistencia, citas sin confirmar del próximo día hábil y tratamientos que terminan en la próxima sesión);
+  - gráfico de citas de la semana, donde cada barra enlaza al día en la agenda.
+- **Casos límite:**
+  - si hoy no hay citas, se muestra el próximo día con citas;
+  - el domingo, el gráfico muestra la semana que empieza al día siguiente;
+  - sin alertas se lee "Todo en orden".
+- **Datos de demostración:** `npm run seed` genera catálogos, 16 clientes, 10 tratamientos y dos semanas de citas en todos los estados, relativos a la fecha actual.
+- **Pruebas:**
+  - lógica del dashboard y componentes (16);
+  - fechas y dominio compartido (8);
+  - reglas de lectura operativa en el emulador (11).
+
+**Corregido durante la revisión**
+
+- **Scroll horizontal en móvil:** una grilla de una columna con pista `auto` crecía con el contenido. Se corrigió con `grid-cols-1` y se aplicó el mismo arreglo en "Mi cuenta" y en el catálogo.
+- **"Nueva cita" duplicado en escritorio**, en la barra superior y en el encabezado.
+- **Resumen comprimido** junto a los indicadores.
+- **"Domingo 27 De Septiembre":** `capitalize` de CSS capitalizaba cada palabra.
+- **Seed:** un mismo cliente aparecía dos veces el mismo día.
+- **Color de la serie del gráfico:** validado con la guía de visualización de datos. El turquesa de la interfaz se leía gris en barras, así que se usa `chart-1` (`#008F99`).

@@ -59,6 +59,14 @@ Siempre van acompañados de texto o icono; el color nunca es la única señal.
 | Cancelada      | neutral | `CircleX`      |
 | No asistió     | danger  | `UserX`        |
 
+### Visualización de datos
+
+- **Serie principal:** `chart-1` (`#008F99`). Es un turquesa de la misma familia de marca, pero con croma suficiente: el `primary` (C = 0.072) se lee gris en barras.
+  - Validado con el script de la guía de visualización: croma ≥ 0.10 y contraste ≥ 3:1 sobre blanco.
+- **Una sola serie:** sin leyenda (el título la nombra), con cifra directa en cada barra.
+- **Accesibilidad:** el desglose por estado va en el tooltip y en el nombre accesible de cada barra.
+- **Estados de cita:** usan los colores de estado, siempre con icono y texto.
+
 ## Tipografía
 
 Se usa una sola familia: **Plus Jakarta Sans Variable**, auto-alojada. Las horas, tablas y KPIs usan cifras tabulares (clase `tabular`).

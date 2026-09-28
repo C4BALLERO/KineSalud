@@ -74,7 +74,7 @@ export function AccountPage() {
         description="Tus datos de acceso al sistema."
         leading={<Avatar name={session.displayName} size="lg" />}
       />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
         <Panel title="Datos de la cuenta">
           <div className="flex flex-col gap-5">
             <KeyValueList
