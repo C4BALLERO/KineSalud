@@ -8,8 +8,8 @@
 | 7 · Dashboard                                           | ✅ Aprobada                             |
 | 8 · Clientes                                            | ✅ Aprobada                             |
 | 9 · Personal y configuración                            | ✅ Aprobada                             |
-| 10 · Agenda                                             | ✅ Completada — pendiente de revisión   |
-| 10B · Cobros y caja                                     | ✅ Completada — pendiente de revisión   |
+| 10 · Agenda                                             | ✅ Aprobada                             |
+| 10B · Cobros y caja                                     | ✅ Aprobada                             |
 | 11 · Tratamientos                                       | ⏳                                      |
 | 12 · Seguimiento                                        | ⏳                                      |
 | 13 · Recordatorios                                      | ⏳                                      |
