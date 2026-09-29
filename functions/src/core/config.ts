@@ -6,5 +6,5 @@ export const REGION = 'southamerica-east1';
 setGlobalOptions({
   region: REGION,
   // Límite de instancias como protección de costos en el plan Blaze.
-  maxInstances: 10,
+  maxInstances: 3,
 });

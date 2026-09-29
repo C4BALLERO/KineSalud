@@ -8,7 +8,7 @@ Producción **no recibe datos de demostración**: `npm run seed` solo funciona c
 
 Estos pasos los hace la persona dueña del proyecto en [console.firebase.google.com](https://console.firebase.google.com/project/kinesalud-d9291):
 
-1. **Plan Blaze.** Uso y facturación → Modificar plan → Blaze. Cloud Functions lo exige. Configura además una **alerta de presupuesto** (por ejemplo, 5 USD al mes) en Google Cloud → Facturación → Presupuestos y alertas. Con el volumen de un consultorio el consumo queda dentro de la capa gratuita.
+1. **Plan Blaze.** Uso y facturación → Modificar plan → Blaze. Cloud Functions lo exige y pide registrar una tarjeta, pero con el volumen de un consultorio el consumo queda dentro de la capa gratuita (ver "Costo $0" más abajo). Al activarlo, crea una **alerta de presupuesto de 1 USD**.
 2. **Firestore.** Firestore Database → Crear base de datos → modo producción → ubicación **`southamerica-east1` (São Paulo)**. La ubicación no se puede cambiar después.
 3. **Authentication.** Authentication → Comenzar → Método de acceso → **Correo electrónico/contraseña** → Habilitar (sin "vínculo de correo electrónico").
 4. **Cerrar el registro público.** Authentication → Configuración → Acciones del usuario → desmarcar **"Habilitar creación (registro)"**. Las cuentas solo las crea un administrador desde la pantalla Usuarios.
@@ -74,3 +74,22 @@ Con la cuenta de administración, en este orden:
 ## Antes de cargar datos reales de pacientes
 
 El sistema ya valida todo en el servidor y las reglas impiden escrituras directas, pero la Fase 15 (Seguridad) agrega protecciones pensadas para datos clínicos reales: App Check, revisión final de permisos y de la auditoría. Hasta entonces conviene usar producción con datos de prueba.
+
+## Costo $0 en el plan Blaze
+
+Blaze cobra solo lo que supera la capa gratuita mensual. Un consultorio queda muy por debajo:
+
+| Servicio                        | Capa gratuita (por mes)                                | Uso estimado del consultorio                   |
+| ------------------------------- | ------------------------------------------------------ | ---------------------------------------------- |
+| Firestore                       | 50 000 lecturas y 20 000 escrituras **por día**, 1 GiB | unos miles de lecturas al día, pocos MB        |
+| Cloud Functions                 | 2 millones de invocaciones                             | unos cientos al día                            |
+| Authentication (correo)         | ilimitado                                              | menos de 20 cuentas                            |
+| Hosting                         | 10 GB de almacenamiento, 360 MB de transferencia/día   | ~1 MB por visita inicial; luego queda en caché |
+| Cloud Build / Artifact Registry | 2 500 min de compilación, 0,5 GB de imágenes           | unos minutos por despliegue                    |
+
+Protecciones configuradas para no salir de la capa gratuita:
+
+- **Instancias limitadas** (`maxInstances: 3` en `functions/src/core/config.ts`) y **cero instancias mínimas**: si no hay uso, no hay gasto. El costo es un arranque en frío de 1 a 2 s en la primera operación después de un rato sin uso.
+- **Limpieza de imágenes:** en el primer `firebase deploy` la CLI pregunta cuántos días conservar las imágenes de las Functions. Responde **1**. Si no preguntó, ejecuta `firebase functions:artifacts:setpolicy --project prod`. Así Artifact Registry no pasa de 0,5 GB.
+- **Alerta de presupuesto de 1 USD** en Google Cloud → Facturación → Presupuestos y alertas. Google no corta el servicio al llegar al monto, solo avisa por correo: si llega un aviso, revisa el uso en Firebase → Uso y facturación.
+- Los reportes (Fase 14) leen resúmenes diarios precalculados en lugar de todas las citas, para no gastar lecturas.
