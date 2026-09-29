@@ -56,6 +56,13 @@ const appRoutes: RouteObject[] = [
     ),
   },
   {
+    path: 'caja',
+    lazy: guarded(
+      'payments.manage',
+      async () => (await import('@/features/cash/pages/CashPage')).CashPage,
+    ),
+  },
+  {
     path: 'clientes',
     lazy: guarded(
       'clients.read',

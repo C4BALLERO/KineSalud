@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Stethoscope,
   Users,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react';
 import { hasPermission, permissionScope, type AccessSubject, type Role } from '@kinesalud/shared';
@@ -52,6 +53,14 @@ export const NAV_ITEMS: NavItem[] = [
     icon: CalendarDays,
     group: 'operacion',
     visible: (s) => hasPermission(s, 'appointments.read'),
+  },
+  {
+    id: 'caja',
+    to: '/caja',
+    label: 'Caja',
+    icon: Wallet,
+    group: 'operacion',
+    visible: (s) => hasPermission(s, 'payments.manage'),
   },
   {
     id: 'clientes',

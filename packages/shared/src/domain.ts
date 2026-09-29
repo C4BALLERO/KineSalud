@@ -11,6 +11,7 @@ import type {
   TreatmentStatus,
 } from './enums';
 import type { CiExtension } from './clients';
+import type { AppointmentPaymentStatus } from './payments';
 import { dayAvailability, type ProfessionalExceptionDoc, type ProfessionalTitle } from './staff';
 import type { DateKey, Weekday } from './time';
 
@@ -56,6 +57,8 @@ export interface ServiceDoc {
   bufferMin: number;
   defaultSessions: number;
   roomKinds: RoomKind[];
+  /** Precio por sesión en centavos; null si aún no se configuró. */
+  priceCents: number | null;
   active: boolean;
 }
 
@@ -104,6 +107,10 @@ export interface AppointmentDoc<Ts = unknown> {
   bufferMin: number;
   /** Nota administrativa (p. ej. "trae estudios"); nunca información clínica. */
   notes: string | null;
+  /** Precio del servicio al agendar, en centavos (null si no tenía precio). */
+  priceCents: number | null;
+  paymentStatus: AppointmentPaymentStatus;
+  paymentId: string | null;
   createdBy: string | null;
   createdAt: Ts;
   updatedAt: Ts;

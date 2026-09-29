@@ -32,6 +32,7 @@ import { Panel } from '@/components/ui/Panel';
 import { ListSkeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/toast-context';
 import { toAppError } from '@/lib/errors';
+import { formatMoney } from '@/utils/format';
 import { cn } from '@/utils/cn';
 import {
   useRooms,
@@ -309,6 +310,9 @@ export function ServicesPanel() {
                         muted={!s.active}
                         meta={
                           <>
+                            <span className="tabular font-medium text-fg">
+                              {s.priceCents != null ? formatMoney(s.priceCents) : 'Sin precio'}
+                            </span>
                             <span className="tabular">
                               {s.durationMin} min
                               {s.bufferMin > 0 && ` + ${s.bufferMin} de preparación`}
@@ -321,6 +325,11 @@ export function ServicesPanel() {
                         }
                         badges={
                           <>
+                            {s.priceCents == null && s.active && (
+                              <Badge tone="warning" icon={<TriangleAlert aria-hidden="true" />}>
+                                Sin precio
+                              </Badge>
+                            )}
                             {noRoom && (
                               <Badge tone="warning" icon={<TriangleAlert aria-hidden="true" />}>
                                 Sin espacio compatible

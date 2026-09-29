@@ -124,6 +124,7 @@ describe('servicios', () => {
     bufferMin: 15,
     defaultSessions: 10,
     roomKinds: ['CAMILLA'],
+    priceCents: 15000,
   };
 
   it('no cambia el área si lo ofrece un profesional que no la atiende', async () => {

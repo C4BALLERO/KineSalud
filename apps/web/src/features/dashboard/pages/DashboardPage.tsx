@@ -20,7 +20,7 @@ import { Stat } from '@/components/ui/StatCard';
 import { useRequiredSession } from '@/features/auth/session';
 import { useExceptions } from '@/features/staff/api/staff';
 import { useNow } from '@/hooks/useNow';
-import { usePermissionScope } from '@/hooks/usePermission';
+import { usePermission, usePermissionScope } from '@/hooks/usePermission';
 import { capitalizeFirst, formatDayLong, greetingFor } from '@/utils/format';
 import {
   useActiveClientsCount,
@@ -30,6 +30,11 @@ import {
 } from '../api/dashboard';
 import { AlertsList } from '../components/AlertsList';
 import { DaySummary } from '../components/DaySummary';
+import {
+  AdminIncomePanel,
+  FrontDeskIncomePanel,
+  ProfessionalIncomePanel,
+} from '../components/IncomePanel';
 import { WeekChart } from '../components/WeekChart';
 import {
   appointmentsOn,
@@ -67,6 +72,19 @@ export function DashboardPage() {
   const professionals = useProfessionals(clinicWide);
   const exceptions = useExceptions(null, today, clinicWide);
   const clientsCount = useActiveClientsCount(scope);
+
+  const seesIncome = usePermission('income.view');
+  const managesCash = usePermission('payments.manage');
+  const professionalNames = useMemo(
+    () =>
+      Object.fromEntries(
+        (professionals.status === 'success' ? professionals.data : []).map((p) => [
+          p.id,
+          p.displayName,
+        ]),
+      ),
+    [professionals],
+  );
 
   const firstName = session.displayName.replace(/^Lic\.\s*/, '').split(' ')[0];
 
@@ -184,6 +202,16 @@ export function DashboardPage() {
             </div>
           </div>
         </Panel>
+
+        {seesIncome ? (
+          <AdminIncomePanel today={today} professionalNames={professionalNames} />
+        ) : managesCash ? (
+          <FrontDeskIncomePanel today={today} />
+        ) : (
+          session.professionalId && (
+            <ProfessionalIncomePanel today={today} professionalId={session.professionalId} />
+          )
+        )}
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
           <Panel

@@ -143,3 +143,10 @@ export function formatRelative(date: Date, now: Date = new Date()): string {
   }
   return 'hace un momento';
 }
+
+const moneyFormat = new Intl.NumberFormat(CLINIC_LOCALE, { style: 'currency', currency: 'BOB' });
+
+/** "Bs 1.350,50" a partir de centavos. */
+export function formatMoney(cents: number): string {
+  return moneyFormat.format(cents / 100);
+}

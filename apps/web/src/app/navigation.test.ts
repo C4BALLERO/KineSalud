@@ -12,6 +12,7 @@ describe('navegación por rol', () => {
     const v = ids(visibleNavItems({ role: 'RECEPCIONISTA' }));
     expect(v).toContain('personal');
     expect(v).toContain('reportes');
+    expect(v).toContain('caja');
     expect(v).not.toContain('usuarios');
     expect(v).not.toContain('configuracion');
   });

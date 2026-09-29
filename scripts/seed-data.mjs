@@ -79,6 +79,7 @@ export const SERVICES = {
     bufferMin: 15,
     defaultSessions: 10,
     roomKinds: ['CAMILLA'],
+    priceCents: 15000,
     active: true,
   },
   'srv-fisio-cervical': {
@@ -88,6 +89,7 @@ export const SERVICES = {
     bufferMin: 15,
     defaultSessions: 8,
     roomKinds: ['CAMILLA'],
+    priceCents: 15000,
     active: true,
   },
   'srv-rehab-rodilla': {
@@ -97,6 +99,7 @@ export const SERVICES = {
     bufferMin: 0,
     defaultSessions: 12,
     roomKinds: ['GIMNASIO', 'CAMILLA'],
+    priceCents: 18000,
     active: true,
   },
   'srv-rehab-hombro': {
@@ -106,6 +109,7 @@ export const SERVICES = {
     bufferMin: 0,
     defaultSessions: 10,
     roomKinds: ['GIMNASIO', 'CAMILLA'],
+    priceCents: 18000,
     active: true,
   },
   'srv-est-facial': {
@@ -115,6 +119,7 @@ export const SERVICES = {
     bufferMin: 0,
     defaultSessions: 1,
     roomKinds: ['CABINA_ESTETICA'],
+    priceCents: 22000,
     active: true,
   },
   'srv-est-drenaje': {
@@ -124,6 +129,7 @@ export const SERVICES = {
     bufferMin: 0,
     defaultSessions: 8,
     roomKinds: ['CABINA_ESTETICA'],
+    priceCents: 20000,
     active: true,
   },
   'srv-est-reductor': {
@@ -133,6 +139,7 @@ export const SERVICES = {
     bufferMin: 0,
     defaultSessions: 10,
     roomKinds: ['CABINA_ESTETICA'],
+    priceCents: 17000,
     active: true,
   },
 };
@@ -348,15 +355,18 @@ export function buildDemoData(now = new Date()) {
     (treatmentsByProf[t.professionalId] ??= []).push(id);
   }
 
-  // Citas: desde el lunes de esta semana hasta 7 días después de hoy.
+  // Citas: desde el inicio del mes (o el lunes de esta semana, si es anterior)
+  // hasta 7 días después de hoy. El mes completo alimenta los ingresos.
   const monday = addDays(today, -WEEKDAYS.indexOf(weekdayOf(today)));
+  const monthStart = `${today.slice(0, 7)}-01`;
+  const firstDay = monthStart < monday ? monthStart : monday;
   const lastDay = addDays(today, 7);
   const appointments = {};
   const busy = { room: new Map(), clientDay: new Set() };
   const nowMs = now.getTime();
   let seq = 0;
 
-  for (let day = monday; day <= lastDay; day = addDays(day, 1)) {
+  for (let day = firstDay; day <= lastDay; day = addDays(day, 1)) {
     const wd = weekdayOf(day);
     for (const [profId, prof] of Object.entries(PROFESSIONALS)) {
       for (const block of prof.weeklySchedule[wd] ?? []) {
@@ -438,6 +448,9 @@ export function buildDemoData(now = new Date()) {
             cancelReason: status === 'CANCELADA' ? 'Solicitud del cliente' : null,
             bufferMin: s.bufferMin,
             notes: null,
+            priceCents: s.priceCents,
+            paymentStatus: 'POR_COBRAR',
+            paymentId: null,
             createdBy: 'demo-recepcion',
             createdAt: now,
             updatedAt: now,
@@ -447,6 +460,8 @@ export function buildDemoData(now = new Date()) {
       }
     }
   }
+
+  const cash = buildCash({ appointments, today, now, random });
 
   const clinicDay = [
     { start: '08:00', end: '13:00' },
@@ -502,5 +517,135 @@ export function buildDemoData(now = new Date()) {
     clientCiIndex,
     treatments,
     appointments,
+    ...cash,
+  };
+}
+
+/* ---------- Caja: una jornada por día con cobros de las sesiones atendidas ---------- */
+
+const RECEPCION = { uid: 'demo-recepcion', name: 'Lucía Mendoza' };
+const OPENING_CENTS = 20000;
+
+/** Monto que entrega el cliente: exacto o redondeado a un billete. */
+function receivedFor(amount, r) {
+  if (r < 0.3) return amount;
+  const bill = r < 0.6 ? 5000 : r < 0.85 ? 10000 : 20000;
+  return Math.ceil(amount / bill) * bill;
+}
+
+function buildCash({ appointments, today, now, random }) {
+  const cashSessions = {};
+  const payments = {};
+  const incomeStats = {};
+  let openSessionId = null;
+  let seq = 0;
+
+  const byDay = new Map();
+  for (const [id, a] of Object.entries(appointments)) {
+    if (a.date > today) continue;
+    byDay.set(a.date, [...(byDay.get(a.date) ?? []), [id, a]]);
+  }
+
+  for (const day of [...byDay.keys()].sort()) {
+    const sessionId = `caja-${day}`;
+    const openedAt = at(day, '07:50');
+    if (openedAt > now) continue;
+    const totals = { EFECTIVO: 0, QR: 0, TARJETA: 0 };
+    let count = 0;
+
+    const attended = byDay
+      .get(day)
+      .filter(([, a]) => a.status === 'ATENDIDA')
+      .sort((x, y) => x[1].startAt - y[1].startAt);
+    for (const [appointmentId, a] of attended) {
+      // Algunas sesiones quedan sin cobrar: aparecen en "Por cobrar".
+      if (random() < (day === today ? 0.3 : 0.12)) continue;
+      const r = random();
+      const method = r < 0.55 ? 'EFECTIVO' : r < 0.88 ? 'QR' : 'TARJETA';
+      const discountCents = random() < 0.1 ? Math.round(a.priceCents * 0.1) : 0;
+      const amountCents = a.priceCents - discountCents;
+      const receivedCents = method === 'EFECTIVO' ? receivedFor(amountCents, random()) : null;
+      const paidAt = new Date(a.endAt.getTime() + 5 * 60_000);
+      const id = `pago-${String(++seq).padStart(4, '0')}`;
+      payments[id] = {
+        appointmentId,
+        clientId: a.clientId,
+        clientName: a.clientName,
+        professionalId: a.professionalId,
+        professionalName: a.professionalName,
+        serviceId: a.serviceId,
+        serviceName: a.serviceName,
+        category: a.category,
+        appointmentDate: a.date,
+        listPriceCents: a.priceCents,
+        discountCents,
+        discountReason: discountCents > 0 ? 'Convenio empresa' : null,
+        amountCents,
+        method,
+        receivedCents,
+        changeCents: receivedCents !== null ? receivedCents - amountCents : null,
+        reference: method === 'EFECTIVO' ? null : String(100000 + seq * 7919).slice(-6),
+        cashSessionId: sessionId,
+        date: day,
+        paidAt,
+        createdBy: RECEPCION,
+        status: 'VALIDO',
+        voidReason: null,
+        voidedAt: null,
+        voidedBy: null,
+      };
+      a.paymentStatus = 'PAGADA';
+      a.paymentId = id;
+      totals[method] += amountCents;
+      count += 1;
+
+      const month = day.slice(0, 7);
+      const stats = (incomeStats[month] ??= {
+        month,
+        totalCents: 0,
+        count: 0,
+        byMethod: { EFECTIVO: 0, QR: 0, TARJETA: 0 },
+        byDay: {},
+        byProfessional: {},
+        byCategory: {},
+      });
+      const dd = day.slice(8, 10);
+      stats.totalCents += amountCents;
+      stats.count += 1;
+      stats.byMethod[method] += amountCents;
+      stats.byDay[dd] = (stats.byDay[dd] ?? 0) + amountCents;
+      stats.byProfessional[a.professionalId] =
+        (stats.byProfessional[a.professionalId] ?? 0) + amountCents;
+      stats.byCategory[a.category] = (stats.byCategory[a.category] ?? 0) + amountCents;
+    }
+
+    const expectedCashCents = OPENING_CENTS + totals.EFECTIVO;
+    const isToday = day === today;
+    // Un cierre con faltante, para mostrar cómo se registra la diferencia.
+    const short = !isToday && day === addDays(today, -2) ? -1000 : 0;
+    cashSessions[sessionId] = {
+      status: isToday ? 'ABIERTA' : 'CERRADA',
+      date: day,
+      openedAt,
+      openedBy: RECEPCION,
+      openingCents: OPENING_CENTS,
+      openingNote: null,
+      totals,
+      paymentsCount: count,
+      closedAt: isToday ? null : at(day, '19:10'),
+      closedBy: isToday ? null : RECEPCION,
+      expectedCashCents: isToday ? null : expectedCashCents,
+      countedCashCents: isToday ? null : expectedCashCents + short,
+      differenceCents: isToday ? null : short,
+      closingNote: short ? 'Faltaron Bs 10 de sencillo; se revisará mañana.' : null,
+    };
+    if (isToday) openSessionId = sessionId;
+  }
+
+  return {
+    cashSessions,
+    payments,
+    incomeStats,
+    cashRegister: { main: { openSessionId } },
   };
 }

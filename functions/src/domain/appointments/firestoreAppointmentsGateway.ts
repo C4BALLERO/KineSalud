@@ -24,6 +24,9 @@ function toStored(id: string, d: DocumentData): StoredAppointment {
     endAt: (d.endAt as Timestamp).toDate(),
     bufferMin: d.bufferMin ?? 0,
     notes: d.notes ?? null,
+    priceCents: d.priceCents ?? null,
+    paymentStatus: d.paymentStatus ?? 'POR_COBRAR',
+    paymentId: d.paymentId ?? null,
     createdBy: d.createdBy ?? null,
   };
 }

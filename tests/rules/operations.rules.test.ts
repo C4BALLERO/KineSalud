@@ -76,6 +76,19 @@ beforeEach(async () => {
       professionalId: 'prof-carla',
       status: 'ACTIVO',
     });
+    await setDoc(doc(fs, 'payments', 'p-diego'), {
+      professionalId: 'prof-diego',
+      date: '2026-09-28',
+      amountCents: 15000,
+    });
+    await setDoc(doc(fs, 'payments', 'p-otro'), {
+      professionalId: 'prof-carla',
+      date: '2026-09-28',
+      amountCents: 9000,
+    });
+    await setDoc(doc(fs, 'cashSessions', 'caja-1'), { status: 'ABIERTA', openingCents: 0 });
+    await setDoc(doc(fs, 'cashRegister', 'main'), { openSessionId: 'caja-1' });
+    await setDoc(doc(fs, 'incomeStats', '2026-09'), { totalCents: 24000 });
   });
 });
 
@@ -216,5 +229,43 @@ describe('clientes y tratamientos', () => {
   it('el PROFESIONAL solo lee sus tratamientos', async () => {
     await assertSucceeds(getDoc(doc(db('d', claims.diego), 'treatments', 't-diego')));
     await assertFails(getDoc(doc(db('d', claims.diego), 'treatments', 't-otro')));
+  });
+});
+
+describe('caja y cobros', () => {
+  it('recepción y administración leen cobros y la caja; nadie los escribe directamente', async () => {
+    for (const token of [claims.admin, claims.recep]) {
+      const fs = db('x', token);
+      await assertSucceeds(getDoc(doc(fs, 'payments', 'p-otro')));
+      await assertSucceeds(getDoc(doc(fs, 'cashSessions', 'caja-1')));
+      await assertSucceeds(getDoc(doc(fs, 'cashRegister', 'main')));
+      await assertFails(setDoc(doc(fs, 'payments', 'nuevo'), { amountCents: 1 }));
+      await assertFails(setDoc(doc(fs, 'cashRegister', 'main'), { openSessionId: null }));
+    }
+  });
+
+  it('el PROFESIONAL solo ve los cobros de sus sesiones, nunca la caja', async () => {
+    const fs = db('d', claims.diego);
+    await assertSucceeds(getDoc(doc(fs, 'payments', 'p-diego')));
+    await assertFails(getDoc(doc(fs, 'payments', 'p-otro')));
+    await assertSucceeds(
+      getDocs(
+        query(
+          collection(fs, 'payments'),
+          where('professionalId', '==', 'prof-diego'),
+          where('date', '>=', '2026-09-01'),
+        ),
+      ),
+    );
+    await assertFails(
+      getDocs(query(collection(fs, 'payments'), where('date', '==', '2026-09-28'))),
+    );
+    await assertFails(getDoc(doc(fs, 'cashSessions', 'caja-1')));
+    await assertFails(getDoc(doc(fs, 'incomeStats', '2026-09')));
+  });
+
+  it('los ingresos globales del mes son solo de administración', async () => {
+    await assertSucceeds(getDoc(doc(db('a', claims.admin), 'incomeStats', '2026-09')));
+    await assertFails(getDoc(doc(db('r', claims.recep), 'incomeStats', '2026-09')));
   });
 });

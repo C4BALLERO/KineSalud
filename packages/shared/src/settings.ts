@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { RoomDoc, ServiceDoc, WeeklySchedule } from './domain';
 import { ROOM_KINDS, TREATMENT_CATEGORIES } from './enums';
+import { centsSchema } from './payments';
 import { weeklyScheduleSchema, workingDays } from './schedule';
 
 /** Documento `settings/clinic`. */
@@ -96,6 +97,7 @@ export const serviceInputSchema = z.object({
     .array(z.enum(ROOM_KINDS))
     .min(1, 'Elige al menos un tipo de espacio.')
     .transform((v) => [...new Set(v)]),
+  priceCents: centsSchema('Ingresa el precio por sesión (0 si es gratuito).'),
 });
 export type ServiceInput = z.input<typeof serviceInputSchema>;
 

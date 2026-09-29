@@ -1,5 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  centsToInput,
+  parseMoney,
   ROOM_KIND_LABELS,
   ROOM_KINDS,
   serviceInputSchema,
@@ -9,11 +11,12 @@ import {
 } from '@kinesalud/shared';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { MoneyInput } from '@/components/domain/MoneyInput';
 import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { CheckboxGroup } from '@/components/ui/CheckboxGroup';
 import { Dialog } from '@/components/ui/Dialog';
-import { FormField } from '@/components/ui/FormField';
+import { FormField, type FieldControlProps } from '@/components/ui/FormField';
 import { InlineAlert } from '@/components/ui/InlineAlert';
 import { Input, Select } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/toast-context';
@@ -49,6 +52,8 @@ export function ServiceDialog({ service, onClose }: ServiceDialogProps) {
       bufferMin: service?.bufferMin ?? 15,
       defaultSessions: service?.defaultSessions ?? 10,
       roomKinds: service?.roomKinds ?? [],
+      // NaN = vacío: el esquema pide completarlo.
+      priceCents: service?.priceCents ?? Number.NaN,
     },
   });
 
@@ -112,6 +117,27 @@ export function ServiceDialog({ service, onClose }: ServiceDialogProps) {
             </Select>
           )}
         </FormField>
+        <Controller
+          control={control}
+          name="priceCents"
+          render={({ field }) => (
+            <FormField
+              label="Precio por sesión"
+              required
+              error={errors.priceCents?.message}
+              className="sm:col-span-2"
+            >
+              {(p) => (
+                <PriceInput
+                  {...p}
+                  initial={service?.priceCents ?? null}
+                  onBlur={field.onBlur}
+                  onChange={(cents) => field.onChange(cents ?? Number.NaN)}
+                />
+              )}
+            </FormField>
+          )}
+        />
         <FormField
           label="Duración (min)"
           required
@@ -194,5 +220,30 @@ export function ServiceDialog({ service, onClose }: ServiceDialogProps) {
         />
       </form>
     </Dialog>
+  );
+}
+
+/** Texto libre en bolivianos ("150", "150,50") que se entrega al formulario en centavos. */
+function PriceInput({
+  initial,
+  onChange,
+  onBlur,
+  ...control
+}: {
+  initial: number | null;
+  onChange: (cents: number | null) => void;
+  onBlur: () => void;
+} & FieldControlProps) {
+  const [text, setText] = useState(initial !== null ? centsToInput(initial) : '');
+  return (
+    <MoneyInput
+      {...control}
+      value={text}
+      onBlur={onBlur}
+      onChange={(e) => {
+        setText(e.target.value);
+        onChange(parseMoney(e.target.value));
+      }}
+    />
   );
 }

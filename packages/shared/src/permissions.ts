@@ -22,6 +22,12 @@ export const PERMISSIONS = [
   'clinical.read',
   'clinical.write',
   'reminders.manage',
+  /** Ver cobros (el profesional, solo los de sus sesiones). */
+  'payments.read',
+  /** Cobrar, abrir y cerrar la caja, anular cobros de la caja abierta. */
+  'payments.manage',
+  /** Ingresos globales del consultorio (mes, por profesional, por área). */
+  'income.view',
   'reports.view',
   'reports.viewWorkload',
   'audit.view',
@@ -54,6 +60,9 @@ export const ROLE_PERMISSIONS: Record<Role, PermissionMap> = {
     'clinical.read': 'all',
     'clinical.write': 'all',
     'reminders.manage': 'all',
+    'payments.read': 'all',
+    'payments.manage': 'all',
+    'income.view': 'all',
     'reports.view': 'all',
     'reports.viewWorkload': 'all',
     'audit.view': 'all',
@@ -68,6 +77,8 @@ export const ROLE_PERMISSIONS: Record<Role, PermissionMap> = {
     'treatments.read': 'all',
     'treatments.manage': 'all',
     'reminders.manage': 'all',
+    'payments.read': 'all',
+    'payments.manage': 'all',
     'reports.view': 'all',
   },
   PROFESIONAL: {
@@ -80,6 +91,7 @@ export const ROLE_PERMISSIONS: Record<Role, PermissionMap> = {
     'treatments.manage': 'own',
     'clinical.read': 'own',
     'clinical.write': 'own',
+    'payments.read': 'own',
   },
 };
 

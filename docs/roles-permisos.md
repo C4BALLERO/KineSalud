@@ -36,6 +36,9 @@ Alcances:
 | `clinical.read`        |      all      |       —       |     own     |
 | `clinical.write`       |      all      |       —       |     own     |
 | `reminders.manage`     |      all      |      all      |      —      |
+| `payments.read`        |      all      |      all      |     own     |
+| `payments.manage`      |      all      |      all      |      —      |
+| `income.view`          |      all      |       —       |      —      |
 | `reports.view`         |      all      |      all      |      —      |
 | `reports.viewWorkload` |      all      |       —       |      —      |
 | `audit.view`           |      all      |       —       |      —      |
@@ -48,6 +51,7 @@ Alcances:
 | ------------- | :-----------: | :-----------: | :-------------: |
 | Inicio        |       ✔       |       ✔       |    "Mi día"     |
 | Agenda        |       ✔       |       ✔       |   "Mi agenda"   |
+| Caja          |       ✔       |       ✔       |        —        |
 | Clientes      |       ✔       |       ✔       | "Mis pacientes" |
 | Tratamientos  |       ✔       |       ✔       |        ✔        |
 | Personal      |       ✔       |       ✔       |        —        |
@@ -73,3 +77,9 @@ La UI nunca es la barrera de seguridad; solo mejora la experiencia.
 - **Confirmar** una cita: `appointments.manage` sobre esa cita. Lo hacen recepción, administración o el profesional de la cita.
 - **Registrar asistencia** (atendida o no asistió): `attendance.mark` sobre esa cita, desde la hora de inicio.
 - **Corregir un estado final** (`appointments.correct`): solo la administración, con motivo obligatorio que queda en el historial y en la auditoría.
+
+### Caja y cobros: qué puede hacer cada rol
+
+- **Cobrar, abrir y cerrar la caja, y anular cobros de la caja abierta** (`payments.manage`): recepción y administración.
+- **Ver cobros** (`payments.read`): recepción y administración, todos. El profesional ve solo los de sus sesiones ("Tus ingresos" en su inicio).
+- **Ingresos globales del consultorio** (`income.view`): solo la administración. Incluye el mes completo, el reparto por profesional y por medio de pago. En su inicio, la recepción ve solo los ingresos del día y el estado de la caja.

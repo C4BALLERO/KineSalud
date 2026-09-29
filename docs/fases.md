@@ -9,6 +9,7 @@
 | 8 · Clientes                                            | ✅ Aprobada                             |
 | 9 · Personal y configuración                            | ✅ Aprobada                             |
 | 10 · Agenda                                             | ✅ Completada — pendiente de revisión   |
+| 10B · Cobros y caja                                     | ✅ Completada — pendiente de revisión   |
 | 11 · Tratamientos                                       | ⏳                                      |
 | 12 · Seguimiento                                        | ⏳                                      |
 | 13 · Recordatorios                                      | ⏳                                      |
@@ -286,3 +287,59 @@
 - **Espacio asignado automáticamente:** el primero compatible y libre. Quien agenda no tiene que elegirlo, aunque el comando admite uno explícito.
 - **Asistencia y progreso del tratamiento:** marcar una cita como atendida suma la sesión al tratamiento. La Fase 12 agregará la nota clínica de esa sesión sin volver a contarla.
 - **Nuevo permiso `appointments.correct`**, solo para la administración (ver `docs/roles-permisos.md`).
+
+## Fase 10B — Cobros y caja
+
+Módulo agregado a pedido del consultorio. En el plan original los pagos quedaban fuera de alcance; la facturación fiscal (SIN) sigue fuera.
+
+**Decisiones del consultorio**
+
+- **Medios de pago:** efectivo, QR / transferencia y tarjeta.
+- **Qué se cobra:** cada sesión (cita), al precio del servicio, con descuento opcional y motivo.
+- **Caja:** una sola, del consultorio, compartida por recepción y administración.
+- **Ingresos visibles:**
+  - la administración ve el día, el mes, por medio de pago y por profesional;
+  - la recepción ve el día y la caja;
+  - cada profesional ve lo que generaron sus sesiones.
+
+**Entregado**
+
+- **Precio por sesión** en el catálogo de servicios (Configuración → Servicios). Se guarda en la cita al agendar.
+- **Caja** (`/caja`, recepción y administración):
+  - **apertura** con el monto inicial en efectivo;
+  - **por cobrar:** las sesiones de hoy sin pagar y las atendidas de días anteriores;
+  - **cobros de la caja** con su medio de pago, descuento, recibido y cambio. Se pueden anular con motivo mientras la caja está abierta;
+  - **cierre con arqueo:** efectivo esperado (inicial + cobros en efectivo) frente al contado, con la diferencia marcada como "Cuadra", "Sobran" o "Faltan". Si no cuadra, la observación es obligatoria. QR y tarjeta se informan aparte;
+  - **historial de cierres** con sus diferencias.
+- **Cobro de una sesión**, desde la caja o desde el detalle de la cita:
+  - muestra el total con el descuento aplicado;
+  - en efectivo, **calcula el cambio a devolver** mientras se escribe el monto recibido, con montos frecuentes a un toque (exacto y redondeos a billetes de 10, 20, 50, 100 y 200);
+  - en QR o tarjeta se registra el número de operación (opcional).
+- **Detalle de la cita:** estado de pago ("Pagada" o "Por cobrar") y botón "Cobrar". Una cita pagada no se cancela sin anular antes el cobro.
+- **Dashboard:**
+  - **administración:** ingresos de hoy y del mes, sesiones por cobrar, estado de la caja, un gráfico de ingresos por día y el reparto por medio de pago y por profesional;
+  - **recepción:** lo cobrado hoy por medio de pago, sesiones por cobrar y estado de la caja;
+  - **profesional:** "Tus ingresos" de hoy y del mes.
+- **Servidor:** `cash-open`, `cash-close`, `cash-charge` y `cash-voidPayment`. Cada uno corre en una transacción y queda en la auditoría (ver "Caja y cobros" en `docs/firestore.md`).
+- **Reglas:**
+  - el profesional solo lee los cobros de sus sesiones;
+  - la caja la leen solo recepción y administración;
+  - los ingresos globales, solo la administración;
+  - nadie escribe estas colecciones desde la web.
+- **Datos de demostración:**
+  - precios de los servicios;
+  - citas desde el inicio del mes;
+  - una caja por jornada, con cobros por los tres medios de pago, algunos descuentos y un cierre con faltante;
+  - la caja de hoy abierta y algunas sesiones sin cobrar.
+- **Pruebas:**
+  - montos, cambio y reglas de cobro (9);
+  - servicio de caja con transacción en memoria (10);
+  - cita pagada no cancelable (1);
+  - diálogo de cobro y modelo de caja (7);
+  - reglas de las nuevas colecciones (3).
+
+**Decisiones técnicas**
+
+- **Montos en centavos enteros.** El campo de monto es de texto y acepta "150", "150,50" o "1.500".
+- **Ingresos del mes precalculados** en `incomeStats/{mes}`: el dashboard de administración hace una sola lectura en lugar de leer cada cobro.
+- **Anular en lugar de borrar**, y solo en la caja abierta: el arqueo de una caja cerrada no cambia después.

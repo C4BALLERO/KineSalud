@@ -116,6 +116,10 @@ async function seedOperationalData(db) {
     clientCiIndex: data.clientCiIndex,
     treatments: data.treatments,
     appointments: data.appointments,
+    cashSessions: data.cashSessions,
+    payments: data.payments,
+    incomeStats: data.incomeStats,
+    cashRegister: data.cashRegister,
   };
 
   for (const [name, docs] of Object.entries(collections)) {

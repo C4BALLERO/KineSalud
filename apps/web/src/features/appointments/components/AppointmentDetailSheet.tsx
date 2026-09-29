@@ -3,7 +3,9 @@ import {
   APPOINTMENT_EVENT_LABELS,
   APPOINTMENT_STATUS_LABELS,
   canAccessRecord,
+  canCharge,
   hasPermission,
+  PAYMENT_METHOD_LABELS,
   permissionScope,
   type AppointmentAction,
 } from '@kinesalud/shared';
@@ -11,7 +13,9 @@ import {
   CalendarClock,
   CheckCheck,
   CircleCheck,
+  CircleDollarSign,
   CircleX,
+  Clock,
   PencilLine,
   UserRound,
   UserX,
@@ -20,6 +24,7 @@ import {
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { CategoryTag } from '@/components/domain/CategoryTag';
+import { Badge } from '@/components/ui/Badge';
 import { AppointmentStatusBadge } from '@/components/domain/StatusBadge';
 import { EmptyState, ErrorState } from '@/components/feedback/States';
 import { Button } from '@/components/ui/Button';
@@ -28,9 +33,17 @@ import { Sheet } from '@/components/ui/Sheet';
 import { ListSkeleton, Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/toast-context';
 import { useRequiredSession } from '@/features/auth/session';
+import { usePayment } from '@/features/cash/api/cash';
+import { PaymentDialog } from '@/features/cash/components/PaymentDialog';
 import { useNow } from '@/hooks/useNow';
 import { toAppError } from '@/lib/errors';
-import { capitalizeFirst, formatDateTime, formatDayLong, formatTime } from '@/utils/format';
+import {
+  capitalizeFirst,
+  formatDateTime,
+  formatDayLong,
+  formatMoney,
+  formatTime,
+} from '@/utils/format';
 import {
   useAppointment,
   useAppointmentEvents,
@@ -49,7 +62,7 @@ const ACTION_ICONS: Record<AppointmentAction, LucideIcon> = {
   CANCELAR: CircleX,
 };
 
-type OpenDialog = 'cancel' | 'reschedule' | 'correct' | null;
+type OpenDialog = 'cancel' | 'reschedule' | 'correct' | 'charge' | null;
 
 /**
  * Detalle de la cita en un panel lateral: datos, acciones según el estado y
@@ -118,6 +131,9 @@ function Detail({ appointment: a }: { appointment: AgendaAppointment }) {
   const reschedulable = canRescheduleNow(a, permissions);
   const closed = actions.length === 0 && !reschedulable;
   const disabledReason = actions.find((s) => !s.enabled)?.reason ?? null;
+  const cancelAction = actions.find((s) => s.action === 'CANCELAR');
+  const seesPayment = canAccessRecord(session, 'payments.read', [a.professionalId]);
+  const managesPayments = hasPermission(session, 'payments.manage');
 
   const run = async (action: AppointmentAction) => {
     if (action === 'CANCELAR') return setDialog('cancel');
@@ -171,6 +187,13 @@ function Detail({ appointment: a }: { appointment: AgendaAppointment }) {
         ]}
       />
 
+      {seesPayment && (
+        <PaymentSection
+          appointment={a}
+          onCharge={managesPayments ? () => setDialog('charge') : undefined}
+        />
+      )}
+
       {!closed && (
         <section aria-label="Acciones" className="flex flex-col gap-2">
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -198,8 +221,12 @@ function Detail({ appointment: a }: { appointment: AgendaAppointment }) {
                 Reprogramar
               </Button>
             )}
-            {actions.some((s) => s.action === 'CANCELAR') && (
-              <Button variant="secondary" onClick={() => setDialog('cancel')}>
+            {cancelAction && (
+              <Button
+                variant="secondary"
+                disabled={!cancelAction.enabled}
+                onClick={() => setDialog('cancel')}
+              >
                 <CircleX aria-hidden="true" />
                 Cancelar cita
               </Button>
@@ -230,7 +257,60 @@ function Detail({ appointment: a }: { appointment: AgendaAppointment }) {
       {dialog === 'correct' && (
         <CorrectStatusDialog appointment={a} onClose={() => setDialog(null)} />
       )}
+      {dialog === 'charge' && <PaymentDialog appointment={a} onClose={() => setDialog(null)} />}
     </div>
+  );
+}
+
+/** Estado de pago de la cita y, para recepción o administración, el botón "Cobrar". */
+function PaymentSection({
+  appointment: a,
+  onCharge,
+}: {
+  appointment: AgendaAppointment;
+  onCharge?: () => void;
+}) {
+  const payment = usePayment(a.paymentStatus === 'PAGADA' ? a.paymentId : null);
+  if (a.paymentStatus !== 'PAGADA' && !canCharge(a)) return null;
+
+  return (
+    <section
+      aria-labelledby="payment-title"
+      className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border px-4 py-3"
+    >
+      <div className="flex min-w-0 flex-col gap-1">
+        <h3
+          id="payment-title"
+          className="flex items-center gap-2 text-body-sm font-semibold text-fg"
+        >
+          Pago
+          {a.paymentStatus === 'PAGADA' ? (
+            <Badge tone="success" icon={<CircleDollarSign aria-hidden="true" />}>
+              Pagada
+            </Badge>
+          ) : (
+            <Badge tone="warning" icon={<Clock aria-hidden="true" />}>
+              Por cobrar
+            </Badge>
+          )}
+        </h3>
+        <p className="text-caption text-fg-muted">
+          {a.paymentStatus === 'PAGADA'
+            ? payment.status === 'success'
+              ? `${formatMoney(payment.data.amountCents)} · ${PAYMENT_METHOD_LABELS[payment.data.method]}${payment.data.paidAt ? ` · ${formatDateTime(payment.data.paidAt)}` : ''}${payment.data.discountCents > 0 ? ` · descuento ${formatMoney(payment.data.discountCents)}` : ''}`
+              : 'Cargando el cobro…'
+            : a.priceCents !== null
+              ? `Precio: ${formatMoney(a.priceCents)}`
+              : 'Se cobra al precio actual del servicio.'}
+        </p>
+      </div>
+      {a.paymentStatus !== 'PAGADA' && onCharge && (
+        <Button size="sm" onClick={onCharge}>
+          <CircleDollarSign aria-hidden="true" />
+          Cobrar
+        </Button>
+      )}
+    </section>
   );
 }
 

@@ -165,7 +165,8 @@ export interface ActionState {
 
 /** Acciones de estado visibles para esta persona y cuáles están habilitadas ahora. */
 export function availableActions(
-  appointment: Pick<AgendaAppointment, 'status' | 'startAt'>,
+  appointment: Pick<AgendaAppointment, 'status' | 'startAt'> &
+    Partial<Pick<AgendaAppointment, 'paymentStatus'>>,
   permissions: AppointmentPermissions,
   now: Date,
 ): ActionState[] {

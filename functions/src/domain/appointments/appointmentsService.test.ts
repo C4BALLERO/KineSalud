@@ -61,6 +61,7 @@ class InMemoryBooking implements AppointmentsGateway {
       bufferMin: 15,
       defaultSessions: 10,
       roomKinds: ['CAMILLA' as const],
+      priceCents: 15000,
       active: true,
     },
   ];
@@ -400,6 +401,39 @@ describe('estados', () => {
     await expect(
       createAppointment(gw, recep, { ...base, clientId: 'cli-2' }, NOW),
     ).resolves.toBeTruthy();
+  });
+
+  it('guarda el precio al agendar y no cancela una cita ya pagada', async () => {
+    const { appointmentId } = await createAppointment(gw, recep, base, NOW);
+    expect(gw.appointments.get(appointmentId)).toMatchObject({
+      priceCents: 15000,
+      paymentStatus: 'POR_COBRAR',
+      paymentId: null,
+    });
+    Object.assign(gw.appointments.get(appointmentId)!, {
+      paymentStatus: 'PAGADA',
+      paymentId: 'pago-1',
+    });
+    await rejects(
+      changeAppointmentStatus(
+        gw,
+        recep,
+        { appointmentId, action: 'CANCELAR', reason: 'Viaje' },
+        NOW,
+      ),
+      'failed-precondition',
+      /Anula el cobro/,
+    );
+    await rejects(
+      correctAppointmentStatus(
+        gw,
+        admin,
+        { appointmentId, status: 'CANCELADA', reason: 'x x x' },
+        NOW,
+      ),
+      'failed-precondition',
+      /Anula el cobro/,
+    );
   });
 
   it('la corrección administrativa ajusta contadores y no pisa horarios ocupados', async () => {

@@ -86,6 +86,26 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ---------- Caja y cobros (escritura solo vía Functions) ----------
+    // El profesional ve lo que generaron sus propias sesiones.
+    match /payments/{paymentId} {
+      allow read: if isFrontDesk() || ownsProfessionalRecord(resource.data.professionalId);
+      allow write: if false;
+    }
+    match /cashSessions/{sessionId} {
+      allow read: if isFrontDesk();
+      allow write: if false;
+    }
+    match /cashRegister/{docId} {
+      allow read: if isFrontDesk();
+      allow write: if false;
+    }
+    // Ingresos globales del mes (por profesional y por área): solo administración.
+    match /incomeStats/{month} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // ---------- Usuarios ----------
     match /users/{uid} {
       // Cada persona lee su propia cuenta; el administrador lee todas.

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { TIME_PATTERN } from './schedule';
 import type { AppointmentStatus } from './enums';
+import type { AppointmentPaymentStatus } from './payments';
 import { toDateKey } from './time';
 
 /**
@@ -47,8 +48,16 @@ export type ActionCheck = { ok: true } | { ok: false; reason: string };
  * ¿Se puede aplicar la acción a una cita en este estado y a esta hora?
  * La asistencia solo se registra desde la hora de inicio.
  */
+/** Una cita pagada no se cancela: primero se anula el cobro y se devuelve el dinero. */
+export const PAID_CANCEL_REASON =
+  'La cita ya está pagada. Anula el cobro en Caja (y devuelve el dinero) antes de cancelarla.';
+
 export function canApplyAction(
-  appointment: { status: AppointmentStatus; startAt: Date },
+  appointment: {
+    status: AppointmentStatus;
+    startAt: Date;
+    paymentStatus?: AppointmentPaymentStatus | null;
+  },
   action: AppointmentAction,
   now: Date,
 ): ActionCheck {
@@ -63,6 +72,9 @@ export function canApplyAction(
   }
   if ((action === 'ATENDER' || action === 'NO_ASISTIO') && now < appointment.startAt) {
     return { ok: false, reason: 'La asistencia se registra desde la hora de inicio de la cita.' };
+  }
+  if (action === 'CANCELAR' && appointment.paymentStatus === 'PAGADA') {
+    return { ok: false, reason: PAID_CANCEL_REASON };
   }
   return { ok: true };
 }
@@ -165,6 +177,8 @@ export const APPOINTMENT_EVENT_TYPES = [
   'NO_ASISTIO',
   'CANCELADA',
   'CORREGIDA',
+  'PAGO_REGISTRADO',
+  'PAGO_ANULADO',
 ] as const;
 export type AppointmentEventType = (typeof APPOINTMENT_EVENT_TYPES)[number];
 
@@ -176,6 +190,8 @@ export const APPOINTMENT_EVENT_LABELS: Record<AppointmentEventType, string> = {
   NO_ASISTIO: 'Marcada como no asistió',
   CANCELADA: 'Cancelada',
   CORREGIDA: 'Estado corregido',
+  PAGO_REGISTRADO: 'Pago registrado',
+  PAGO_ANULADO: 'Pago anulado',
 };
 
 /** Documento `appointments/{id}/events/{id}` (inmutable). */

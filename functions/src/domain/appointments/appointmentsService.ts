@@ -11,6 +11,7 @@ import {
   createAppointmentInputSchema,
   findSlots,
   nearestSlots,
+  PAID_CANCEL_REASON,
   rescheduleAppointmentInputSchema,
   SLOT_CONFLICTS,
   toDateKey,
@@ -218,6 +219,9 @@ export async function createAppointment(
       cancelReason: null,
       bufferMin: service.bufferMin,
       notes: input.notes,
+      priceCents: service.priceCents ?? null,
+      paymentStatus: 'POR_COBRAR',
+      paymentId: null,
       createdBy: actor.uid ?? null,
     });
     tx.addEvent(id, {
@@ -415,6 +419,9 @@ export async function correctAppointmentStatus(
     const current = await tx.getAppointment(input.appointmentId);
     if (!current) throw new DomainError('not-found', 'La cita no existe.');
     if (current.status === input.status) return false;
+    if (input.status === 'CANCELADA' && current.paymentStatus === 'PAGADA') {
+      throw new DomainError('failed-precondition', PAID_CANCEL_REASON);
+    }
 
     // Volver a ocupar un horario liberado exige que siga libre.
     const reoccupies =

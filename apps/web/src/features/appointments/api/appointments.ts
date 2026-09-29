@@ -50,6 +50,9 @@ export function toAgendaAppointment(id: string, d: DocumentData): AgendaAppointm
     cancelReason: a.cancelReason ?? null,
     bufferMin: a.bufferMin ?? 0,
     notes: a.notes ?? null,
+    priceCents: a.priceCents ?? null,
+    paymentStatus: a.paymentStatus ?? 'POR_COBRAR',
+    paymentId: a.paymentId ?? null,
     createdBy: a.createdBy ?? null,
   };
 }
