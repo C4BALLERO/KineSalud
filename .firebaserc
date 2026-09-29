@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "demo-kinesalud"
+    "default": "demo-kinesalud",
+    "prod": "kinesalud-d9291"
   }
 }

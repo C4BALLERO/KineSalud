@@ -88,15 +88,4 @@ Estas mismas verificaciones se ejecutan en GitHub Actions en cada _push_ y _pull
 
 ## Despliegue
 
-Se completa en la Fase 16.
-
-1. Crear el proyecto en la consola de Firebase, activar el **plan Blaze** y configurar una **alerta de presupuesto**.
-2. Habilitar Authentication (correo/contraseña) y Firestore en la región `southamerica-east1`.
-3. En Authentication → Plantillas → _Restablecimiento de contraseña_:
-   - traducir el correo al español;
-   - personalizar la **URL de acción** como `https://<dominio>/auth/accion`, para que el enlace abra la pantalla propia del sistema.
-4. Ejecutar `firebase use --add` con el ID del proyecto real.
-5. Ejecutar `npm run build` y luego `firebase deploy`.
-6. Crear la primera cuenta de administración. Se documentará en la Fase 16 con un script basado en el Admin SDK, porque solo un administrador puede crear usuarios desde el sistema.
-
-Se despliegan Hosting, Functions, las reglas y los índices.
+El paso a paso para publicar en el proyecto real (`kinesalud-d9291`) está en [despliegue.md](despliegue.md).
