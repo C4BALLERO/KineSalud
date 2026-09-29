@@ -149,6 +149,20 @@ export function NewAppointmentPage() {
   const day = useAgendaAppointments(null, date, date);
   const treatments = useClientActiveTreatments(client?.id ?? null);
 
+  // Llegada desde un tratamiento (?tratamiento=): se preselecciona una sola vez,
+  // cuando se cargan los tratamientos activos del cliente.
+  const requestedTreatment = params.get('tratamiento');
+  const [treatmentApplied, setTreatmentApplied] = useState(false);
+  if (!treatmentApplied && requestedTreatment && treatments.status === 'success') {
+    setTreatmentApplied(true);
+    const t = treatments.data.find((x) => x.id === requestedTreatment);
+    if (t) {
+      setTreatmentId(t.id);
+      setServiceId(t.serviceId);
+      setProfessionalId(t.professionalId);
+    }
+  }
+
   if (!clinicWide) {
     return (
       <NoPermissionState description="Las citas las agendan recepción y administración. Desde tu agenda puedes confirmar y registrar la asistencia de tus citas." />

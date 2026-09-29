@@ -330,8 +330,14 @@ export function buildDemoData(now = new Date()) {
       plannedSessions: planned,
       completedSessions: done,
       status: 'ACTIVO',
+      statusReason: null,
+      statusChangedAt: null,
+      notes: i === 1 ? 'Derivado por el Dr. Salinas (traumatología).' : null,
       nextAppointmentAt: null,
       lastSessionAt: at(addDays(today, -2), '10:00'),
+      createdBy: 'demo-recepcion',
+      createdAt: now,
+      updatedAt: now,
     };
     c.stats.activeTreatments += 1;
     assign(clientId, profId);
@@ -346,8 +352,22 @@ export function buildDemoData(now = new Date()) {
     serviceId: 'srv-est-facial',
     serviceName: SERVICES['srv-est-facial'].name,
     status: 'FINALIZADO',
+    statusChangedAt: at(addDays(today, -20), '11:00'),
   };
   assign('cli-10', treatments['trt-10'].professionalId);
+  // Uno suspendido, con su motivo.
+  treatments['trt-11'] = {
+    ...treatments['trt-04'],
+    clientId: 'cli-11',
+    clientName: `${clients['cli-11'].firstName} ${clients['cli-11'].lastName}`,
+    plannedSessions: 10,
+    completedSessions: 3,
+    notes: null,
+    status: 'SUSPENDIDO',
+    statusReason: 'Viaje del paciente por un mes',
+    statusChangedAt: at(addDays(today, -12), '16:00'),
+  };
+  assign('cli-11', treatments['trt-11'].professionalId);
 
   const treatmentsByProf = {};
   for (const [id, t] of Object.entries(treatments)) {
@@ -380,7 +400,7 @@ export function buildDemoData(now = new Date()) {
           }
           // Preferir clientes con tratamiento activo con este profesional.
           const ownTreatments = treatmentsByProf[profId] ?? [];
-          const treatmentId = ownTreatments.length && random() < 0.7 ? pick(ownTreatments) : null;
+          const treatmentId = ownTreatments.length && random() < 0.3 ? pick(ownTreatments) : null;
           const srvId = treatmentId ? treatments[treatmentId].serviceId : pick(prof.serviceIds);
           const clientId = treatmentId
             ? treatments[treatmentId].clientId
@@ -461,6 +481,7 @@ export function buildDemoData(now = new Date()) {
     }
   }
 
+  numberTreatmentSessions(treatments, appointments);
   const cash = buildCash({ appointments, today, now, random });
 
   const clinicDay = [
@@ -519,6 +540,57 @@ export function buildDemoData(now = new Date()) {
     appointments,
     ...cash,
   };
+}
+
+/* ---------- Tratamientos: numeración coherente de sesiones ---------- */
+
+/**
+ * Las citas se generan eligiendo tratamientos al azar; aquí se ajustan para
+ * que cada tratamiento cuente una historia coherente: sesiones previas al mes
+ * (base), sesiones numeradas en orden y nunca más de las previstas.
+ */
+function numberTreatmentSessions(treatments, appointments) {
+  const lost = (a) => a.status === 'CANCELADA' || a.status === 'NO_ASISTIO';
+  const byTreatment = new Map();
+  for (const a of Object.values(appointments)) {
+    if (a.treatmentId)
+      byTreatment.set(a.treatmentId, [...(byTreatment.get(a.treatmentId) ?? []), a]);
+  }
+  for (const [tid, list] of byTreatment) {
+    const t = treatments[tid];
+    list.sort((x, y) => x.startAt - y.startAt);
+    // Canceladas e inasistencias quedan vinculadas, pero sin número de sesión.
+    for (const a of list.filter(lost)) a.sessionNumber = null;
+
+    let counted = list.filter((a) => !lost(a));
+    const attended = counted.filter((a) => a.status === 'ATENDIDA').length;
+    const base = Math.min(
+      Math.max(0, t.completedSessions - attended),
+      Math.max(0, t.plannedSessions - counted.length),
+    );
+    // Nunca más sesiones que las previstas: las citas que sobran quedan sueltas.
+    const room = t.plannedSessions - base;
+    for (const a of counted.slice(room)) {
+      a.treatmentId = null;
+      a.sessionNumber = null;
+    }
+    counted = counted.slice(0, room);
+    counted.forEach((a, i) => {
+      a.sessionNumber = base + i + 1;
+    });
+    const done = counted.filter((a) => a.status === 'ATENDIDA');
+    t.completedSessions = base + done.length;
+    if (done.length > 0) t.lastSessionAt = done.at(-1).endAt;
+    t.startDate = addDays(list[0].date, -(base * 4 + 3));
+  }
+  // Los tratamientos que no están activos no conservan citas por delante.
+  for (const a of Object.values(appointments)) {
+    const t = a.treatmentId ? treatments[a.treatmentId] : null;
+    if (t && t.status !== 'ACTIVO' && !lost(a) && a.status !== 'ATENDIDA') {
+      a.treatmentId = null;
+      a.sessionNumber = null;
+    }
+  }
 }
 
 /* ---------- Caja: una jornada por día con cobros de las sesiones atendidas ---------- */

@@ -83,3 +83,8 @@ La UI nunca es la barrera de seguridad; solo mejora la experiencia.
 - **Cobrar, abrir y cerrar la caja, y anular cobros de la caja abierta** (`payments.manage`): recepción y administración.
 - **Ver cobros** (`payments.read`): recepción y administración, todos. El profesional ve solo los de sus sesiones ("Tus ingresos" en su inicio).
 - **Ingresos globales del consultorio** (`income.view`): solo la administración. Incluye el mes completo, el reparto por profesional y por medio de pago. En su inicio, la recepción ve solo los ingresos del día y el estado de la caja.
+
+### Tratamientos: qué puede hacer cada rol
+
+- **Recepción y administración** abren, editan, finalizan, suspenden y reactivan cualquier tratamiento (`treatments.manage` con alcance `all`), y agendan sus sesiones.
+- **El profesional** (alcance `own`) abre tratamientos solo a su nombre y para sus pacientes, y gestiona los suyos. No los reasigna a otro profesional ni agenda citas.

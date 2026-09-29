@@ -10,7 +10,7 @@
 | 9 · Personal y configuración                            | ✅ Aprobada                             |
 | 10 · Agenda                                             | ✅ Aprobada                             |
 | 10B · Cobros y caja                                     | ✅ Aprobada                             |
-| 11 · Tratamientos                                       | ⏳                                      |
+| 11 · Tratamientos                                       | ✅ Completada — pendiente de revisión   |
 | 12 · Seguimiento                                        | ⏳                                      |
 | 13 · Recordatorios                                      | ⏳                                      |
 | 14 · Reportes                                           | ⏳                                      |
@@ -343,3 +343,46 @@ Módulo agregado a pedido del consultorio. En el plan original los pagos quedaba
 - **Montos en centavos enteros.** El campo de monto es de texto y acepta "150", "150,50" o "1.500".
 - **Ingresos del mes precalculados** en `incomeStats/{mes}`: el dashboard de administración hace una sola lectura en lugar de leer cada cobro.
 - **Anular en lugar de borrar**, y solo en la caja abierta: el arqueo de una caja cerrada no cambia después.
+
+## Fase 11 — Tratamientos
+
+**Entregado**
+
+- **Listado** (`/tratamientos`):
+  - administración y recepción ven los del consultorio; el profesional, solo los suyos;
+  - búsqueda por cliente o servicio (sin distinguir tildes);
+  - filtros por estado, área, profesional y "por terminar" (2 sesiones o menos), guardados en la URL;
+  - progreso "n de N" en cada fila. En móvil se muestra como tarjetas.
+- **Nuevo tratamiento** (`/tratamientos/nuevo`, también desde el perfil del cliente):
+  - cliente, servicio y profesional; solo se ofrecen los profesionales que realizan el servicio;
+  - fecha de inicio, sesiones previstas (con el valor sugerido del servicio) y una nota administrativa;
+  - el profesional solo abre tratamientos a su nombre y para sus pacientes.
+- **Detalle** (`/tratamientos/:id`):
+  - progreso con sesiones realizadas, agendadas y por agendar, la próxima sesión, la última y las inasistencias;
+  - **línea de tiempo** de las sesiones: realizadas, agendadas, perdidas o canceladas (atenuadas) y las que faltan agendar, con acceso directo a la agenda;
+  - **Agendar sesión** abre el asistente de citas con el cliente, el servicio, el profesional y el tratamiento ya elegidos;
+  - al completar las sesiones previstas, sugiere finalizar el tratamiento o ampliarlo.
+- **Acciones:**
+  - **editar:** profesional, sesiones previstas y nota. Las sesiones previstas no pueden quedar por debajo de las realizadas más las agendadas;
+  - **finalizar, suspender y reactivar**, con motivo cuando corresponde.
+- **Reglas de negocio** (en `packages/shared/src/treatments.ts`, las mismas en la web y el servidor):
+  - un cliente no tiene dos tratamientos activos del mismo servicio;
+  - un tratamiento con citas agendadas no se finaliza ni se suspende: primero se cancelan esas citas;
+  - el motivo es obligatorio al suspender, al finalizar antes de completar las sesiones y al reabrir uno finalizado;
+  - el contador de tratamientos activos del cliente se mantiene en la misma transacción.
+- **Servidor:** `treatments-create`, `-update` y `-changeStatus`, en transacción y con auditoría.
+- **Perfil del cliente:** la pestaña Tratamientos enlaza a cada detalle y permite abrir uno nuevo.
+- **Datos de demostración:**
+  - las sesiones de cada tratamiento se numeran en orden y nunca superan las previstas;
+  - hay tratamientos por terminar, completos, uno suspendido con motivo y uno finalizado.
+- **Pruebas:**
+  - estados y esquemas (6);
+  - servicio de tratamientos (9);
+  - listado, progreso, línea de tiempo y diálogos (7);
+  - reglas de las citas por tratamiento (2).
+
+**Decisiones**
+
+- **Lo clínico queda para la Fase 12.** Objetivos, indicaciones y evolución son datos clínicos con acceso restringido y auditado. El tratamiento guarda solo datos administrativos, que la recepción puede ver.
+- **La línea de tiempo se arma con las citas** vinculadas al tratamiento, sin duplicar la información en otra colección.
+- **Consultas solo por igualdad**, ordenadas en la web: no necesitan índices compuestos nuevos.

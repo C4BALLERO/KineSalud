@@ -226,6 +226,28 @@ describe('clientes y tratamientos', () => {
     );
   });
 
+  it('el PROFESIONAL ve las sesiones de un tratamiento filtrando por su ficha', async () => {
+    const fs = db('d', claims.diego);
+    await assertSucceeds(
+      getDocs(
+        query(
+          collection(fs, 'appointments'),
+          where('treatmentId', '==', 't-diego'),
+          where('professionalId', '==', 'prof-diego'),
+        ),
+      ),
+    );
+    await assertFails(
+      getDocs(query(collection(fs, 'appointments'), where('treatmentId', '==', 't-diego'))),
+    );
+  });
+
+  it('nadie escribe tratamientos directamente', async () => {
+    await assertFails(
+      setDoc(doc(db('r', claims.recep), 'treatments', 'nuevo'), { status: 'ACTIVO' }),
+    );
+  });
+
   it('el PROFESIONAL solo lee sus tratamientos', async () => {
     await assertSucceeds(getDoc(doc(db('d', claims.diego), 'treatments', 't-diego')));
     await assertFails(getDoc(doc(db('d', claims.diego), 'treatments', 't-otro')));

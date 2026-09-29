@@ -128,8 +128,16 @@ export interface TreatmentDoc<Ts = unknown> {
   plannedSessions: number;
   completedSessions: number;
   status: TreatmentStatus;
+  /** Motivo del último cambio de estado (suspensión, finalización anticipada, reapertura). */
+  statusReason: string | null;
+  statusChangedAt: Ts | null;
+  /** Nota administrativa; la información clínica vive en `clinicalRecords`. */
+  notes: string | null;
   nextAppointmentAt: Ts | null;
   lastSessionAt: Ts | null;
+  createdBy: string | null;
+  createdAt: Ts;
+  updatedAt: Ts;
 }
 
 /** ¿El profesional atiende ese día? Considera su horario semanal y sus ausencias. */

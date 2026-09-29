@@ -16,4 +16,5 @@ export * as cash from './api/callable/cash';
 export * as clients from './api/callable/clients';
 export * as settings from './api/callable/settings';
 export * as staff from './api/callable/staff';
+export * as treatments from './api/callable/treatments';
 export * as users from './api/callable/users';

@@ -2,6 +2,7 @@ import { ageOn, CI_EXTENSION_LABELS, toDateKey } from '@kinesalud/shared';
 import {
   CalendarPlus,
   ClipboardList,
+  HeartPulse,
   MoreHorizontal,
   Pencil,
   UserCheck,
@@ -62,6 +63,7 @@ export function ClientProfilePage() {
 
   const canWrite = usePermission('clients.write');
   const canReadClinical = usePermission('clinical.read');
+  const canManageTreatments = usePermission('treatments.manage');
   // El profesional solo ve sus propias citas y tratamientos con el paciente.
   const scope = usePermissionScope('appointments.read') === 'all' ? null : session.professionalId;
 
@@ -376,7 +378,21 @@ export function ClientProfilePage() {
         </TabsContent>
 
         <TabsContent value="tratamientos">
-          <Panel flush>
+          <Panel
+            flush
+            title="Tratamientos"
+            actions={
+              canManageTreatments &&
+              active && (
+                <Button asChild size="sm">
+                  <Link to={`/tratamientos/nuevo?cliente=${c.id}`}>
+                    <HeartPulse aria-hidden="true" />
+                    Nuevo tratamiento
+                  </Link>
+                </Button>
+              )
+            }
+          >
             {treatments.status === 'loading' ? (
               <ListSkeleton rows={3} label="Cargando tratamientos…" />
             ) : treatments.status === 'error' ? (

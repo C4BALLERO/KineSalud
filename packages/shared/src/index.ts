@@ -9,4 +9,5 @@ export * from './schedule';
 export * from './settings';
 export * from './staff';
 export * from './time';
+export * from './treatments';
 export * from './users';

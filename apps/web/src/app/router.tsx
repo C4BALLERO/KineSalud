@@ -92,14 +92,25 @@ const appRoutes: RouteObject[] = [
   },
   {
     path: 'tratamientos',
-    element: (
-      <RequirePermission permission="treatments.read">
-        <ModulePlaceholder
-          title="Tratamientos"
-          description="Planes de fisioterapia, rehabilitación y estética con su progreso."
-          phase={11}
-        />
-      </RequirePermission>
+    lazy: guarded(
+      'treatments.read',
+      async () => (await import('@/features/treatments/pages/TreatmentsPage')).TreatmentsPage,
+    ),
+  },
+  {
+    path: 'tratamientos/nuevo',
+    lazy: guarded(
+      'treatments.manage',
+      async () =>
+        (await import('@/features/treatments/pages/TreatmentCreatePage')).TreatmentCreatePage,
+    ),
+  },
+  {
+    path: 'tratamientos/:treatmentId',
+    lazy: guarded(
+      'treatments.read',
+      async () =>
+        (await import('@/features/treatments/pages/TreatmentDetailPage')).TreatmentDetailPage,
     ),
   },
   {

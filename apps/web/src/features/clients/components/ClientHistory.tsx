@@ -1,10 +1,10 @@
-import { TREATMENT_STATUS_LABELS } from '@kinesalud/shared';
 import { HeartPulse } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { Link } from 'react-router';
 import { AppointmentDayList } from '@/components/domain/AppointmentDayList';
 import { CategoryTag } from '@/components/domain/CategoryTag';
+import { TreatmentStatusBadge } from '@/components/domain/StatusBadge';
 import { EmptyState } from '@/components/feedback/States';
-import { Badge } from '@/components/ui/Badge';
 import { SessionProgress } from '@/components/ui/Progress';
 import { formatDayLong } from '@/utils/format';
 import type { ClientAppointment, ClientTreatment } from '../api/clients';
@@ -32,12 +32,6 @@ export function AppointmentHistory({
   );
 }
 
-const TREATMENT_TONES = {
-  ACTIVO: 'primary',
-  FINALIZADO: 'success',
-  SUSPENDIDO: 'neutral',
-} as const;
-
 export function TreatmentList({ treatments }: { treatments: ClientTreatment[] }) {
   if (treatments.length === 0) {
     return (
@@ -55,7 +49,12 @@ export function TreatmentList({ treatments }: { treatments: ClientTreatment[] })
         <li key={t.id} className="flex flex-col gap-3 p-4 md:px-5">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-body-sm font-semibold text-fg">{t.serviceName}</p>
+              <Link
+                to={`/tratamientos/${t.id}`}
+                className="text-body-sm font-semibold text-fg underline-offset-2 hover:text-primary hover:underline"
+              >
+                {t.serviceName}
+              </Link>
               <p className="flex flex-wrap items-center gap-x-2 text-caption text-fg-muted">
                 <CategoryTag category={t.category} />
                 <span aria-hidden="true">·</span>
@@ -64,7 +63,7 @@ export function TreatmentList({ treatments }: { treatments: ClientTreatment[] })
                 desde el {formatDayLong(t.startDate)}
               </p>
             </div>
-            <Badge tone={TREATMENT_TONES[t.status]}>{TREATMENT_STATUS_LABELS[t.status]}</Badge>
+            <TreatmentStatusBadge status={t.status} />
           </div>
           <SessionProgress completed={t.completedSessions} planned={t.plannedSessions} />
         </li>
