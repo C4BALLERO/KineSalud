@@ -18,8 +18,8 @@ if (process.platform === 'win32' && !env.JAVA_TOOL_OPTIONS?.includes('jdk.net.un
     `${env.JAVA_TOOL_OPTIONS ?? ''} -Djdk.net.unixdomain.tmpdir=${dir}`.trim();
 }
 // El primer arranque en Windows puede superar los 10 s por defecto al cargar
-// las Functions (antivirus escaneando node_modules).
-env.FUNCTIONS_DISCOVERY_TIMEOUT ??= '30';
+// las Functions (antivirus escaneando node_modules); con 30 s a veces no alcanza.
+env.FUNCTIONS_DISCOVERY_TIMEOUT ??= '60';
 
 const globalRoot = execSync('npm root -g', { encoding: 'utf8' }).trim();
 const cli = join(globalRoot, 'firebase-tools', 'lib', 'bin', 'firebase.js');
