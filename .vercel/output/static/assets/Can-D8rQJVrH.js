@@ -1,1 +1,0 @@
-import{K as e}from"./index-B21tL5Gg.js";function t({permission:t,children:n,fallback:r=null}){return e(t)?n:r}export{t};

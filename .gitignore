@@ -33,3 +33,7 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Salida de compilación del despliegue gratuito (rama despliegue-gratuito)
+.vercel/
+.api-local/

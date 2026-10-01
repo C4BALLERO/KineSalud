@@ -1,1 +1,0 @@
-import{ar as e,sr as t}from"./Button-B-zXHhml.js";var n=t(e(),1);function r(e=6e4){let[t,r]=(0,n.useState)(()=>new Date);return(0,n.useEffect)(()=>{let t=window.setInterval(()=>r(new Date),e);return()=>window.clearInterval(t)},[e]),t}export{r as t};

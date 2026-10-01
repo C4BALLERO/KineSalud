@@ -1,1 +1,0 @@
-import{Ln as e,Un as t}from"./Button-B-zXHhml.js";import{R as n}from"./index-B21tL5Gg.js";var r=t();function i({className:t,...i}){return(0,r.jsx)(n,{...i,type:`text`,inputMode:`decimal`,autoComplete:`off`,leadingIcon:(0,r.jsx)(`span`,{className:`text-body-sm font-medium`,children:`Bs`}),className:e(`tabular`,t)})}export{i as t};
