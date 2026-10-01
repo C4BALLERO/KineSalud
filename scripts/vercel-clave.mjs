@@ -34,18 +34,9 @@ if (key.project_id !== projectId) {
   fail(`La clave es del proyecto "${key.project_id}", no de "${projectId}".`);
 }
 
+// Un solo texto de comando (sin argumentos externos): npx necesita shell en Windows.
 const result = spawnSync(
-  'npx',
-  [
-    '--yes',
-    'vercel@62',
-    'env',
-    'add',
-    'FIREBASE_SERVICE_ACCOUNT',
-    'production',
-    '--sensitive',
-    '--force',
-  ],
+  'npx --yes vercel@62 env add FIREBASE_SERVICE_ACCOUNT production --sensitive --force',
   { input: JSON.stringify(key), stdio: ['pipe', 'inherit', 'inherit'], shell: true },
 );
 if (result.status !== 0) fail('Vercel no aceptó la variable (¿hiciste `vercel link`?).');
