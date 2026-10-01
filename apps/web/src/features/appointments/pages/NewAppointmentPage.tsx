@@ -1,5 +1,6 @@
 import {
   addDays,
+  explainNoSlots,
   findSlots,
   TIME_PATTERN,
   toDateKey,
@@ -35,6 +36,7 @@ import {
   useCreateAppointment,
 } from '../api/appointments';
 import { ClientPicker } from '../components/ClientPicker';
+import { NoSlotsAlert } from '../components/NoSlotsAlert';
 import { SlotPicker } from '../components/SlotPicker';
 import { useAgendaCatalogs } from '../hooks/useAgendaCatalogs';
 import { alternativesOf, buildDayContext, openingRangesOn } from '../model';
@@ -189,21 +191,22 @@ export function NewAppointmentPage() {
     : [];
   const nameOf = (id: string) => professionals.find((p) => p.id === id)?.displayName ?? '';
 
-  const slots =
+  const dayContext =
     service && clinic && day.status === 'success'
-      ? findSlots(
-          buildDayContext({
-            date,
-            clinic,
-            professionals,
-            exceptions: catalogs.data.exceptions,
-            rooms,
-            appointments: day.data,
-            now,
-          }),
-          { service, clientId: client?.id ?? null, professionalId: professionalId || null },
-        )
-      : [];
+      ? buildDayContext({
+          date,
+          clinic,
+          professionals,
+          exceptions: catalogs.data.exceptions,
+          rooms,
+          appointments: day.data,
+          now,
+        })
+      : null;
+  const slotRequest = service
+    ? { service, clientId: client?.id ?? null, professionalId: professionalId || null }
+    : null;
+  const slots = dayContext && slotRequest ? findSlots(dayContext, slotRequest) : [];
   // Si se llegó desde un hueco de la agenda, ese horario queda preseleccionado
   // (solo hasta que se cambie la fecha, el profesional o el servicio).
   const suggested =
@@ -500,9 +503,16 @@ export function NewAppointmentPage() {
                 ))}
               </div>
             ) : slots.length === 0 ? (
-              <InlineAlert tone="info" title="No hay horarios libres ese día.">
-                Prueba otra fecha{professionalId ? ' u otro profesional' : ''}.
-              </InlineAlert>
+              dayContext && slotRequest ? (
+                <NoSlotsAlert
+                  reason={explainNoSlots(dayContext, slotRequest)}
+                  professionalChosen={!!professionalId}
+                />
+              ) : (
+                <InlineAlert tone="info" title="No hay horarios libres ese día.">
+                  {clinic ? 'Prueba otra fecha.' : 'Falta configurar el horario del consultorio.'}
+                </InlineAlert>
+              )
             ) : (
               <SlotPicker
                 slots={slots}

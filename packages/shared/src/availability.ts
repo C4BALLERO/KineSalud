@@ -209,6 +209,43 @@ export function findSlots(
 }
 
 /** Los `limit` horarios libres más cercanos a una hora (para sugerir alternativas). */
+export const NO_SLOTS_REASONS = {
+  SERVICE_INACTIVE: 'El servicio está desactivado.',
+  NO_PROFESSIONAL: 'Ningún profesional activo realiza este servicio.',
+  NO_ROOM: 'No hay un espacio activo compatible con este servicio.',
+  CLINIC_CLOSED: 'El consultorio no atiende ese día.',
+  NOBODY_WORKS: 'Nadie que realice este servicio atiende ese día.',
+  FULLY_BOOKED: 'Todos los horarios de ese día están ocupados o ya pasaron.',
+} as const;
+export type NoSlotsReason = keyof typeof NO_SLOTS_REASONS;
+
+/**
+ * Por qué `findSlots` no devolvió horarios: el primer motivo que conviene
+ * corregir, del más estructural (catálogo) al más circunstancial (agenda llena).
+ */
+export function explainNoSlots(
+  ctx: DayContext,
+  request: SlotRequest & { professionalId?: string | null },
+): NoSlotsReason {
+  const { service } = request;
+  if (!service.active) return 'SERVICE_INACTIVE';
+  const professionals = ctx.professionals.filter(
+    (p) =>
+      (!request.professionalId || p.id === request.professionalId) &&
+      p.active &&
+      p.serviceIds.includes(service.id),
+  );
+  if (professionals.length === 0) return 'NO_PROFESSIONAL';
+  if (compatibleRooms(service, ctx.rooms).length === 0) return 'NO_ROOM';
+  if ((ctx.openingHours[weekdayOf(ctx.date)] ?? []).length === 0) return 'CLINIC_CLOSED';
+  const someoneFits = professionals.some((p) =>
+    workingRanges(p, ctx).some(
+      (r) => timeToMinutes(r.end) - timeToMinutes(r.start) >= service.durationMin,
+    ),
+  );
+  return someoneFits ? 'FULLY_BOOKED' : 'NOBODY_WORKS';
+}
+
 export function nearestSlots(slots: readonly Slot[], around: string, limit = 3): Slot[] {
   const target = timeToMinutes(around);
   return [...slots]
