@@ -1,4 +1,10 @@
-import { findSlots, toDateKey, type Slot, type SlotAlternative } from '@kinesalud/shared';
+import {
+  explainNoSlots,
+  findSlots,
+  toDateKey,
+  type Slot,
+  type SlotAlternative,
+} from '@kinesalud/shared';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
@@ -17,6 +23,7 @@ import {
 } from '../api/appointments';
 import { useAgendaCatalogs } from '../hooks/useAgendaCatalogs';
 import { alternativesOf, buildDayContext } from '../model';
+import { NoSlotsAlert } from './NoSlotsAlert';
 import { SlotPicker } from './SlotPicker';
 
 /** Reprogramar: nueva fecha, profesional y horario libre (la cita vuelve a Pendiente). */
@@ -52,26 +59,27 @@ export function RescheduleDialog({
           p.id === appointment.professionalId,
       )
     : [];
-  const slots =
+  const dayContext =
     ready && service && catalogs.data.clinic && date >= today
-      ? findSlots(
-          buildDayContext({
-            date,
-            clinic: catalogs.data.clinic,
-            professionals: catalogs.data.professionals,
-            exceptions: catalogs.data.exceptions,
-            rooms: catalogs.data.rooms,
-            appointments: day.data,
-            now,
-          }),
-          {
-            service,
-            clientId: appointment.clientId,
-            ignoreAppointmentId: appointment.id,
-            professionalId,
-          },
-        )
-      : [];
+      ? buildDayContext({
+          date,
+          clinic: catalogs.data.clinic,
+          professionals: catalogs.data.professionals,
+          exceptions: catalogs.data.exceptions,
+          rooms: catalogs.data.rooms,
+          appointments: day.data,
+          now,
+        })
+      : null;
+  const slotRequest = service
+    ? {
+        service,
+        clientId: appointment.clientId,
+        ignoreAppointmentId: appointment.id,
+        professionalId,
+      }
+    : null;
+  const slots = dayContext && slotRequest ? findSlots(dayContext, slotRequest) : [];
 
   const submit = async (target: { start: string; professionalId: string }) => {
     setError(null);
@@ -178,9 +186,16 @@ export function RescheduleDialog({
             ))}
           </div>
         ) : slots.length === 0 ? (
-          <InlineAlert tone="info" title="No hay horarios libres ese día.">
-            Prueba otra fecha u otro profesional.
-          </InlineAlert>
+          dayContext && slotRequest ? (
+            <NoSlotsAlert
+              reason={explainNoSlots(dayContext, slotRequest)}
+              professionalChosen={!!professionalId}
+            />
+          ) : (
+            <InlineAlert tone="info" title="No hay horarios libres ese día.">
+              Prueba otra fecha u otro profesional.
+            </InlineAlert>
+          )
         ) : (
           <SlotPicker slots={slots} value={slot} onChange={setSlot} label="Horario" />
         )}

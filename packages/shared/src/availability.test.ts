@@ -7,6 +7,7 @@ import {
 } from './appointments';
 import {
   checkSlot,
+  explainNoSlots,
   findSlots,
   nearestSlots,
   workingRanges,
@@ -257,5 +258,37 @@ describe('estados de la cita', () => {
       roomId: null,
       notes: null,
     });
+  });
+});
+
+describe('explainNoSlots', () => {
+  const request = { service: lumbar };
+
+  it('explica primero lo que falta en el catálogo', () => {
+    expect(explainNoSlots(ctx(), { service: { ...lumbar, active: false } })).toBe(
+      'SERVICE_INACTIVE',
+    );
+    expect(explainNoSlots(ctx({ professionals: [] }), request)).toBe('NO_PROFESSIONAL');
+    expect(explainNoSlots(ctx(), { ...request, professionalId: 'otro' })).toBe('NO_PROFESSIONAL');
+    expect(explainNoSlots(ctx({ rooms: [] }), request)).toBe('NO_ROOM');
+    expect(
+      explainNoSlots(
+        ctx({
+          rooms: [{ id: 'g', kind: 'GIMNASIO', allowedCategories: ['FISIOTERAPIA'], active: true }],
+        }),
+        request,
+      ),
+    ).toBe('NO_ROOM');
+  });
+
+  it('distingue consultorio cerrado, nadie que atienda y agenda llena', () => {
+    expect(explainNoSlots(ctx({ openingHours: {} }), request)).toBe('CLINIC_CLOSED');
+    const offMonday = ctx({
+      professionals: [
+        { id: 'diego', active: true, serviceIds: ['srv-lumbar'], weeklySchedule: { tue: morning } },
+      ],
+    });
+    expect(explainNoSlots(offMonday, request)).toBe('NOBODY_WORKS');
+    expect(explainNoSlots(ctx({ nowMinutes: 23 * 60 }), request)).toBe('FULLY_BOOKED');
   });
 });
