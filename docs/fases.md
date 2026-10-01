@@ -10,10 +10,10 @@
 | 9 · Personal y configuración                            | ✅ Aprobada                             |
 | 10 · Agenda                                             | ✅ Aprobada                             |
 | 10B · Cobros y caja                                     | ✅ Aprobada                             |
-| 11 · Tratamientos                                       | ✅ Completada — pendiente de revisión   |
+| 11 · Tratamientos                                       | ✅ Aprobada                             |
 | 12 · Seguimiento                                        | ⏳                                      |
 | 13 · Recordatorios                                      | ⏳                                      |
-| 14 · Reportes                                           | ⏳                                      |
+| 14 · Reportes                                           | ✅ Completada — pendiente de revisión   |
 | 15 · Seguridad                                          | ⏳                                      |
 | 16 · Pruebas y despliegue                               | ⏳                                      |
 
@@ -386,3 +386,41 @@ Módulo agregado a pedido del consultorio. En el plan original los pagos quedaba
 - **Lo clínico queda para la Fase 12.** Objetivos, indicaciones y evolución son datos clínicos con acceso restringido y auditado. El tratamiento guarda solo datos administrativos, que la recepción puede ver.
 - **La línea de tiempo se arma con las citas** vinculadas al tratamiento, sin duplicar la información en otra colección.
 - **Consultas solo por igualdad**, ordenadas en la web: no necesitan índices compuestos nuevos.
+
+## Fase 14 — Reportes
+
+Se adelantó a pedido del consultorio. Las Fases 12 (Seguimiento) y 13 (Recordatorios) siguen pendientes.
+
+**Entregado**
+
+- **Resúmenes diarios mantenidos por triggers:**
+  - `dailyStats/{fecha}`: citas por profesional, área y estado, minutos atendidos y clientes nuevos;
+  - `dailyIncome/{fecha}`: cobros válidos por medio de pago, profesional y área (solo administración).
+
+  Cada cambio de una cita, un cobro o un cliente nuevo recalcula el día completo desde los datos originales. Así el resultado no cambia si el trigger se reintenta, y una cita reprogramada actualiza los dos días.
+
+- **Recalcular** (`reports-rebuild`, solo administración): vuelve a calcular un período de hasta 366 días. Sirve para datos cargados antes de activar los reportes o para reparar una cifra.
+- **Pantalla de reportes** (`/reportes`, administración y recepción):
+  - **período:** hoy, esta semana, este mes, mes anterior, últimos 30 días, este año o un rango personalizado;
+  - **filtros:** área y, para la administración, profesional. Todo queda guardado en la URL;
+  - **indicadores:** citas, atendidas (con horas), asistencia, cancelaciones, clientes nuevos y, para la administración, ingresos;
+  - **gráfico de citas por estado:** se agrupa por día, por semana o por mes según el largo del período, con leyenda y detalle en cada barra;
+  - **por área:** citas, atendidas y asistencia;
+  - **tratamientos:** iniciados y finalizados en el período, activos y suspendidos hoy;
+  - **carga por profesional** (solo administración): citas, atendidas, horas, asistencia, cancelaciones e ingresos;
+  - **ingresos** (solo administración): total, cantidad de cobros, promedio por cobro, gráfico del período y reparto por medio de pago y por área;
+  - **exportar CSV** del detalle por día, con ";" y tildes correctas para abrirlo en Excel.
+- **Reglas:** la recepción y la administración leen `dailyStats`; `dailyIncome` es solo de la administración; nadie los escribe desde la web.
+- **Datos de demostración:** cuatro semanas de historia antes de la semana actual.
+- **Verificación con el emulador:** después de cargar los datos, los resúmenes cuentan las 275 citas y suman exactamente lo mismo que los cobros válidos.
+- **Pruebas:**
+  - agregación, filtros, tasas, agrupación y recálculo (7 en el dominio compartido, 3 en el servidor);
+  - períodos, series, CSV y gráfico (7 en la web);
+  - reglas (2).
+
+**Decisiones**
+
+- **Recalcular el día en lugar de sumar o restar:** con incrementos, un reintento del trigger contaría dos veces. Recalcular cuesta unas decenas de lecturas por cambio, que con el volumen de un consultorio no se nota.
+- **Celdas por profesional y área:** permiten filtrar por cualquiera de los dos, o por ambos, con un documento por día.
+- **Ingresos en una colección aparte:** así la recepción no puede leer los ingresos por profesional.
+- **Gráficos propios con CSS:** como en el dashboard, sin agregar una biblioteca de gráficos.

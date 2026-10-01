@@ -5,6 +5,7 @@ export * from './domain';
 export * from './enums';
 export * from './payments';
 export * from './permissions';
+export * from './reports';
 export * from './schedule';
 export * from './settings';
 export * from './staff';

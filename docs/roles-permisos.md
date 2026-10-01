@@ -88,3 +88,9 @@ La UI nunca es la barrera de seguridad; solo mejora la experiencia.
 
 - **Recepción y administración** abren, editan, finalizan, suspenden y reactivan cualquier tratamiento (`treatments.manage` con alcance `all`), y agendan sus sesiones.
 - **El profesional** (alcance `own`) abre tratamientos solo a su nombre y para sus pacientes, y gestiona los suyos. No los reasigna a otro profesional ni agenda citas.
+
+### Reportes: qué ve cada rol
+
+- **Administración** (`reports.view`, `reports.viewWorkload`, `income.view`): todo, incluida la carga por profesional, los ingresos y el filtro por profesional. Además, puede recalcular las estadísticas.
+- **Recepción** (`reports.view`): reportes operativos (citas, asistencia, áreas, tratamientos y clientes nuevos), sin carga por profesional ni ingresos.
+- **Profesional:** no accede a Reportes. Su resumen está en "Mi día".

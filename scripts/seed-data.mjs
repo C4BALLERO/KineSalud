@@ -375,11 +375,13 @@ export function buildDemoData(now = new Date()) {
     (treatmentsByProf[t.professionalId] ??= []).push(id);
   }
 
-  // Citas: desde el inicio del mes (o el lunes de esta semana, si es anterior)
-  // hasta 7 días después de hoy. El mes completo alimenta los ingresos.
+  // Citas: desde el inicio del mes (o 4 semanas antes de este lunes, si es
+  // anterior) hasta 7 días después de hoy.
   const monday = addDays(today, -WEEKDAYS.indexOf(weekdayOf(today)));
   const monthStart = `${today.slice(0, 7)}-01`;
-  const firstDay = monthStart < monday ? monthStart : monday;
+  // Al menos 4 semanas de historia, para que los reportes muestren tendencia.
+  const fourWeeksAgo = addDays(monday, -28);
+  const firstDay = monthStart < fourWeeksAgo ? monthStart : fourWeeksAgo;
   const lastDay = addDays(today, 7);
   const appointments = {};
   const busy = { room: new Map(), clientDay: new Set() };

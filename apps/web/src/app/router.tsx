@@ -155,14 +155,9 @@ const appRoutes: RouteObject[] = [
   },
   {
     path: 'reportes',
-    element: (
-      <RequirePermission permission="reports.view">
-        <ModulePlaceholder
-          title="Reportes"
-          description="Citas, asistencia, clientes, tratamientos y carga de trabajo."
-          phase={14}
-        />
-      </RequirePermission>
+    lazy: guarded(
+      'reports.view',
+      async () => (await import('@/features/reports/pages/ReportsPage')).ReportsPage,
     ),
   },
   {

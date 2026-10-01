@@ -89,6 +89,8 @@ beforeEach(async () => {
     await setDoc(doc(fs, 'cashSessions', 'caja-1'), { status: 'ABIERTA', openingCents: 0 });
     await setDoc(doc(fs, 'cashRegister', 'main'), { openSessionId: 'caja-1' });
     await setDoc(doc(fs, 'incomeStats', '2026-09'), { totalCents: 24000 });
+    await setDoc(doc(fs, 'dailyStats', '2026-09-28'), { date: '2026-09-28', cells: {} });
+    await setDoc(doc(fs, 'dailyIncome', '2026-09-28'), { date: '2026-09-28', totalCents: 0 });
   });
 });
 
@@ -289,5 +291,23 @@ describe('caja y cobros', () => {
   it('los ingresos globales del mes son solo de administración', async () => {
     await assertSucceeds(getDoc(doc(db('a', claims.admin), 'incomeStats', '2026-09')));
     await assertFails(getDoc(doc(db('r', claims.recep), 'incomeStats', '2026-09')));
+  });
+});
+
+describe('reportes', () => {
+  it('recepción y administración leen las estadísticas; el profesional no', async () => {
+    const range = (fs: ReturnType<typeof db>) =>
+      getDocs(query(collection(fs, 'dailyStats'), where('date', '>=', '2026-09-01')));
+    await assertSucceeds(range(db('a', claims.admin)));
+    await assertSucceeds(range(db('r', claims.recep)));
+    await assertFails(range(db('d', claims.diego)));
+    await assertFails(
+      setDoc(doc(db('a', claims.admin), 'dailyStats', '2026-09-28'), { cells: {} }),
+    );
+  });
+
+  it('los ingresos diarios son solo de administración', async () => {
+    await assertSucceeds(getDoc(doc(db('a', claims.admin), 'dailyIncome', '2026-09-28')));
+    await assertFails(getDoc(doc(db('r', claims.recep), 'dailyIncome', '2026-09-28')));
   });
 });
