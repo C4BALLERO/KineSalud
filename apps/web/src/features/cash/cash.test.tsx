@@ -47,6 +47,7 @@ function appt(over: Partial<AgendaAppointment> = {}): AgendaAppointment {
     priceCents: 13500,
     paymentStatus: 'POR_COBRAR',
     paymentId: null,
+    sessionRecorded: false,
     createdBy: null,
     ...over,
   };

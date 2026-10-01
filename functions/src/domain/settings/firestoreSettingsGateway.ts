@@ -56,6 +56,29 @@ export const firestoreSettingsGateway: SettingsGateway = {
 
   saveService: (id, doc) => saveDoc('services', id, doc),
 
+  async countServiceUsage(serviceId) {
+    const [appointments, treatments] = await Promise.all([
+      db.collection('appointments').where('serviceId', '==', serviceId).count().get(),
+      db.collection('treatments').where('serviceId', '==', serviceId).count().get(),
+    ]);
+    return { appointments: appointments.data().count, treatments: treatments.data().count };
+  },
+
+  async deleteService(id) {
+    await db.collection('services').doc(id).delete();
+  },
+
+  async saveProfessionalServices(updates) {
+    const batch = db.batch();
+    for (const u of updates) {
+      batch.update(db.collection('professionals').doc(u.id), {
+        serviceIds: u.serviceIds,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
+    await batch.commit();
+  },
+
   async audit(entry) {
     await db.collection('auditLogs').add({ ...entry, at: FieldValue.serverTimestamp() });
   },

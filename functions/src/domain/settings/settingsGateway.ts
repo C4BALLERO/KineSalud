@@ -17,5 +17,10 @@ export interface SettingsGateway {
   saveRoom(id: string | null, doc: RoomDoc): Promise<string>;
   listServices(): Promise<StoredService[]>;
   saveService(id: string | null, doc: ServiceDoc): Promise<string>;
+  /** Citas y tratamientos que usan el servicio (historial que impide borrarlo). */
+  countServiceUsage(serviceId: string): Promise<{ appointments: number; treatments: number }>;
+  deleteService(id: string): Promise<void>;
+  /** Reemplaza los servicios de varios profesionales en una sola escritura atómica. */
+  saveProfessionalServices(updates: { id: string; serviceIds: string[] }[]): Promise<void>;
   audit(entry: AuditEntry): Promise<void>;
 }

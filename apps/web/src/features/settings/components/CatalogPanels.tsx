@@ -1,9 +1,4 @@
-import {
-  compatibleRooms,
-  ROOM_KIND_LABELS,
-  TREATMENT_CATEGORIES,
-  TREATMENT_CATEGORY_LABELS,
-} from '@kinesalud/shared';
+import { ROOM_KIND_LABELS } from '@kinesalud/shared';
 import {
   CircleCheck,
   CircleSlash,
@@ -13,7 +8,6 @@ import {
   Plus,
   Power,
   PowerOff,
-  TriangleAlert,
   type LucideIcon,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
@@ -32,18 +26,9 @@ import { Panel } from '@/components/ui/Panel';
 import { ListSkeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/toast-context';
 import { toAppError } from '@/lib/errors';
-import { formatMoney } from '@/utils/format';
 import { cn } from '@/utils/cn';
-import {
-  useRooms,
-  useServices,
-  useSetRoomActive,
-  useSetServiceActive,
-  type RoomItem,
-  type ServiceItem,
-} from '../api/catalog';
+import { useRooms, useSetRoomActive, type RoomItem } from '../api/catalog';
 import { RoomDialog } from './RoomDialog';
-import { ServiceDialog } from './ServiceDialog';
 
 function ActiveBadge({ active }: { active: boolean }) {
   return active ? (
@@ -244,130 +229,6 @@ export function RoomsPanel() {
         title="¿Desactivar este espacio?"
         description={`${toggle.pending?.name ?? ''} dejará de asignarse a citas nuevas. Las citas ya agendadas no cambian.`}
         confirmLabel="Desactivar espacio"
-        destructive
-        loading={toggle.busy}
-        onConfirm={toggle.confirm}
-      />
-    </Panel>
-  );
-}
-
-/* ---------- Servicios ---------- */
-
-export function ServicesPanel() {
-  const services = useServices();
-  const rooms = useRooms();
-  const setActive = useSetServiceActive();
-  const [editing, setEditing] = useState<ServiceItem | 'new' | null>(null);
-  const toggle = useActiveToggle<ServiceItem>(setActive.mutateAsync, 'estado del servicio');
-
-  const newButton = (
-    <Button size="sm" onClick={() => setEditing('new')}>
-      <Plus aria-hidden="true" />
-      Nuevo servicio
-    </Button>
-  );
-  const roomList = rooms.status === 'success' ? rooms.data : null;
-
-  return (
-    <Panel
-      flush
-      title="Servicios"
-      description="Catálogo de fisioterapia, rehabilitación y estética que se puede agendar."
-      actions={newButton}
-    >
-      {services.status === 'loading' && <ListSkeleton rows={5} label="Cargando servicios…" />}
-      {services.status === 'error' && (
-        <ErrorState description={services.error.message} onRetry={services.retry} />
-      )}
-      {services.status === 'success' &&
-        (services.data.length === 0 ? (
-          <EmptyCatalog
-            icon={Plus}
-            title="Aún no hay servicios"
-            description="Registra los servicios que ofrece el consultorio para asignarlos al personal y agendarlos."
-            action={newButton}
-          />
-        ) : (
-          TREATMENT_CATEGORIES.map((category) => {
-            const list = services.data
-              .filter((s) => s.category === category)
-              .sort((a, b) => Number(b.active) - Number(a.active));
-            if (list.length === 0) return null;
-            return (
-              <section key={category} aria-label={TREATMENT_CATEGORY_LABELS[category]}>
-                <h3 className="border-y border-border bg-surface-muted px-4 py-1.5 first:border-t-0 md:px-5">
-                  <CategoryTag category={category} />
-                </h3>
-                <ul className="divide-y divide-border">
-                  {list.map((s) => {
-                    const noRoom =
-                      s.active && roomList !== null && compatibleRooms(s, roomList).length === 0;
-                    return (
-                      <ListItem
-                        key={s.id}
-                        title={s.name}
-                        muted={!s.active}
-                        meta={
-                          <>
-                            <span className="tabular font-medium text-fg">
-                              {s.priceCents != null ? formatMoney(s.priceCents) : 'Sin precio'}
-                            </span>
-                            <span className="tabular">
-                              {s.durationMin} min
-                              {s.bufferMin > 0 && ` + ${s.bufferMin} de preparación`}
-                            </span>
-                            <span className="tabular">
-                              {s.defaultSessions} {s.defaultSessions === 1 ? 'sesión' : 'sesiones'}
-                            </span>
-                            <span>{s.roomKinds.map((k) => ROOM_KIND_LABELS[k]).join(' o ')}</span>
-                          </>
-                        }
-                        badges={
-                          <>
-                            {s.priceCents == null && s.active && (
-                              <Badge tone="warning" icon={<TriangleAlert aria-hidden="true" />}>
-                                Sin precio
-                              </Badge>
-                            )}
-                            {noRoom && (
-                              <Badge tone="warning" icon={<TriangleAlert aria-hidden="true" />}>
-                                Sin espacio compatible
-                              </Badge>
-                            )}
-                            <ActiveBadge active={s.active} />
-                          </>
-                        }
-                        actions={
-                          <RowActions
-                            label={s.name}
-                            active={s.active}
-                            onEdit={() => setEditing(s)}
-                            onToggle={() => toggle.request(s)}
-                          />
-                        }
-                      />
-                    );
-                  })}
-                </ul>
-              </section>
-            );
-          })
-        ))}
-
-      {editing && (
-        <ServiceDialog
-          key={editing === 'new' ? 'new' : editing.id}
-          service={editing === 'new' ? null : editing}
-          onClose={() => setEditing(null)}
-        />
-      )}
-      <ConfirmDialog
-        open={toggle.pending !== null}
-        onOpenChange={(o) => !o && toggle.cancel()}
-        title="¿Desactivar este servicio?"
-        description={`${toggle.pending?.name ?? ''} dejará de ofrecerse al agendar. Las citas y tratamientos existentes no cambian.`}
-        confirmLabel="Desactivar servicio"
         destructive
         loading={toggle.busy}
         onConfirm={toggle.confirm}

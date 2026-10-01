@@ -11,7 +11,7 @@
 | 10 · Agenda                                             | ✅ Aprobada                             |
 | 10B · Cobros y caja                                     | ✅ Aprobada                             |
 | 11 · Tratamientos                                       | ✅ Aprobada                             |
-| 12 · Seguimiento                                        | ⏳                                      |
+| 12 · Seguimiento (y módulo de Servicios)                | ✅ Completada — pendiente de revisión   |
 | 13 · Recordatorios                                      | ⏳                                      |
 | 14 · Reportes                                           | ✅ Completada — pendiente de revisión   |
 | 15 · Seguridad                                          | ⏳                                      |
@@ -304,7 +304,7 @@ Módulo agregado a pedido del consultorio. En el plan original los pagos quedaba
 
 **Entregado**
 
-- **Precio por sesión** en el catálogo de servicios (Configuración → Servicios). Se guarda en la cita al agendar.
+- **Precio por sesión** en el catálogo de servicios (hoy en el módulo Servicios). Se guarda en la cita al agendar.
 - **Caja** (`/caja`, recepción y administración):
   - **apertura** con el monto inicial en efectivo;
   - **por cobrar:** las sesiones de hoy sin pagar y las atendidas de días anteriores;
@@ -424,3 +424,54 @@ Se adelantó a pedido del consultorio. Las Fases 12 (Seguimiento) y 13 (Recordat
 - **Celdas por profesional y área:** permiten filtrar por cualquiera de los dos, o por ambos, con un documento por día.
 - **Ingresos en una colección aparte:** así la recepción no puede leer los ingresos por profesional.
 - **Gráficos propios con CSS:** como en el dashboard, sin agregar una biblioteca de gráficos.
+
+## Fase 12 — Seguimiento clínico y módulo de Servicios
+
+**Entregado: seguimiento clínico**
+
+- **Registrar sesión** (`/citas/:id/sesion`, desde el detalle de la cita o el aviso de "Mi día"):
+  - observaciones (obligatorias), evolución, recomendaciones y dolor al llegar y al terminar (EVA 0–10);
+  - muestra las alertas clínicas del paciente y el número de sesión del tratamiento;
+  - si la cita no estaba marcada como atendida, la marca en la misma operación, sin contar la sesión dos veces;
+  - la nota la edita su autor durante 7 días; después, solo la administración;
+  - avisa si se sale con cambios sin guardar.
+- **Historia clínica** (pestaña del perfil del cliente): alertas destacadas (alergias, contraindicaciones), antecedentes editables y todas las notas de sesión.
+- **Tratamiento:** pestañas **Plan** (motivo y evaluación, objetivos, indicaciones; lo define el profesional del tratamiento) y **Evolución** (gráfico del dolor antes y después por sesión, más las notas).
+- **"Mi día"** avisa al profesional de sus sesiones atendidas sin registrar.
+- **Privacidad:**
+  - `clinicalRecords` está cerrada a la web para todos los roles; se accede solo por `clinical-*`;
+  - la recepción nunca ve información clínica;
+  - cada lectura queda en la auditoría, y las pestañas clínicas solo consultan al abrirse.
+
+**Entregado: módulo de Servicios** (`/servicios`, en el menú de administración y recepción)
+
+- **Listado** con búsqueda, filtros por área y estado, y una columna de quién realiza cada servicio.
+- **Avisos** de servicio sin precio, sin espacio compatible o sin profesional que lo realice.
+- **CRUD completo** (administración):
+  - crear, editar y **duplicar**;
+  - activar y desactivar;
+  - **asignar profesionales** desde el servicio, validando que atiendan el área;
+  - **eliminar** un servicio sin historial. Uno con citas o tratamientos se rechaza con el detalle y la sugerencia de desactivarlo.
+- **Configuración** queda con Consultorio y Espacios; los enlaces viejos a la pestaña de servicios redirigen al módulo.
+- **Servidor:** `settings-deleteService` y `settings-setServiceProfessionals`, con auditoría.
+
+**Verificación**
+
+- **Pruebas:**
+  - reglas clínicas, permisos y escala EVA (6 en el dominio compartido);
+  - servicio clínico (7) y eliminar o asignar servicios (3) en el servidor;
+  - escala, nota, gráfico, aviso y servicios (8) en la web;
+  - reglas: nadie lee `clinicalRecords` desde la web (1).
+- **Integración contra el emulador:**
+  - registrar sesión actualiza cita, tratamiento, cliente y nota en la misma transacción;
+  - dos registros simultáneos de la misma cita guardan uno solo.
+
+  Las pruebas de integración ahora corren de a un archivo por vez, porque comparten el emulador.
+
+- **Datos de demostración** (ficticios): antecedentes y alertas, planes de tratamiento y notas con el dolor bajando sesión a sesión. Algunas sesiones quedan sin registrar, para el aviso.
+
+**Decisiones**
+
+- **Lecturas clínicas por función, no con suscripciones:** así cada acceso queda auditado, a cambio de no actualizarse en tiempo real (se recargan después de cada cambio).
+- **Una nota por cita, con el mismo id:** evita duplicados sin consultas adicionales.
+- **Color nuevo para gráficos `--color-chart-2` (arcilla):** se validó junto al turquesa para daltonismo (ΔE 13,9) y visión normal (ΔE 24,6).

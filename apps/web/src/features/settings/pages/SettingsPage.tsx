@@ -1,21 +1,24 @@
-import { useSearchParams } from 'react-router';
+import { Navigate, useSearchParams } from 'react-router';
 import { ErrorState } from '@/components/feedback/States';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useClinicSettings } from '../api/catalog';
-import { RoomsPanel, ServicesPanel } from '../components/CatalogPanels';
+import { RoomsPanel } from '../components/CatalogPanels';
 import { ClinicSettingsPanel } from '../components/ClinicSettingsPanel';
 
-const TABS = ['consultorio', 'espacios', 'servicios'] as const;
+const TABS = ['consultorio', 'espacios'] as const;
 type Tab = (typeof TABS)[number];
 
-/** Configuración del consultorio: horario de atención, espacios y servicios. */
+/** Configuración del consultorio: horario de atención y espacios (los servicios tienen su módulo). */
 export function SettingsPage() {
   const [params, setParams] = useSearchParams();
   const tabParam = params.get('tab') as Tab | null;
   const tab: Tab = tabParam && TABS.includes(tabParam) ? tabParam : 'consultorio';
   const clinic = useClinicSettings();
+
+  // Enlaces antiguos a la pestaña de servicios: ahora es un módulo propio.
+  if (tabParam === ('servicios' as Tab)) return <Navigate to="/servicios" replace />;
 
   const changeTab = (next: string) =>
     setParams(next === 'consultorio' ? {} : { tab: next }, { replace: true });
@@ -24,13 +27,12 @@ export function SettingsPage() {
     <>
       <PageHeader
         title="Configuración"
-        description="Horario de atención, espacios y catálogo de servicios del consultorio."
+        description="Horario de atención y espacios del consultorio. El catálogo de servicios está en Servicios."
       />
       <Tabs value={tab} onValueChange={changeTab}>
         <TabsList label="Secciones de configuración">
           <TabsTrigger value="consultorio">Consultorio</TabsTrigger>
           <TabsTrigger value="espacios">Espacios</TabsTrigger>
-          <TabsTrigger value="servicios">Servicios</TabsTrigger>
         </TabsList>
 
         <TabsContent value="consultorio">
@@ -51,9 +53,6 @@ export function SettingsPage() {
         </TabsContent>
         <TabsContent value="espacios">
           <RoomsPanel />
-        </TabsContent>
-        <TabsContent value="servicios">
-          <ServicesPanel />
         </TabsContent>
       </Tabs>
     </>

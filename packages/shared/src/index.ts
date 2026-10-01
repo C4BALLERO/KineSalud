@@ -1,6 +1,7 @@
 export * from './appointments';
 export * from './availability';
 export * from './clients';
+export * from './clinical';
 export * from './domain';
 export * from './enums';
 export * from './payments';

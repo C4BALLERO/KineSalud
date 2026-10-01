@@ -63,6 +63,13 @@ const appRoutes: RouteObject[] = [
     ),
   },
   {
+    path: 'citas/:appointmentId/sesion',
+    lazy: guarded(
+      'clinical.write',
+      async () => (await import('@/features/clinical/pages/SessionPage')).SessionPage,
+    ),
+  },
+  {
     path: 'clientes',
     lazy: guarded(
       'clients.read',
@@ -139,6 +146,13 @@ const appRoutes: RouteObject[] = [
     lazy: guarded(
       'staff.manage',
       async () => (await import('@/features/staff/pages/StaffEditPage')).StaffEditPage,
+    ),
+  },
+  {
+    path: 'servicios',
+    lazy: guarded(
+      'appointments.read',
+      async () => (await import('@/features/services/pages/ServicesPage')).ServicesPage,
     ),
   },
   {

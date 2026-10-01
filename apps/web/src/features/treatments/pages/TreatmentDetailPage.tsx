@@ -12,6 +12,7 @@ import {
   CirclePause,
   CirclePlay,
   HeartPulse,
+  Lock,
   MoreHorizontal,
   Pencil,
   UserRound,
@@ -35,7 +36,9 @@ import { Panel } from '@/components/ui/Panel';
 import { SessionProgress } from '@/components/ui/Progress';
 import { ListSkeleton, LoadingRegion, Skeleton } from '@/components/ui/Skeleton';
 import { Stat } from '@/components/ui/StatCard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useRequiredSession } from '@/features/auth/session';
+import { TreatmentClinicalPanels } from '@/features/clinical/components/TreatmentClinicalPanels';
 import { capitalizeFirst, formatDateLong, formatDayLong, formatTime } from '@/utils/format';
 import { useTreatment, useTreatmentAppointments, type TreatmentItem } from '../api/treatments';
 import { EditTreatmentDialog, TreatmentStatusDialog } from '../components/TreatmentDialogs';
@@ -88,11 +91,16 @@ export function TreatmentDetailPage() {
   return <Detail treatment={treatment.data} />;
 }
 
+type Tab = 'sesiones' | 'plan' | 'evolucion';
+
 type OpenDialog = { kind: 'edit' } | { kind: 'status'; action: TreatmentAction } | null;
 
 function Detail({ treatment: t }: { treatment: TreatmentItem }) {
   const session = useRequiredSession();
   const [dialog, setDialog] = useState<OpenDialog>(null);
+  const [tab, setTab] = useState<Tab>('sesiones');
+  const seesClinical = canAccessRecord(session, 'clinical.read', [t.professionalId]);
+  const canEditPlan = canAccessRecord(session, 'clinical.write', [t.professionalId]);
 
   const clinicWide = permissionScope(session, 'treatments.read') === 'all';
   const appointments = useTreatmentAppointments(t.id, clinicWide ? null : session.professionalId);
@@ -253,73 +261,101 @@ function Detail({ treatment: t }: { treatment: TreatmentItem }) {
           </div>
         </Panel>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
-          <Panel
-            title="Sesiones"
-            description={
-              clinicWide
-                ? 'Citas vinculadas a este tratamiento.'
-                : 'Tus citas vinculadas a este tratamiento.'
-            }
-          >
-            {appointments.status === 'loading' && (
-              <ListSkeleton rows={4} label="Cargando sesiones…" />
-            )}
-            {appointments.status === 'error' && (
-              <ErrorState
-                size="compact"
-                description={appointments.error.message}
-                onRetry={appointments.retry}
-              />
-            )}
-            {progress &&
-              (progress.timeline.length === 0 ? (
-                <EmptyState
-                  size="compact"
-                  icon={<CalendarPlus />}
-                  title="Sin sesiones agendadas"
-                  description="Agenda la primera sesión para empezar el tratamiento."
-                  action={
-                    canSchedule &&
-                    t.status === 'ACTIVO' && (
-                      <Button asChild>
-                        <Link to={scheduleHref}>Agendar sesión</Link>
-                      </Button>
-                    )
-                  }
-                />
-              ) : (
-                <TreatmentTimeline
-                  items={progress.timeline}
-                  scheduleHref={canSchedule && t.status === 'ACTIVO' ? scheduleHref : undefined}
-                />
-              ))}
-          </Panel>
+        <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+          <TabsList label="Secciones del tratamiento">
+            <TabsTrigger value="sesiones">Sesiones</TabsTrigger>
+            {seesClinical && <TabsTrigger value="plan">Plan</TabsTrigger>}
+            {seesClinical && <TabsTrigger value="evolucion">Evolución</TabsTrigger>}
+          </TabsList>
+          <TabsContent value="sesiones">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+              <Panel
+                title="Sesiones"
+                description={
+                  clinicWide
+                    ? 'Citas vinculadas a este tratamiento.'
+                    : 'Tus citas vinculadas a este tratamiento.'
+                }
+              >
+                {appointments.status === 'loading' && (
+                  <ListSkeleton rows={4} label="Cargando sesiones…" />
+                )}
+                {appointments.status === 'error' && (
+                  <ErrorState
+                    size="compact"
+                    description={appointments.error.message}
+                    onRetry={appointments.retry}
+                  />
+                )}
+                {progress &&
+                  (progress.timeline.length === 0 ? (
+                    <EmptyState
+                      size="compact"
+                      icon={<CalendarPlus />}
+                      title="Sin sesiones agendadas"
+                      description="Agenda la primera sesión para empezar el tratamiento."
+                      action={
+                        canSchedule &&
+                        t.status === 'ACTIVO' && (
+                          <Button asChild>
+                            <Link to={scheduleHref}>Agendar sesión</Link>
+                          </Button>
+                        )
+                      }
+                    />
+                  ) : (
+                    <TreatmentTimeline
+                      items={progress.timeline}
+                      scheduleHref={canSchedule && t.status === 'ACTIVO' ? scheduleHref : undefined}
+                    />
+                  ))}
+              </Panel>
 
-          <Panel title="Datos del tratamiento">
-            <KeyValueList
-              columns={1}
-              items={[
-                {
-                  label: 'Cliente',
-                  value: (
-                    <Link
-                      to={`/clientes/${t.clientId}?tab=tratamientos`}
-                      className="inline-flex items-center gap-1.5 font-medium text-primary underline-offset-2 hover:underline"
-                    >
-                      <UserRound aria-hidden="true" className="size-4" />
-                      {t.clientName}
-                    </Link>
-                  ),
-                },
-                { label: 'Servicio', value: t.serviceName },
-                { label: 'Profesional', value: t.professionalName },
-                { label: 'Inicio', value: formatDateLong(t.startDate) },
-                ...(t.notes ? [{ label: 'Nota', value: t.notes }] : []),
-              ]}
-            />
-          </Panel>
-        </div>
+              <Panel title="Datos del tratamiento">
+                <KeyValueList
+                  columns={1}
+                  items={[
+                    {
+                      label: 'Cliente',
+                      value: (
+                        <Link
+                          to={`/clientes/${t.clientId}?tab=tratamientos`}
+                          className="inline-flex items-center gap-1.5 font-medium text-primary underline-offset-2 hover:underline"
+                        >
+                          <UserRound aria-hidden="true" className="size-4" />
+                          {t.clientName}
+                        </Link>
+                      ),
+                    },
+                    { label: 'Servicio', value: t.serviceName },
+                    { label: 'Profesional', value: t.professionalName },
+                    { label: 'Inicio', value: formatDateLong(t.startDate) },
+                    ...(t.notes ? [{ label: 'Nota', value: t.notes }] : []),
+                  ]}
+                />
+              </Panel>
+            </div>
+            {!seesClinical && (
+              <p className="mt-4 flex items-center gap-1.5 text-caption text-fg-subtle">
+                <Lock aria-hidden="true" className="size-3.5" />
+                El plan y la evolución clínica solo los ven el profesional y la administración.
+              </p>
+            )}
+          </TabsContent>
+          {seesClinical && (tab === 'plan' || tab === 'evolucion') && (
+            <TabsContent value={tab}>
+              {/* Se monta solo al abrir la pestaña: cada lectura clínica queda auditada. */}
+              <TreatmentClinicalPanels
+                treatmentId={t.id}
+                serviceName={t.serviceName}
+                canEditPlan={canEditPlan}
+                currentUid={session.uid}
+                isAdmin={session.role === 'ADMINISTRADOR'}
+                view={tab}
+              />
+            </TabsContent>
+          )}
+        </Tabs>
       </div>
 
       {dialog?.kind === 'edit' && progress && (

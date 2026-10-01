@@ -13,4 +13,4 @@
 | Primer administrador en producción    | `scripts/bootstrap-admin.mjs`                                                                                                                         |
 | Documentación                         | `docs/` (índice en `docs/INDEX.md`)                                                                                                                   |
 
-Módulos: auth/users, dashboard, clients, staff, settings, appointments (agenda), cash (caja y cobros), treatments, reports. Faltan: seguimiento clínico (Fase 12) y recordatorios (Fase 13).
+Módulos: auth/users, dashboard, clients, staff, settings, services, appointments (agenda), cash (caja y cobros), treatments, clinical (seguimiento), reports. Falta: recordatorios (Fase 13).

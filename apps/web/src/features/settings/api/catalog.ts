@@ -1,12 +1,14 @@
 import type {
   ClinicSettingsDoc,
   ClinicSettingsInput,
+  DeleteServiceInput,
   RoomDoc,
   RoomInput,
   SaveCatalogResult,
   ServiceDoc,
   ServiceInput,
   SetCatalogActiveInput,
+  SetServiceProfessionalsInput,
   UpdateClinicResult,
 } from '@kinesalud/shared';
 import { useMutation } from '@tanstack/react-query';
@@ -82,5 +84,19 @@ export function useSetServiceActive() {
   return useMutation({
     mutationFn: (input: SetCatalogActiveInput) =>
       callFunction<SetCatalogActiveInput>('settings-setServiceActive', input),
+  });
+}
+
+export function useDeleteService() {
+  return useMutation({
+    mutationFn: (input: DeleteServiceInput) =>
+      callFunction<DeleteServiceInput>('settings-deleteService', input),
+  });
+}
+
+export function useSetServiceProfessionals() {
+  return useMutation({
+    mutationFn: (input: SetServiceProfessionalsInput) =>
+      callFunction<SetServiceProfessionalsInput>('settings-setServiceProfessionals', input),
   });
 }

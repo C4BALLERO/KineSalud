@@ -30,6 +30,8 @@ export interface AppointmentItem {
   category: TreatmentCategory;
   roomName: string;
   sessionNumber: number | null;
+  /** Ya tiene nota clínica de sesión. */
+  sessionRecorded?: boolean;
 }
 
 export interface TreatmentItem {
@@ -124,6 +126,8 @@ interface AlertInput {
   now: Date;
   /** Etiqueta legible del próximo día hábil, p. ej. "el lunes 28". */
   formatDay: (day: DateKey) => string;
+  /** Ficha del profesional de la sesión: avisa de sus sesiones atendidas sin nota. */
+  recordsFor?: string | null;
 }
 
 /** Alertas accionables, ordenadas por urgencia. Solo aparecen si hay algo que hacer. */
@@ -133,8 +137,31 @@ export function buildAlerts({
   today,
   now,
   formatDay,
+  recordsFor = null,
 }: AlertInput): DashboardAlert[] {
   const alerts: DashboardAlert[] = [];
+
+  if (recordsFor) {
+    const toRecord = appointments.filter(
+      (a) =>
+        a.professionalId === recordsFor &&
+        a.status === 'ATENDIDA' &&
+        a.date <= today &&
+        a.sessionRecorded === false,
+    );
+    if (toRecord.length > 0) {
+      alerts.push({
+        id: 'sessions-to-record',
+        tone: 'warning',
+        title: `${toRecord.length} ${toRecord.length === 1 ? 'sesión atendida' : 'sesiones atendidas'} sin registrar`,
+        description: 'Completa la nota clínica: observaciones, evolución y dolor.',
+        action:
+          toRecord.length === 1
+            ? { label: 'Registrar', to: `/citas/${toRecord[0]!.id}/sesion` }
+            : { label: 'Ver citas', to: `/agenda?fecha=${toRecord[0]!.date}` },
+      });
+    }
+  }
 
   const unregistered = appointments.filter((a) => a.date === today && isUnregistered(a, now));
   if (unregistered.length > 0) {

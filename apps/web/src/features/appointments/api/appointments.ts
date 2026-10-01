@@ -53,6 +53,7 @@ export function toAgendaAppointment(id: string, d: DocumentData): AgendaAppointm
     priceCents: a.priceCents ?? null,
     paymentStatus: a.paymentStatus ?? 'POR_COBRAR',
     paymentId: a.paymentId ?? null,
+    sessionRecorded: a.sessionRecorded === true,
     createdBy: a.createdBy ?? null,
   };
 }

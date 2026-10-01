@@ -123,3 +123,16 @@ export function compatibleRooms<R extends Pick<RoomDoc, 'kind' | 'allowedCategor
       r.allowedCategories.includes(service.category),
   );
 }
+
+export const deleteServiceInputSchema = z.object({ id: idSchema });
+export type DeleteServiceInput = z.input<typeof deleteServiceInputSchema>;
+
+/** Profesionales que realizan un servicio (reemplaza la lista completa). */
+export const setServiceProfessionalsInputSchema = z.object({
+  serviceId: idSchema,
+  professionalIds: z
+    .array(idSchema)
+    .max(100)
+    .transform((v) => [...new Set(v)]),
+});
+export type SetServiceProfessionalsInput = z.input<typeof setServiceProfessionalsInputSchema>;

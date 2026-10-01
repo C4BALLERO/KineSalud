@@ -255,7 +255,7 @@ export function ProfessionalForm({
                             <p className="text-caption text-fg-subtle">
                               No hay servicios de esta área.{' '}
                               <Link
-                                to="/configuracion?tab=servicios"
+                                to="/servicios"
                                 className="font-medium text-primary underline underline-offset-2"
                               >
                                 Crear en Configuración

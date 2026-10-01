@@ -91,6 +91,11 @@ beforeEach(async () => {
     await setDoc(doc(fs, 'incomeStats', '2026-09'), { totalCents: 24000 });
     await setDoc(doc(fs, 'dailyStats', '2026-09-28'), { date: '2026-09-28', cells: {} });
     await setDoc(doc(fs, 'dailyIncome', '2026-09-28'), { date: '2026-09-28', totalCents: 0 });
+    await setDoc(doc(fs, 'clinicalRecords', 'c-diego'), { alerts: 'Alergia al látex' });
+    await setDoc(doc(fs, 'clinicalRecords', 'c-diego', 'sessionNotes', 'a-diego'), {
+      professionalId: 'prof-diego',
+      observations: 'x',
+    });
   });
 });
 
@@ -309,5 +314,24 @@ describe('reportes', () => {
   it('los ingresos diarios son solo de administración', async () => {
     await assertSucceeds(getDoc(doc(db('a', claims.admin), 'dailyIncome', '2026-09-28')));
     await assertFails(getDoc(doc(db('r', claims.recep), 'dailyIncome', '2026-09-28')));
+  });
+});
+
+describe('información clínica', () => {
+  it('nadie la lee ni la escribe desde la web, ni siquiera la administración o el profesional asignado', async () => {
+    for (const [uid, token] of [
+      ['a', claims.admin],
+      ['r', claims.recep],
+      ['d', claims.diego],
+    ] as const) {
+      const fs = db(uid, token);
+      await assertFails(getDoc(doc(fs, 'clinicalRecords', 'c-diego')));
+      await assertFails(getDoc(doc(fs, 'clinicalRecords', 'c-diego', 'sessionNotes', 'a-diego')));
+      await assertFails(
+        setDoc(doc(fs, 'clinicalRecords', 'c-diego', 'sessionNotes', 'nueva'), {
+          observations: 'x',
+        }),
+      );
+    }
   });
 });

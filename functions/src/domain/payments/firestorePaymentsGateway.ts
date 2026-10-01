@@ -41,6 +41,7 @@ function paymentsTx(tx: Transaction): PaymentsTx {
         priceCents: d.priceCents ?? null,
         paymentStatus: d.paymentStatus ?? 'POR_COBRAR',
         paymentId: d.paymentId ?? null,
+        sessionRecorded: d.sessionRecorded === true,
       };
     },
 

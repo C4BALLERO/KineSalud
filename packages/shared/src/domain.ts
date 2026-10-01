@@ -111,6 +111,8 @@ export interface AppointmentDoc<Ts = unknown> {
   priceCents: number | null;
   paymentStatus: AppointmentPaymentStatus;
   paymentId: string | null;
+  /** Ya tiene nota clínica de sesión (la nota vive en `clinicalRecords`). */
+  sessionRecorded: boolean;
   createdBy: string | null;
   createdAt: Ts;
   updatedAt: Ts;

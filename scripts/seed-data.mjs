@@ -473,6 +473,7 @@ export function buildDemoData(now = new Date()) {
             priceCents: s.priceCents,
             paymentStatus: 'POR_COBRAR',
             paymentId: null,
+            sessionRecorded: false,
             createdBy: 'demo-recepcion',
             createdAt: now,
             updatedAt: now,
@@ -485,6 +486,7 @@ export function buildDemoData(now = new Date()) {
 
   numberTreatmentSessions(treatments, appointments);
   const cash = buildCash({ appointments, today, now, random });
+  const clinical = buildClinical({ appointments, treatments, now, random });
 
   const clinicDay = [
     { start: '08:00', end: '13:00' },
@@ -541,6 +543,7 @@ export function buildDemoData(now = new Date()) {
     treatments,
     appointments,
     ...cash,
+    clinical,
   };
 }
 
@@ -593,6 +596,174 @@ function numberTreatmentSessions(treatments, appointments) {
       a.sessionNumber = null;
     }
   }
+}
+
+/* ---------- Seguimiento clínico (datos ficticios) ---------- */
+
+const NOTE_TEXT = {
+  FISIOTERAPIA: {
+    observations: [
+      'Termoterapia 15 min, movilización articular y TENS en zona lumbar. Buena tolerancia.',
+      'Liberación miofascial de paravertebrales y estiramientos guiados. Sin molestias al finalizar.',
+      'Ultrasonido terapéutico y ejercicios de control motor. Realiza la pauta sin dolor.',
+    ],
+    evolution: ['Menos rigidez matinal.', 'Mejora la flexión de tronco.', 'Dolor más localizado.'],
+    recommendations: [
+      'Calor local 15 min por la noche y ejercicios de la pauta 2 veces al día.',
+      'Evitar cargar peso; pausas activas cada hora en el trabajo.',
+    ],
+  },
+  REHABILITACION: {
+    observations: [
+      'Fortalecimiento de cuádriceps con banda elástica y ejercicios propioceptivos.',
+      'Ejercicios en cadena cinética cerrada y bicicleta estática 10 min.',
+      'Trabajo de rango articular y crioterapia al final de la sesión.',
+    ],
+    evolution: [
+      'Mayor estabilidad al apoyar.',
+      'Gana rango de movimiento.',
+      'Sube escaleras con menos dolor.',
+    ],
+    recommendations: [
+      'Hielo 10 min después de los ejercicios en casa.',
+      'Continuar con la serie de ejercicios 3 veces por semana.',
+    ],
+  },
+  ESTETICA: {
+    observations: [
+      'Drenaje linfático manual en miembros inferiores, 50 min.',
+      'Masaje reductor en abdomen y presoterapia 20 min.',
+      'Limpieza profunda, extracción y mascarilla hidratante.',
+    ],
+    evolution: [
+      'Menor retención de líquidos.',
+      'Piel más uniforme.',
+      'Disminuye la sensación de pesadez.',
+    ],
+    recommendations: ['Hidratación abundante durante el día.', 'Protector solar diario.'],
+  },
+};
+
+const PLAN_TEXT = {
+  FISIOTERAPIA: {
+    assessment:
+      'Dolor de espalda de 3 meses de evolución, empeora al estar sentado. Contractura paravertebral.',
+    goals: 'Reducir el dolor a EVA ≤ 3 y recuperar la movilidad para la jornada laboral.',
+    indications: 'Termoterapia, terapia manual, ejercicios de estabilización y educación postural.',
+  },
+  REHABILITACION: {
+    assessment:
+      'Rehabilitación posquirúrgica, limitación del rango articular y debilidad muscular.',
+    goals: 'Recuperar el rango completo y la marcha sin dolor en 12 sesiones.',
+    indications: 'Fortalecimiento progresivo, propiocepción y crioterapia después de cada sesión.',
+  },
+  ESTETICA: {
+    assessment: 'Retención de líquidos en miembros inferiores.',
+    goals: 'Disminuir el edema y la sensación de pesadez.',
+    indications: 'Drenaje linfático manual 2 veces por semana y presoterapia.',
+  },
+};
+
+const BACKGROUNDS = [
+  ['Hipertensión controlada. Cirugía de apendicitis (2018).', 'Alergia al ibuprofeno.'],
+  ['Sin antecedentes de importancia. Trabajo de oficina, sedentario.', null],
+  [
+    'Diabetes tipo 2 con tratamiento oral. Ex deportista.',
+    'Precaución con calor local en pies (sensibilidad reducida).',
+  ],
+  ['Hernia discal L4-L5 diagnosticada en 2024.', null],
+  ['Embarazo de 20 semanas.', 'No aplicar electroterapia ni calor en zona abdominal.'],
+];
+
+/**
+ * Notas de sesión para la mayoría de las citas atendidas (algunas quedan sin
+ * registrar, para el aviso del profesional), antecedentes de los pacientes con
+ * tratamiento y el plan de cada tratamiento.
+ */
+function buildClinical({ appointments, treatments, now, random }) {
+  const records = {};
+  const notes = [];
+  const plans = [];
+  const pick = (arr) => arr[Math.floor(random() * arr.length)];
+  const backgroundOf = (clientId) => {
+    const i = Number(clientId.slice(-2)) % BACKGROUNDS.length;
+    return { background: BACKGROUNDS[i][0], alerts: BACKGROUNDS[i][1] };
+  };
+  // Autor de la nota: la cuenta de demostración del profesional (Jorge no tiene cuenta).
+  const ACCOUNTS = {
+    'prof-ana': 'demo-admin',
+    'prof-diego': 'demo-fisio',
+    'prof-carla': 'demo-estetica',
+  };
+  const actorOf = (a) => ({ uid: ACCOUNTS[a.professionalId] ?? null, name: a.professionalName });
+
+  for (const [tid, t] of Object.entries(treatments)) {
+    records[t.clientId] ??= {
+      clientId: t.clientId,
+      ...backgroundOf(t.clientId),
+      updatedAt: now,
+      updatedBy: { uid: 'demo-admin', name: 'Ana Gutiérrez' },
+    };
+    if (t.status === 'ACTIVO' || t.status === 'SUSPENDIDO') {
+      plans.push({
+        clientId: t.clientId,
+        treatmentId: tid,
+        doc: {
+          treatmentId: tid,
+          ...PLAN_TEXT[t.category],
+          updatedAt: now,
+          updatedBy: { uid: null, name: t.professionalName },
+        },
+      });
+    }
+  }
+
+  // Dolor que baja sesión a sesión dentro de cada tratamiento.
+  const painByTreatment = new Map();
+  const attended = Object.entries(appointments)
+    .filter(([, a]) => a.status === 'ATENDIDA')
+    .sort((x, y) => x[1].startAt - y[1].startAt);
+  for (const [id, a] of attended) {
+    if (random() < 0.1) continue; // Sin registrar todavía.
+    const text = NOTE_TEXT[a.category];
+    let painBefore = null;
+    let painAfter = null;
+    if (a.category !== 'ESTETICA') {
+      const prev = painByTreatment.get(a.treatmentId ?? id) ?? 7 + Math.floor(random() * 2);
+      painBefore = Math.max(1, Math.min(10, Math.round(prev)));
+      painAfter = Math.max(0, painBefore - 1 - Math.floor(random() * 2));
+      painByTreatment.set(a.treatmentId ?? id, prev - 0.6);
+    }
+    notes.push({
+      clientId: a.clientId,
+      id,
+      doc: {
+        appointmentId: id,
+        treatmentId: a.treatmentId,
+        sessionNumber: a.sessionNumber,
+        date: a.date,
+        serviceName: a.serviceName,
+        professionalId: a.professionalId,
+        professionalName: a.professionalName,
+        observations: pick(text.observations),
+        evolution: random() < 0.7 ? pick(text.evolution) : null,
+        recommendations: random() < 0.6 ? pick(text.recommendations) : null,
+        painBefore,
+        painAfter,
+        createdAt: new Date(a.endAt.getTime() + 10 * 60_000),
+        createdBy: actorOf(a),
+        updatedAt: null,
+      },
+    });
+    a.sessionRecorded = true;
+    records[a.clientId] ??= {
+      clientId: a.clientId,
+      ...backgroundOf(a.clientId),
+      updatedAt: now,
+      updatedBy: { uid: 'demo-admin', name: 'Ana Gutiérrez' },
+    };
+  }
+  return { records, notes, plans };
 }
 
 /* ---------- Caja: una jornada por día con cobros de las sesiones atendidas ---------- */

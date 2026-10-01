@@ -152,7 +152,7 @@ export async function chargeAppointment(
     if (listPriceCents === null) {
       throw new DomainError(
         'failed-precondition',
-        `El servicio «${appointment.serviceName}» no tiene precio. Pide a la administración que lo configure en Configuración → Servicios.`,
+        `El servicio «${appointment.serviceName}» no tiene precio. Pide a la administración que lo configure en Servicios.`,
       );
     }
     if (input.discountCents > listPriceCents) {

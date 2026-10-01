@@ -7,6 +7,7 @@ import {
   Settings,
   ShieldCheck,
   Stethoscope,
+  Tags,
   Users,
   Wallet,
   type LucideIcon,
@@ -87,6 +88,15 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Stethoscope,
     group: 'gestion',
     // El profesional consulta su propia ficha desde "Mi cuenta", no desde el directorio.
+    visible: (s) => permissionScope(s, 'staff.read') === 'all',
+  },
+  {
+    id: 'servicios',
+    to: '/servicios',
+    label: 'Servicios',
+    icon: Tags,
+    group: 'gestion',
+    // Recepción lo consulta (precios); solo la administración lo edita.
     visible: (s) => permissionScope(s, 'staff.read') === 'all',
   },
   {

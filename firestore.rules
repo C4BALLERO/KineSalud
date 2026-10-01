@@ -106,6 +106,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ---------- Información clínica (Fase 12) ----------
+    // Cerrada para la web, también para la administración: se lee y se escribe
+    // solo por Cloud Functions, que verifican el acceso y auditan cada uso.
+    match /clinicalRecords/{clientId}/{document=**} {
+      allow read, write: if false;
+    }
+    match /clinicalRecords/{clientId} {
+      allow read, write: if false;
+    }
+
     // ---------- Reportes (resúmenes diarios que mantiene un trigger) ----------
     // Citas por día: reportes operativos de recepción y administración.
     match /dailyStats/{date} {

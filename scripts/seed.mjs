@@ -133,6 +133,26 @@ async function seedOperationalData(db) {
     }
     console.log(`✓ ${name.padEnd(13)} ${entries.length}`);
   }
+
+  // Información clínica (ficticia): documento por paciente y subcolecciones.
+  await db.recursiveDelete(db.collection('clinicalRecords'));
+  const { records, notes, plans } = data.clinical;
+  const writes = [
+    ...Object.entries(records).map(([id, doc]) => [db.doc(`clinicalRecords/${id}`), doc]),
+    ...notes.map((n) => [db.doc(`clinicalRecords/${n.clientId}/sessionNotes/${n.id}`), n.doc]),
+    ...plans.map((p) => [
+      db.doc(`clinicalRecords/${p.clientId}/treatmentPlans/${p.treatmentId}`),
+      p.doc,
+    ]),
+  ];
+  for (let i = 0; i < writes.length; i += 400) {
+    const batch = db.batch();
+    for (const [ref, doc] of writes.slice(i, i + 400)) batch.set(ref, doc);
+    await batch.commit();
+  }
+  console.log(
+    `✓ clinicalRecords ${Object.keys(records).length} (${notes.length} notas, ${plans.length} planes)`,
+  );
 }
 
 main().catch((err) => {

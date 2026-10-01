@@ -148,6 +148,7 @@ function appointment(over: Partial<StoredAppointment> = {}): StoredAppointment {
     priceCents: 15000,
     paymentStatus: 'POR_COBRAR',
     paymentId: null,
+    sessionRecorded: false,
     createdBy: null,
     ...over,
   };

@@ -222,6 +222,7 @@ export async function createAppointment(
       priceCents: service.priceCents ?? null,
       paymentStatus: 'POR_COBRAR',
       paymentId: null,
+      sessionRecorded: false,
       createdBy: actor.uid ?? null,
     });
     tx.addEvent(id, {
@@ -336,7 +337,7 @@ export async function rescheduleAppointment(
 /* ---------- Cambios de estado ---------- */
 
 /** Efectos de entrar o salir de ATENDIDA / NO_ASISTIO sobre cliente y tratamiento. */
-function applyCounters(
+export function applyCounters(
   tx: BookingTx,
   appointment: StoredAppointment,
   from: AppointmentStatus,

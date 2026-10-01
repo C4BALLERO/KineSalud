@@ -50,6 +50,7 @@ export function useAppointmentsBetween(scope: Scope, from: DateKey, to: DateKey)
         category: a.category,
         roomName: a.roomName,
         sessionNumber: a.sessionNumber,
+        sessionRecorded: a.sessionRecorded === true,
       };
     },
   );

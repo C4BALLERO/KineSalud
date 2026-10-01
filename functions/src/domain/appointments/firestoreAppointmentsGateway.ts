@@ -27,6 +27,7 @@ function toStored(id: string, d: DocumentData): StoredAppointment {
     priceCents: d.priceCents ?? null,
     paymentStatus: d.paymentStatus ?? 'POR_COBRAR',
     paymentId: d.paymentId ?? null,
+    sessionRecorded: d.sessionRecorded === true,
     createdBy: d.createdBy ?? null,
   };
 }
@@ -39,7 +40,7 @@ function toFirestore(changes: Partial<NewAppointment>): DocumentData {
   return out;
 }
 
-function bookingTx(tx: Transaction): BookingTx {
+export function bookingTx(tx: Transaction): BookingTx {
   const lockedDays = new Set<string>();
   let locksWritten = false;
 

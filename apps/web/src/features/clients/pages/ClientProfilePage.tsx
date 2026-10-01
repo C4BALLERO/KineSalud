@@ -1,13 +1,5 @@
 import { ageOn, CI_EXTENSION_LABELS, toDateKey } from '@kinesalud/shared';
-import {
-  CalendarPlus,
-  ClipboardList,
-  HeartPulse,
-  MoreHorizontal,
-  Pencil,
-  UserCheck,
-  UserX,
-} from 'lucide-react';
+import { CalendarPlus, HeartPulse, MoreHorizontal, Pencil, UserCheck, UserX } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { AppointmentRow } from '@/components/domain/AppointmentRow';
@@ -46,6 +38,7 @@ import {
   useSetClientStatus,
   type ClientDetail,
 } from '../api/clients';
+import { ClinicalRecordPanel } from '@/features/clinical/components/ClinicalRecordPanel';
 import { ClientStatusBadge } from '../components/ClientStatusBadge';
 import { AppointmentHistory, TreatmentList } from '../components/ClientHistory';
 
@@ -404,20 +397,24 @@ export function ClientProfilePage() {
         </TabsContent>
 
         <TabsContent value="clinica">
-          <Panel>
-            {canReadClinical ? (
-              <EmptyState
-                icon={<ClipboardList />}
-                title="Historia clínica"
-                description="La evolución, las observaciones y las recomendaciones de cada sesión se registran con el módulo de Seguimiento (Fase 12). Solo las ve el profesional asignado y la administración."
+          {canReadClinical ? (
+            // Se monta solo al abrir la pestaña: cada lectura queda auditada.
+            tab === 'clinica' && (
+              <ClinicalRecordPanel
+                clientId={c.id}
+                clientName={c.fullName}
+                currentUid={session.uid}
+                isAdmin={session.role === 'ADMINISTRADOR'}
               />
-            ) : (
+            )
+          ) : (
+            <Panel>
               <NoPermissionState
                 title="Información clínica restringida"
                 description="La historia clínica solo es visible para el profesional que atiende al cliente y para la administración."
               />
-            )}
-          </Panel>
+            </Panel>
+          )}
         </TabsContent>
       </Tabs>
 

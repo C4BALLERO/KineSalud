@@ -172,7 +172,7 @@ export function PaymentDialog({
         )}
         {!priceLoading && listPrice === null && (
           <InlineAlert tone="warning" title="El servicio no tiene precio">
-            Pide a la administración que lo configure en Configuración → Servicios.
+            Pide a la administración que lo configure en Servicios.
           </InlineAlert>
         )}
         {general && <InlineAlert tone="danger">{general}</InlineAlert>}

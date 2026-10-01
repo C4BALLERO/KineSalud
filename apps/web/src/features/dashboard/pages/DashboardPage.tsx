@@ -119,6 +119,7 @@ export function DashboardPage() {
         today,
         now,
         formatDay: (d) => (d === addDays(today, 1) ? 'para mañana' : `para el ${formatDayLong(d)}`),
+        recordsFor: session.professionalId,
       }),
     };
   }, [appointments, treatments, today, monday, now, onlyMine, session.professionalId]);

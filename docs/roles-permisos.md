@@ -53,6 +53,7 @@ Alcances:
 | Agenda        |       ✔       |       ✔       |   "Mi agenda"   |
 | Caja          |       ✔       |       ✔       |        —        |
 | Clientes      |       ✔       |       ✔       | "Mis pacientes" |
+| Servicios     |    editar     |   consultar   |        —        |
 | Tratamientos  |       ✔       |       ✔       |        ✔        |
 | Personal      |       ✔       |       ✔       |        —        |
 | Recordatorios |       ✔       |       ✔       |        —        |
@@ -94,3 +95,18 @@ La UI nunca es la barrera de seguridad; solo mejora la experiencia.
 - **Administración** (`reports.view`, `reports.viewWorkload`, `income.view`): todo, incluida la carga por profesional, los ingresos y el filtro por profesional. Además, puede recalcular las estadísticas.
 - **Recepción** (`reports.view`): reportes operativos (citas, asistencia, áreas, tratamientos y clientes nuevos), sin carga por profesional ni ingresos.
 - **Profesional:** no accede a Reportes. Su resumen está en "Mi día".
+
+### Seguimiento clínico: qué puede hacer cada rol
+
+- **Administración:** ve y edita la historia clínica, los planes y las notas de todos los pacientes. Edita cualquier nota sin límite de tiempo.
+- **Profesional:** ve la historia clínica de sus pacientes asignados. Registra las sesiones de sus propias citas y define el plan de sus tratamientos. Edita sus notas durante 7 días.
+- **Recepción:** no ve información clínica. En el perfil del cliente y en el tratamiento aparece "Información clínica restringida".
+- Cada acceso queda en la auditoría, también las lecturas.
+
+### Servicios: qué puede hacer cada rol
+
+- **Administración:**
+  - crea, edita, duplica, activa y desactiva servicios;
+  - asigna los profesionales que los realizan (solo quienes atienden el área);
+  - elimina los que nunca se usaron. Uno con citas o tratamientos no se elimina: se desactiva.
+- **Recepción:** consulta el catálogo (precios, duración y quién lo realiza).

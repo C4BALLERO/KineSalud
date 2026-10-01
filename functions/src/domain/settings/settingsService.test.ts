@@ -9,7 +9,14 @@ import type {
   StoredRoom,
   StoredService,
 } from './settingsGateway';
-import { saveRoom, saveService, setRoomActive, updateClinicSettings } from './settingsService';
+import {
+  deleteService,
+  saveRoom,
+  saveService,
+  setRoomActive,
+  setServiceProfessionals,
+  updateClinicSettings,
+} from './settingsService';
 
 class InMemorySettings implements SettingsGateway {
   clinic: ClinicSettingsDoc | null = null;
@@ -17,6 +24,7 @@ class InMemorySettings implements SettingsGateway {
   rooms = new Map<string, StoredRoom>();
   services = new Map<string, StoredService>();
   audits: AuditEntry[] = [];
+  usage = new Map<string, { appointments: number; treatments: number }>();
   private seq = 0;
 
   async saveClinic(doc: ClinicSettingsDoc) {
@@ -40,6 +48,18 @@ class InMemorySettings implements SettingsGateway {
     const serviceId = id ?? `srv-${++this.seq}`;
     this.services.set(serviceId, { id: serviceId, ...doc });
     return serviceId;
+  }
+  async countServiceUsage(id: string) {
+    return this.usage.get(id) ?? { appointments: 0, treatments: 0 };
+  }
+  async deleteService(id: string) {
+    this.services.delete(id);
+  }
+  async saveProfessionalServices(updates: { id: string; serviceIds: string[] }[]) {
+    for (const u of updates) {
+      const p = this.professionals.find((x) => x.id === u.id)!;
+      p.serviceIds = u.serviceIds;
+    }
   }
   async audit(entry: AuditEntry) {
     this.audits.push(entry);
@@ -145,5 +165,62 @@ describe('servicios', () => {
     await expect(
       saveService(gw, admin, { ...service, serviceId: id, durationMin: 60 }),
     ).resolves.toEqual({ id });
+  });
+});
+
+describe('eliminar y asignar servicios', () => {
+  const lumbar = {
+    name: 'Fisioterapia lumbar',
+    category: 'FISIOTERAPIA' as const,
+    durationMin: 45,
+    bufferMin: 15,
+    defaultSessions: 10,
+    roomKinds: ['CAMILLA' as const],
+    priceCents: 15000,
+  };
+  const pro = (
+    id: string,
+    categories: ProfessionalSchedule['categories'],
+    serviceIds: string[],
+  ) => ({
+    id,
+    displayName: `Lic. ${id}`,
+    active: true,
+    weeklySchedule: {},
+    serviceIds,
+    categories,
+  });
+
+  it('no elimina un servicio con historial: sugiere desactivarlo', async () => {
+    const { id } = await saveService(gw, admin, lumbar);
+    gw.usage.set(id, { appointments: 3, treatments: 1 });
+    await expect(deleteService(gw, admin, { id })).rejects.toThrow(
+      /3 citas y 1 tratamiento.*Desactívalo/,
+    );
+    expect(gw.services.has(id)).toBe(true);
+  });
+
+  it('elimina uno sin uso y lo quita de las fichas que lo ofrecían', async () => {
+    const { id } = await saveService(gw, admin, lumbar);
+    gw.professionals = [pro('ana', ['FISIOTERAPIA'], [id, 'otro'])];
+    await expect(deleteService(gw, recep, { id })).rejects.toBeInstanceOf(DomainError);
+    await deleteService(gw, admin, { id });
+    expect(gw.services.has(id)).toBe(false);
+    expect(gw.professionals[0]?.serviceIds).toEqual(['otro']);
+    expect(gw.audits.at(-1)?.action).toBe('service.delete');
+  });
+
+  it('asigna profesionales solo si atienden el área del servicio', async () => {
+    const { id } = await saveService(gw, admin, lumbar);
+    gw.professionals = [
+      pro('ana', ['FISIOTERAPIA'], []),
+      pro('jorge', ['FISIOTERAPIA', 'REHABILITACION'], [id]),
+      pro('carla', ['ESTETICA'], []),
+    ];
+    await expect(
+      setServiceProfessionals(gw, admin, { serviceId: id, professionalIds: ['carla'] }),
+    ).rejects.toThrow(/Lic. carla no atiende fisioterapia/);
+    await setServiceProfessionals(gw, admin, { serviceId: id, professionalIds: ['ana'] });
+    expect(gw.professionals.map((p) => p.serviceIds)).toEqual([[id], [], []]);
   });
 });

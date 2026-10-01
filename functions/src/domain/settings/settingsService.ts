@@ -2,10 +2,12 @@ import {
   CLINIC_TIMEZONE,
   clinicSettingsInputSchema,
   daysOutsideHours,
+  deleteServiceInputSchema,
   normalizeSearchText,
   roomInputSchema,
   serviceInputSchema,
   setCatalogActiveInputSchema,
+  setServiceProfessionalsInputSchema,
   TREATMENT_CATEGORY_LABELS,
   type SaveCatalogResult,
   type UpdateClinicResult,
@@ -154,5 +156,104 @@ export async function setServiceActive(
     action: active ? 'service.activate' : 'service.deactivate',
     entity: 'services',
     entityId: id,
+  });
+}
+
+/**
+ * Elimina un servicio que nunca se usó. Con citas o tratamientos registrados
+ * no se borra (se perdería el historial): se ofrece desactivarlo.
+ */
+export async function deleteService(
+  gateway: SettingsGateway,
+  actor: Actor,
+  data: unknown,
+): Promise<void> {
+  requirePermission(actor, 'settings.manage');
+  const { id } = parseInput(deleteServiceInputSchema, data);
+  const current = (await gateway.listServices()).find((s) => s.id === id);
+  if (!current) throw new DomainError('not-found', 'El servicio no existe.');
+
+  const usage = await gateway.countServiceUsage(id);
+  if (usage.appointments > 0 || usage.treatments > 0) {
+    const parts = [
+      usage.appointments > 0 &&
+        `${usage.appointments} ${usage.appointments === 1 ? 'cita' : 'citas'}`,
+      usage.treatments > 0 &&
+        `${usage.treatments} ${usage.treatments === 1 ? 'tratamiento' : 'tratamientos'}`,
+    ].filter(Boolean);
+    throw new DomainError(
+      'failed-precondition',
+      `No se puede eliminar «${current.name}»: tiene ${parts.join(' y ')} en el historial. Desactívalo para que no se pueda agendar.`,
+      { usage },
+    );
+  }
+
+  // Quien lo ofrecía deja de tenerlo en su ficha.
+  const offering = (await gateway.listProfessionals()).filter((p) => p.serviceIds.includes(id));
+  if (offering.length > 0) {
+    await gateway.saveProfessionalServices(
+      offering.map((p) => ({ id: p.id, serviceIds: p.serviceIds.filter((s) => s !== id) })),
+    );
+  }
+  await gateway.deleteService(id);
+  await gateway.audit({
+    actor: auditActor(actor),
+    action: 'service.delete',
+    entity: 'services',
+    entityId: id,
+    meta: { name: current.name },
+  });
+}
+
+/**
+ * Define qué profesionales realizan un servicio. Cada uno debe atender el
+ * área del servicio (fisioterapia, rehabilitación o estética).
+ */
+export async function setServiceProfessionals(
+  gateway: SettingsGateway,
+  actor: Actor,
+  data: unknown,
+): Promise<void> {
+  requirePermission(actor, 'settings.manage');
+  const { serviceId, professionalIds } = parseInput(setServiceProfessionalsInputSchema, data);
+  const service = (await gateway.listServices()).find((s) => s.id === serviceId);
+  if (!service) throw new DomainError('not-found', 'El servicio no existe.');
+
+  const professionals = await gateway.listProfessionals();
+  const unknown = professionalIds.filter((id) => !professionals.some((p) => p.id === id));
+  if (unknown.length > 0) throw new DomainError('not-found', 'Algún profesional ya no existe.');
+  const wrongArea = professionals
+    .filter((p) => professionalIds.includes(p.id) && !p.categories.includes(service.category))
+    .map((p) => p.displayName);
+  if (wrongArea.length > 0) {
+    throw new DomainError(
+      'failed-precondition',
+      `${wrongArea.join(', ')} no ${wrongArea.length === 1 ? 'atiende' : 'atienden'} ${TREATMENT_CATEGORY_LABELS[service.category].toLowerCase()}. Agrega el área en su ficha primero.`,
+      { field: 'professionalIds' },
+    );
+  }
+
+  const updates = professionals
+    .map((p) => {
+      const has = p.serviceIds.includes(serviceId);
+      const wants = professionalIds.includes(p.id);
+      if (has === wants) return null;
+      return {
+        id: p.id,
+        serviceIds: wants
+          ? [...p.serviceIds, serviceId]
+          : p.serviceIds.filter((s) => s !== serviceId),
+      };
+    })
+    .filter((u): u is { id: string; serviceIds: string[] } => u !== null);
+  if (updates.length === 0) return;
+
+  await gateway.saveProfessionalServices(updates);
+  await gateway.audit({
+    actor: auditActor(actor),
+    action: 'service.setProfessionals',
+    entity: 'services',
+    entityId: serviceId,
+    meta: { professionalIds },
   });
 }

@@ -4,6 +4,7 @@ import {
   APPOINTMENT_STATUS_LABELS,
   canAccessRecord,
   canCharge,
+  canRecordSession,
   hasPermission,
   PAYMENT_METHOD_LABELS,
   permissionScope,
@@ -15,6 +16,7 @@ import {
   CircleCheck,
   CircleDollarSign,
   CircleX,
+  ClipboardPen,
   Clock,
   PencilLine,
   UserRound,
@@ -133,6 +135,8 @@ function Detail({ appointment: a }: { appointment: AgendaAppointment }) {
   const disabledReason = actions.find((s) => !s.enabled)?.reason ?? null;
   const cancelAction = actions.find((s) => s.action === 'CANCELAR');
   const seesPayment = canAccessRecord(session, 'payments.read', [a.professionalId]);
+  const writesClinical = canAccessRecord(session, 'clinical.write', [a.professionalId]);
+  const sessionCheck = canRecordSession(a, now);
   const managesPayments = hasPermission(session, 'payments.manage');
 
   const run = async (action: AppointmentAction) => {
@@ -186,6 +190,27 @@ function Detail({ appointment: a }: { appointment: AgendaAppointment }) {
           ...(a.cancelReason ? [{ label: 'Motivo de cancelación', value: a.cancelReason }] : []),
         ]}
       />
+
+      {writesClinical && (a.sessionRecorded || sessionCheck.ok) && (
+        <section
+          aria-label="Sesión clínica"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border px-4 py-3"
+        >
+          <p className="text-body-sm text-fg">
+            {a.sessionRecorded
+              ? 'La sesión ya está registrada.'
+              : a.status === 'ATENDIDA'
+                ? 'Falta registrar la sesión.'
+                : 'Registra la sesión al atender: la cita quedará como atendida.'}
+          </p>
+          <Button asChild size="sm" variant={a.sessionRecorded ? 'secondary' : 'primary'}>
+            <Link to={`/citas/${a.id}/sesion`}>
+              <ClipboardPen aria-hidden="true" />
+              {a.sessionRecorded ? 'Ver sesión' : 'Registrar sesión'}
+            </Link>
+          </Button>
+        </section>
+      )}
 
       {seesPayment && (
         <PaymentSection

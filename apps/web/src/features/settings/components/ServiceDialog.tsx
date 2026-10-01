@@ -25,13 +25,16 @@ import { useSaveService, type ServiceItem } from '../api/catalog';
 
 interface ServiceDialogProps {
   service: ServiceItem | null;
+  /** Al duplicar: valores iniciales de otro servicio (se crea uno nuevo). */
+  template?: ServiceItem;
   onClose: () => void;
 }
 
 const numberField = { valueAsNumber: true } as const;
 
 /** Crear o editar un servicio del catálogo. */
-export function ServiceDialog({ service, onClose }: ServiceDialogProps) {
+export function ServiceDialog({ service, template, onClose }: ServiceDialogProps) {
+  const base = service ?? template;
   const toast = useToast();
   const saveService = useSaveService();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -46,14 +49,14 @@ export function ServiceDialog({ service, onClose }: ServiceDialogProps) {
     mode: 'onTouched',
     defaultValues: {
       serviceId: service?.id ?? null,
-      name: service?.name ?? '',
-      category: service?.category ?? 'FISIOTERAPIA',
-      durationMin: service?.durationMin ?? 45,
-      bufferMin: service?.bufferMin ?? 15,
-      defaultSessions: service?.defaultSessions ?? 10,
-      roomKinds: service?.roomKinds ?? [],
+      name: service?.name ?? (template ? `${template.name} (copia)` : ''),
+      category: base?.category ?? 'FISIOTERAPIA',
+      durationMin: base?.durationMin ?? 45,
+      bufferMin: base?.bufferMin ?? 15,
+      defaultSessions: base?.defaultSessions ?? 10,
+      roomKinds: base?.roomKinds ?? [],
       // NaN = vacío: el esquema pide completarlo.
-      priceCents: service?.priceCents ?? Number.NaN,
+      priceCents: base?.priceCents ?? Number.NaN,
     },
   });
 
@@ -130,7 +133,7 @@ export function ServiceDialog({ service, onClose }: ServiceDialogProps) {
               {(p) => (
                 <PriceInput
                   {...p}
-                  initial={service?.priceCents ?? null}
+                  initial={base?.priceCents ?? null}
                   onBlur={field.onBlur}
                   onChange={(cents) => field.onChange(cents ?? Number.NaN)}
                 />
