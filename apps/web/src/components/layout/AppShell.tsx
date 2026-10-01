@@ -4,6 +4,7 @@ import { BREAKPOINTS, useMediaQuery } from '@/hooks/useMediaQuery';
 import { BottomNav } from './BottomNav';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { useReminderTick } from '@/features/reminders/hooks/useReminderTick';
 
 /**
  * Estructura principal de la aplicación autenticada.
@@ -12,6 +13,7 @@ import { Topbar } from './Topbar';
  * - Escritorio (≥1280): sidebar completo.
  */
 export function AppShell() {
+  useReminderTick();
   const isDesktop = useMediaQuery(BREAKPOINTS.xl);
   // null = automático según el ancho de pantalla; boolean = elección del usuario.
   const [userCollapsed, setUserCollapsed] = useState<boolean | null>(null);

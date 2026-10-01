@@ -45,6 +45,7 @@ La guía completa, con los emuladores y las variables de entorno, está en [docs
 - [Design System](docs/design-system.md)
 - [Navegación, pantallas y flujos](docs/flujos.md)
 - [Instalación, configuración y despliegue](docs/instalacion.md)
+- [Despliegue gratuito sin tarjeta (Firebase Spark + Vercel)](docs/despliegue-gratuito.md), rama `despliegue-gratuito`
 - [Preparación para el chatbot](docs/integracion-chatbot.md)
 - [Decisiones de arquitectura (ADR)](docs/adr/)
 - [Avance por fases](docs/fases.md)

@@ -25,7 +25,10 @@
     "emulators": "npm run build -w @kinesalud/functions && node scripts/firebase.mjs emulators:start --project demo-kinesalud",
     "seed": "node scripts/seed.mjs",
     "deploy": "npm run check && npm run build && firebase deploy --project prod",
-    "bootstrap:admin": "node scripts/bootstrap-admin.mjs"
+    "bootstrap:admin": "node scripts/bootstrap-admin.mjs",
+    "build:vercel": "node scripts/build-vercel.mjs",
+    "emulators:gratis": "node scripts/firebase.mjs emulators:start --only auth,firestore --project demo-kinesalud",
+    "api:local": "node scripts/build-vercel.mjs --api-only --local && node .api-local/server.cjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
