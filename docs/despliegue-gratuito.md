@@ -25,6 +25,8 @@ npx vercel@62 link --yes --project kinesalud
 
 `login` abre la autorización en el navegador (cuenta Hobby, sin tarjeta). `link` crea el proyecto si no existe y guarda el vínculo en `.vercel/project.json`, que git ignora. No hace falta conectar el repositorio de GitHub: se publica desde tu computadora y `vercel.json` desactiva los despliegues por push.
 
+Dirección fija del proyecto (ya asignada y autorizada en Firebase): **https://kinesaludyvida.vercel.app**, con `npx vercel@62 domains add kinesaludyvida.vercel.app kinesalud`.
+
 ## 2. Clave de la cuenta de servicio (la haces tú)
 
 El servidor en Vercel necesita una credencial para hablar con Firebase.
