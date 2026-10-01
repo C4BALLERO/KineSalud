@@ -13,6 +13,7 @@ import {
   getDoc,
   getDocs,
   query,
+  serverTimestamp,
   setDoc,
   where,
 } from 'firebase/firestore';
@@ -92,6 +93,8 @@ beforeEach(async () => {
     await setDoc(doc(fs, 'dailyStats', '2026-09-28'), { date: '2026-09-28', cells: {} });
     await setDoc(doc(fs, 'dailyIncome', '2026-09-28'), { date: '2026-09-28', totalCents: 0 });
     await setDoc(doc(fs, 'clinicalRecords', 'c-diego'), { alerts: 'Alergia al látex' });
+    await setDoc(doc(fs, 'reminders', 'a-diego'), { status: 'ENVIADO', clientName: 'Carla' });
+    await setDoc(doc(fs, 'notifications', 'n-recep'), { userId: 'r', title: 'x', read: false });
     await setDoc(doc(fs, 'clinicalRecords', 'c-diego', 'sessionNotes', 'a-diego'), {
       professionalId: 'prof-diego',
       observations: 'x',
@@ -333,5 +336,45 @@ describe('información clínica', () => {
         }),
       );
     }
+  });
+});
+
+describe('recordatorios y notificaciones', () => {
+  it('recepción y administración leen los recordatorios; el profesional no; nadie los escribe', async () => {
+    await assertSucceeds(getDoc(doc(db('r', claims.recep), 'reminders', 'a-diego')));
+    await assertSucceeds(getDoc(doc(db('a', claims.admin), 'reminders', 'a-diego')));
+    await assertFails(getDoc(doc(db('d', claims.diego), 'reminders', 'a-diego')));
+    await assertFails(
+      setDoc(doc(db('r', claims.recep), 'reminders', 'a-diego'), { status: 'CONFIRMADO' }),
+    );
+  });
+
+  it('cada persona ve sus notificaciones y solo puede marcarlas como leídas', async () => {
+    const mine = doc(db('r', claims.recep), 'notifications', 'n-recep');
+    await assertSucceeds(getDoc(mine));
+    await assertFails(getDoc(doc(db('a', claims.admin), 'notifications', 'n-recep')));
+    await assertFails(setDoc(mine, { title: 'cambiado' }, { merge: true }));
+    await assertSucceeds(setDoc(mine, { read: true }, { merge: true }));
+    await assertFails(
+      setDoc(doc(db('r', claims.recep), 'notifications', 'nueva'), { userId: 'r', read: false }),
+    );
+  });
+
+  it('cada persona registra solo sus dispositivos para push', async () => {
+    const fs = db('r', claims.recep);
+    await assertSucceeds(
+      setDoc(doc(fs, 'users', 'r', 'devices', 'd1'), {
+        token: 'abc',
+        userAgent: 'Chrome',
+        createdAt: serverTimestamp(),
+      }),
+    );
+    await assertFails(
+      setDoc(doc(fs, 'users', 'otro', 'devices', 'd1'), {
+        token: 'abc',
+        userAgent: 'Chrome',
+        createdAt: serverTimestamp(),
+      }),
+    );
   });
 });

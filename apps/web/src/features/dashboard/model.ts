@@ -128,6 +128,8 @@ interface AlertInput {
   formatDay: (day: DateKey) => string;
   /** Ficha del profesional de la sesión: avisa de sus sesiones atendidas sin nota. */
   recordsFor?: string | null;
+  /** Recordatorios en la cola de recepción (solo para quien los gestiona). */
+  pendingReminders?: number;
 }
 
 /** Alertas accionables, ordenadas por urgencia. Solo aparecen si hay algo que hacer. */
@@ -138,8 +140,19 @@ export function buildAlerts({
   now,
   formatDay,
   recordsFor = null,
+  pendingReminders = 0,
 }: AlertInput): DashboardAlert[] {
   const alerts: DashboardAlert[] = [];
+
+  if (pendingReminders > 0) {
+    alerts.push({
+      id: 'reminders',
+      tone: 'warning',
+      title: `${pendingReminders} ${pendingReminders === 1 ? 'recordatorio' : 'recordatorios'} por gestionar`,
+      description: 'Contacta a cada cliente para confirmar o recordar su cita.',
+      action: { label: 'Gestionar', to: '/recordatorios' },
+    });
+  }
 
   if (recordsFor) {
     const toRecord = appointments.filter(

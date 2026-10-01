@@ -12,6 +12,7 @@ import { FormField } from '@/components/ui/FormField';
 import { InlineAlert } from '@/components/ui/InlineAlert';
 import { KeyValueList } from '@/components/ui/KeyValueList';
 import { Panel } from '@/components/ui/Panel';
+import { PushNotificationsPanel } from '../components/PushNotificationsPanel';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { useToast } from '@/components/ui/toast-context';
 import { changePassword } from '@/features/auth/api/authApi';
@@ -109,6 +110,7 @@ export function AccountPage() {
         >
           <ChangePasswordForm />
         </Panel>
+        {session.role !== 'PROFESIONAL' && <PushNotificationsPanel uid={session.uid} />}
       </div>
     </>
   );

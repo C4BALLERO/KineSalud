@@ -93,3 +93,15 @@ Protecciones configuradas para no salir de la capa gratuita:
 - **Limpieza de imágenes:** en el primer `firebase deploy` la CLI pregunta cuántos días conservar las imágenes de las Functions. Responde **1**. Si no preguntó, ejecuta `firebase functions:artifacts:setpolicy --project prod`. Así Artifact Registry no pasa de 0,5 GB.
 - **Alerta de presupuesto de 1 USD** en Google Cloud → Facturación → Presupuestos y alertas. Google no corta el servicio al llegar al monto, solo avisa por correo: si llega un aviso, revisa el uso en Firebase → Uso y facturación.
 - Los reportes (Fase 14) leen resúmenes diarios precalculados en lugar de todas las citas, para no gastar lecturas.
+
+## Notificaciones push (opcional)
+
+La campana de la app funciona sin configurar nada. Para los avisos push del navegador:
+
+1. Consola de Firebase → Configuración del proyecto → **Cloud Messaging** → Certificados push web → **Generar par de claves**.
+2. Copia la clave pública en `apps/web/.env.production.local` como `VITE_FIREBASE_VAPID_KEY=...` y vuelve a publicar la web (`firebase deploy --only hosting --project prod`).
+3. Cada persona de recepción o administración los activa en **Mi cuenta → Avisos en este dispositivo**.
+
+## Tarea programada de recordatorios
+
+`triggers-processReminders` corre cada 15 minutos con Cloud Scheduler, que se crea solo al desplegar en el plan Blaze. La capa gratuita incluye 3 tareas programadas por cuenta de facturación, y el sistema usa una.

@@ -8,7 +8,6 @@ import { AuthActionPage } from '@/features/auth/pages/AuthActionPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { AppLoadingPage } from '@/pages/AppLoadingPage';
-import { ModulePlaceholder } from '@/pages/ModulePlaceholder';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { RouteErrorPage } from '@/pages/RouteErrorPage';
 
@@ -27,8 +26,7 @@ function guarded(permission: Permission, load: () => Promise<ComponentType>) {
 }
 
 /**
- * Rutas de la aplicación. Cada módulo reemplaza su ModulePlaceholder en la
- * fase correspondiente. Las guardias de permiso protegen la UI; Firestore
+ * Rutas de la aplicación. Las guardias de permiso protegen la UI; Firestore
  * Rules y Cloud Functions son la barrera real.
  */
 const appRoutes: RouteObject[] = [
@@ -157,14 +155,9 @@ const appRoutes: RouteObject[] = [
   },
   {
     path: 'recordatorios',
-    element: (
-      <RequirePermission permission="reminders.manage">
-        <ModulePlaceholder
-          title="Recordatorios"
-          description="Recordatorios y confirmaciones de citas pendientes."
-          phase={13}
-        />
-      </RequirePermission>
+    lazy: guarded(
+      'reminders.manage',
+      async () => (await import('@/features/reminders/pages/RemindersPage')).RemindersPage,
     ),
   },
   {

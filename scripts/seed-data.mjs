@@ -487,6 +487,7 @@ export function buildDemoData(now = new Date()) {
   numberTreatmentSessions(treatments, appointments);
   const cash = buildCash({ appointments, today, now, random });
   const clinical = buildClinical({ appointments, treatments, now, random });
+  const reminders = buildReminders({ appointments, clients, now, random });
 
   const clinicDay = [
     { start: '08:00', end: '13:00' },
@@ -544,6 +545,7 @@ export function buildDemoData(now = new Date()) {
     appointments,
     ...cash,
     clinical,
+    ...reminders,
   };
 }
 
@@ -764,6 +766,107 @@ function buildClinical({ appointments, treatments, now, random }) {
     };
   }
   return { records, notes, plans };
+}
+
+/* ---------- Recordatorios y notificaciones ---------- */
+
+const LEAD_HOURS = 24;
+const FRONT_DESK = ['demo-recepcion', 'demo-admin'];
+
+/**
+ * Un recordatorio por cita futura: los de las próximas 24 h ya están en la
+ * cola de recepción (algunos sin respuesta); el resto, programados. Más
+ * algunos gestionados de los últimos días y avisos en la campana.
+ */
+function buildReminders({ appointments, clients, now, random }) {
+  const reminders = {};
+  const RECEPCION = { uid: 'demo-recepcion', name: 'Lucía Mendoza' };
+  const leadMs = LEAD_HOURS * 3_600_000;
+  let queued = 0;
+
+  for (const [id, a] of Object.entries(appointments)) {
+    const c = clients[a.clientId];
+    const base = {
+      appointmentId: id,
+      clientId: a.clientId,
+      clientName: a.clientName,
+      clientPhone: c.phone,
+      clientPhoneE164: c.phoneE164,
+      professionalName: a.professionalName,
+      serviceName: a.serviceName,
+      appointmentDate: a.date,
+      appointmentStartAt: a.startAt,
+      appointmentStatus: a.status,
+      type: a.status === 'PENDIENTE' ? 'CONFIRMACION' : 'RECORDATORIO',
+      channel: 'IN_APP',
+      attempts: 0,
+      lastError: null,
+      sentAt: null,
+      handledAt: null,
+      handledBy: null,
+      outcomeNote: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const startMs = a.startAt.getTime();
+    const open = a.status === 'PENDIENTE' || a.status === 'CONFIRMADA';
+    if (open && startMs > now.getTime()) {
+      const scheduledFor = new Date(Math.max(now.getTime(), startMs - leadMs));
+      if (scheduledFor.getTime() <= now.getTime()) {
+        const noAnswer = random() < 0.25;
+        reminders[id] = {
+          ...base,
+          scheduledFor: new Date(startMs - leadMs),
+          status: noAnswer ? 'SIN_RESPUESTA' : 'ENVIADO',
+          attempts: 1,
+          sentAt: new Date(startMs - leadMs),
+          ...(noAnswer
+            ? { handledAt: new Date(now.getTime() - 40 * 60_000), handledBy: RECEPCION }
+            : {}),
+        };
+        queued += 1;
+      } else {
+        reminders[id] = { ...base, scheduledFor, status: 'PROGRAMADO' };
+      }
+    } else if (
+      a.status !== 'CANCELADA' &&
+      startMs <= now.getTime() &&
+      now.getTime() - startMs < 4 * 86_400_000
+    ) {
+      // Gestionados en los últimos días (la cita ya pasó).
+      reminders[id] = {
+        ...base,
+        scheduledFor: new Date(startMs - leadMs),
+        status: 'CONFIRMADO',
+        attempts: 1,
+        sentAt: new Date(startMs - leadMs),
+        handledAt: new Date(startMs - leadMs + 2 * 3_600_000),
+        handledBy: RECEPCION,
+      };
+    }
+  }
+
+  const notifications = {};
+  for (const userId of FRONT_DESK) {
+    notifications[`n-${userId}-1`] = {
+      userId,
+      title:
+        queued === 1 ? '1 recordatorio para gestionar' : `${queued} recordatorios para gestionar`,
+      body: 'Contacta a los clientes de las próximas citas para confirmarlas.',
+      link: '/recordatorios',
+      read: false,
+      createdAt: new Date(now.getTime() - 25 * 60_000),
+    };
+    notifications[`n-${userId}-2`] = {
+      userId,
+      title: '4 recordatorios para gestionar',
+      body: 'Contacta a los clientes de las próximas citas para confirmarlas.',
+      link: '/recordatorios',
+      read: true,
+      createdAt: new Date(now.getTime() - 26 * 3_600_000),
+    };
+  }
+  return { reminders, notifications };
 }
 
 /* ---------- Caja: una jornada por día con cobros de las sesiones atendidas ---------- */

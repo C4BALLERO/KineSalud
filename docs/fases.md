@@ -12,7 +12,7 @@
 | 10B · Cobros y caja                                     | ✅ Aprobada                             |
 | 11 · Tratamientos                                       | ✅ Aprobada                             |
 | 12 · Seguimiento (y módulo de Servicios)                | ✅ Completada — pendiente de revisión   |
-| 13 · Recordatorios                                      | ⏳                                      |
+| 13 · Recordatorios                                      | ✅ Completada — pendiente de revisión   |
 | 14 · Reportes                                           | ✅ Completada — pendiente de revisión   |
 | 15 · Seguridad                                          | ⏳                                      |
 | 16 · Pruebas y despliegue                               | ⏳                                      |
@@ -475,3 +475,45 @@ Se adelantó a pedido del consultorio. Las Fases 12 (Seguimiento) y 13 (Recordat
 - **Lecturas clínicas por función, no con suscripciones:** así cada acceso queda auditado, a cambio de no actualizarse en tiempo real (se recargan después de cada cambio).
 - **Una nota por cita, con el mismo id:** evita duplicados sin consultas adicionales.
 - **Color nuevo para gráficos `--color-chart-2` (arcilla):** se validó junto al turquesa para daltonismo (ΔE 13,9) y visión normal (ΔE 24,6).
+
+## Fase 13 — Recordatorios
+
+Los clientes no tienen la app, así que el recordatorio es **asistido**. El sistema programa y organiza el trabajo; recepción contacta al cliente con un toque y registra lo que respondió.
+
+**Entregado**
+
+- **Programación automática.** Un trigger mantiene un recordatorio por cita (`reminders/{idCita}`):
+  - se programa `reminderLeadHours` antes de la cita (24 h por defecto, en Configuración → Consultorio), o de inmediato si la cita es más próxima;
+  - reprogramar la cita lo reinicia, y cancelarla o cerrarla lo anula;
+  - es idempotente, y se verificó en el emulador creando y cancelando una cita.
+- **Cola cada 15 minutos** (`triggers-processReminders`, Cloud Scheduler). Los recordatorios vencidos pasan a **"Por gestionar"** y se avisa al personal de recepción y administración por cada canal:
+  - **bandeja in-app**: la campana del encabezado, con contador, en tiempo real;
+  - **push del navegador** (FCM), opcional: se activa por dispositivo en "Mi cuenta".
+
+  Un canal que falla no frena la cola. Tras 3 errores de procesamiento, el recordatorio queda **Fallido**. La administración tiene "Procesar ahora" (`reminders-runNow`), que también sirve en el emulador, donde las tareas programadas no corren.
+
+- **Pantalla Recordatorios** (`/recordatorios`), con tres pestañas:
+  - **Por gestionar**: botón **WhatsApp**, que abre el chat con el mensaje ya redactado (día, hora, servicio y profesional, sin datos clínicos), y botón **Llamar**;
+  - **Programados**;
+  - **Gestionados**.
+- **Resultado del contacto:**
+  - "Confirmó" confirma la cita pendiente (si ya estaba confirmada, el botón dice "Avisado");
+  - "No respondió" la deja en la cola para reintentar;
+  - "Canceló" pide el motivo y cancela la cita, con las mismas reglas de la agenda (una cita pagada no se cancela sin anular antes el cobro).
+- **Inicio de recepción:** aviso "N recordatorios por gestionar".
+- **Reglas:**
+  - recordatorios: solo lectura para recepción y administración;
+  - notificaciones: cada persona ve las suyas y solo puede marcarlas como leídas;
+  - dispositivos push: cada persona registra los suyos.
+- **Pruebas:**
+  - plan, mensaje y enlace de WhatsApp (6 en el dominio compartido);
+  - programación, cola y gestión (8 en el servidor);
+  - fila de recordatorio y aviso (5 en la web);
+  - reglas (3).
+- **Datos de demostración:** recordatorios en todos los estados y avisos en la campana de recepción y de administración.
+
+**Decisiones**
+
+- **Contacto asistido en lugar de envío automático:** la API de WhatsApp Business tiene costo y requiere una verificación del negocio. El canal está desacoplado (`NotificationChannel`), así que se puede agregar en la etapa 2 sin tocar el dominio.
+- **Un recordatorio por cita, con su mismo id:** evita duplicados y simplifica el trigger.
+- **Push solo para el personal**, sin datos de pacientes. Requiere la clave Web Push del proyecto (ver `docs/despliegue.md`); sin ella, la opción no se ofrece.

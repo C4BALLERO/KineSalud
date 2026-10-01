@@ -137,6 +137,30 @@ service cloud.firestore {
         && onlyChanges(['lastLoginAt'])
         && request.resource.data.lastLoginAt == request.time;
       allow create, delete: if false;
+
+      // Dispositivos para notificaciones push: cada persona registra los suyos.
+      match /devices/{deviceId} {
+        allow read, delete: if isActive() && isSelf(uid);
+        allow create, update: if isActive() && isSelf(uid)
+          && request.resource.data.keys().hasOnly(['token', 'userAgent', 'createdAt'])
+          && request.resource.data.token is string
+          && request.resource.data.token.size() < 4096
+          && request.resource.data.createdAt == request.time;
+      }
+    }
+
+    // ---------- Recordatorios y notificaciones (Fase 13) ----------
+    match /reminders/{reminderId} {
+      allow read: if isFrontDesk();
+      allow write: if false;
+    }
+    // Bandeja in-app: cada persona ve las suyas y solo puede marcarlas como leídas.
+    match /notifications/{notificationId} {
+      allow read: if isActive() && resource.data.userId == request.auth.uid;
+      allow update: if isActive() && resource.data.userId == request.auth.uid
+        && onlyChanges(['read'])
+        && request.resource.data.read == true;
+      allow create, delete: if false;
     }
 
     // ---------- Auditoría (solo escritura desde el servidor) ----------

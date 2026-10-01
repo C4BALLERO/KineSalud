@@ -18,6 +18,7 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ListSkeleton, LoadingRegion, Skeleton } from '@/components/ui/Skeleton';
 import { Stat } from '@/components/ui/StatCard';
 import { useRequiredSession } from '@/features/auth/session';
+import { usePendingReminders } from '@/features/reminders/api/reminders';
 import { useExceptions } from '@/features/staff/api/staff';
 import { useNow } from '@/hooks/useNow';
 import { usePermission, usePermissionScope } from '@/hooks/usePermission';
@@ -74,6 +75,12 @@ export function DashboardPage() {
   const clientsCount = useActiveClientsCount(scope);
 
   const seesIncome = usePermission('income.view');
+  const managesReminders = usePermission('reminders.manage');
+  const reminders = usePendingReminders(managesReminders);
+  const pendingReminders =
+    reminders.status === 'success'
+      ? reminders.data.filter((r) => r.appointmentStartAt > now).length
+      : 0;
   const managesCash = usePermission('payments.manage');
   const professionalNames = useMemo(
     () =>
@@ -120,9 +127,19 @@ export function DashboardPage() {
         now,
         formatDay: (d) => (d === addDays(today, 1) ? 'para mañana' : `para el ${formatDayLong(d)}`),
         recordsFor: session.professionalId,
+        pendingReminders,
       }),
     };
-  }, [appointments, treatments, today, monday, now, onlyMine, session.professionalId]);
+  }, [
+    appointments,
+    treatments,
+    today,
+    monday,
+    now,
+    onlyMine,
+    session.professionalId,
+    pendingReminders,
+  ]);
 
   const team =
     professionals.status === 'success'

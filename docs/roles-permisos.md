@@ -110,3 +110,9 @@ La UI nunca es la barrera de seguridad; solo mejora la experiencia.
   - asigna los profesionales que los realizan (solo quienes atienden el área);
   - elimina los que nunca se usaron. Uno con citas o tratamientos no se elimina: se desactiva.
 - **Recepción:** consulta el catálogo (precios, duración y quién lo realiza).
+
+### Recordatorios: qué puede hacer cada rol
+
+- **Recepción y administración** (`reminders.manage`): ven la cola, contactan al cliente y registran el resultado. Reciben los avisos en la campana y, si los activan, push en su navegador.
+- **Administración:** además, puede "Procesar ahora" la cola.
+- **Profesional:** no gestiona recordatorios.

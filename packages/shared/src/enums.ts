@@ -74,14 +74,32 @@ export type ReminderType = (typeof REMINDER_TYPES)[number];
 export const REMINDER_CHANNELS = ['IN_APP', 'PUSH', 'WHATSAPP', 'SMS', 'EMAIL'] as const;
 export type ReminderChannel = (typeof REMINDER_CHANNELS)[number];
 
+/**
+ * PROGRAMADO: espera su hora. ENVIADO: ya venció y está en la cola de
+ * recepción. SIN_RESPUESTA: se intentó contactar y conviene reintentar.
+ * CONFIRMADO / CANCELADO: resueltos. FALLIDO: no se pudo procesar.
+ */
 export const REMINDER_STATUSES = [
   'PROGRAMADO',
   'ENVIADO',
+  'SIN_RESPUESTA',
   'CONFIRMADO',
   'FALLIDO',
   'CANCELADO',
 ] as const;
 export type ReminderStatus = (typeof REMINDER_STATUSES)[number];
+
+/** Requieren acción de recepción. */
+export const REMINDER_STATUS_OPEN = ['ENVIADO', 'SIN_RESPUESTA'] as const;
+
+export const REMINDER_STATUS_LABELS: Record<ReminderStatus, string> = {
+  PROGRAMADO: 'Programado',
+  ENVIADO: 'Por gestionar',
+  SIN_RESPUESTA: 'Sin respuesta',
+  CONFIRMADO: 'Confirmado',
+  FALLIDO: 'Fallido',
+  CANCELADO: 'Cancelado',
+};
 
 /** Origen de una operación: preparado para el chatbot de la etapa 2. */
 export const ACTOR_TYPES = ['USER', 'CHATBOT', 'SYSTEM'] as const;

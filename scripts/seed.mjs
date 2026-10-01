@@ -120,6 +120,8 @@ async function seedOperationalData(db) {
     payments: data.payments,
     incomeStats: data.incomeStats,
     cashRegister: data.cashRegister,
+    reminders: data.reminders,
+    notifications: data.notifications,
   };
 
   for (const [name, docs] of Object.entries(collections)) {
