@@ -1,0 +1,1 @@
+import{Qn as e,ar as t,sr as n}from"./Button-B-zXHhml.js";var r=n(t(),1);function i(t){let n=e(({currentLocation:e,nextLocation:n})=>t&&e.pathname!==n.pathname);return(0,r.useEffect)(()=>{if(!t)return;let e=e=>e.preventDefault();return window.addEventListener(`beforeunload`,e),()=>window.removeEventListener(`beforeunload`,e)},[t]),n}export{i as t};
