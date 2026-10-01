@@ -1,1 +1,0 @@
-import{Rn as e,Un as t}from"./Button-B-zXHhml.js";import{t as n}from"./circle-slash-DQQ2Yclj.js";import{t as r}from"./Badge-CFEGmjcw.js";var i=t();function a({status:t}){return t===`ACTIVO`?(0,i.jsx)(r,{tone:`success`,icon:(0,i.jsx)(e,{"aria-hidden":`true`}),children:`Activo`}):(0,i.jsx)(r,{icon:(0,i.jsx)(n,{"aria-hidden":`true`}),children:`Inactivo`})}export{a as t};

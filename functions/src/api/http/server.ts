@@ -36,6 +36,8 @@ export interface ServerDeps {
   cron?: { secret: string | undefined; run(): Promise<unknown> };
   /** Orígenes permitidos para CORS (solo hace falta si la web está en otro dominio). */
   allowedOrigins?: string[];
+  /** Comprobación pública del servidor (GET /api/health): no devuelve datos. */
+  health?(): Promise<boolean>;
 }
 
 const STATUS: Record<string, [number, string]> = {
@@ -86,6 +88,10 @@ export async function handleRequest(
 ): Promise<HttpResponseLike> {
   const cors = corsHeaders(req.headers.origin, deps.allowedOrigins ?? []);
   if (req.method === 'OPTIONS') return { status: 204, headers: cors, body: null };
+  if (req.route === 'health' && req.method === 'GET') {
+    const ok = deps.health ? await deps.health().catch(() => false) : true;
+    return json(ok ? 200 : 503, { status: ok ? 'ok' : 'error' }, cors);
+  }
   if (req.method !== 'POST') {
     return json(405, { error: { status: 'INVALID_ARGUMENT', message: 'Usa POST.' } }, cors);
   }

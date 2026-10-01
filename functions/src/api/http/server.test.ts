@@ -107,6 +107,14 @@ describe('protocolo callable sobre HTTP', () => {
     ).toBe(401);
   });
 
+  it('health responde por GET sin sesión y refleja el estado de Firestore', async () => {
+    const get = { method: 'GET', route: 'health', headers: {}, body: null };
+    const ok = await handleRequest(get, deps({ health: async () => true }));
+    expect(ok).toMatchObject({ status: 200, body: { status: 'ok' } });
+    const down = await handleRequest(get, deps({ health: async () => false }));
+    expect(down).toMatchObject({ status: 503, body: { status: 'error' } });
+  });
+
   it('CORS solo para los orígenes permitidos', async () => {
     const d = deps({ allowedOrigins: ['http://localhost:5173'] });
     const pre = await handleRequest(

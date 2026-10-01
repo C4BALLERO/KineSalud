@@ -4,11 +4,14 @@
 //   .vercel/output/functions/api.func → el servidor de comandos en un solo archivo
 //   .vercel/output/config.json       → rutas: /api/* a la función; el resto, a la SPA
 //
-// Uso: node scripts/build-vercel.mjs            (Vercel lo ejecuta como buildCommand)
+// Uso: npm run deploy:gratis                   (compila aquí y publica con `vercel deploy --prebuilt`)
 //      node scripts/build-vercel.mjs --api-only  (solo el bundle del servidor)
+//
+// La configuración pública de la web sale de apps/web/.env.production.local, igual que
+// en el despliegue con Blaze: Vite la incorpora al compilar y no hace falta cargarla en Vercel.
 import { build } from 'esbuild';
 import { execSync } from 'node:child_process';
-import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -46,6 +49,15 @@ if (local) {
 rmSync(out, { recursive: true, force: true });
 
 if (!apiOnly) {
+  const hasWebConfig =
+    process.env.VITE_FIREBASE_PROJECT_ID || existsSync(`${root}apps/web/.env.production.local`);
+  if (!hasWebConfig) {
+    console.error(
+      '✗ Falta la configuración de Firebase de la web: crea apps/web/.env.production.local ' +
+        '(ver docs/variables-entorno.md).',
+    );
+    process.exit(1);
+  }
   console.log('› Compilando la web…');
   if (!process.env.VITE_API_URL) process.env.VITE_API_URL = '/api';
   process.env.VITE_USE_EMULATORS = 'false';

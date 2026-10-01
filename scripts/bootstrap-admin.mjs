@@ -5,6 +5,9 @@
 //   gcloud auth application-default set-quota-project <proyecto>
 //   npm run bootstrap:admin -- --project <proyecto> --email <correo> --name "<Nombre Apellido>"
 //
+// En el despliegue gratuito, sin gcloud, con la clave de la cuenta de servicio:
+//   npm run bootstrap:admin -- --credentials "<ruta .json>" --app-url https://<dominio> //     --email <correo> --name "<Nombre Apellido>"
+//
 // - La cuenta se crea SIN contraseña: la persona define la suya con
 //   "¿Olvidaste tu contraseña?" en la pantalla de ingreso.
 // - Si falta, crea `settings/clinic` con un horario inicial editable desde Configuración.
@@ -13,7 +16,7 @@
 // - No carga datos de demostración.
 import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-import { initializeApp } from 'firebase-admin/app';
+import { cert, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 
@@ -22,6 +25,8 @@ const { values } = parseArgs({
     project: { type: 'string' },
     email: { type: 'string' },
     name: { type: 'string' },
+    credentials: { type: 'string' },
+    'app-url': { type: 'string' },
   },
 });
 
@@ -79,7 +84,15 @@ const DEFAULT_CLINIC = {
 };
 
 async function main() {
-  initializeApp({ projectId });
+  if (values.credentials) {
+    const key = JSON.parse(readFileSync(values.credentials, 'utf8'));
+    if (key.project_id !== projectId) {
+      fail(`La clave es del proyecto "${key.project_id}", no de "${projectId}".`);
+    }
+    initializeApp({ credential: cert(key), projectId });
+  } else {
+    initializeApp({ projectId });
+  }
   const auth = getAuth();
   const db = getFirestore();
 
@@ -138,8 +151,9 @@ async function main() {
     console.log('✓ Configuración inicial del consultorio creada (editable en Configuración)');
   }
 
+  const appUrl = (values['app-url'] ?? `https://${projectId}.web.app`).replace(/\/$/, '');
   console.log(
-    `\nListo. Abre https://${projectId}.web.app/recuperar-contrasena, ingresa ${email} ` +
+    `\nListo. Abre ${appUrl}/recuperar-contrasena, ingresa ${email} ` +
       'y define la contraseña con el enlace que llegará por correo.',
   );
 }

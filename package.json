@@ -27,6 +27,8 @@
     "deploy": "npm run check && npm run build && firebase deploy --project prod",
     "bootstrap:admin": "node scripts/bootstrap-admin.mjs",
     "build:vercel": "node scripts/build-vercel.mjs",
+    "deploy:gratis": "npm run check && node scripts/build-vercel.mjs && npx --yes vercel@62 deploy --prebuilt --prod --yes",
+    "vercel:clave": "node scripts/vercel-clave.mjs",
     "emulators:gratis": "node scripts/firebase.mjs emulators:start --only auth,firestore --project demo-kinesalud",
     "api:local": "node scripts/build-vercel.mjs --api-only --local && node .api-local/server.cjs"
   },

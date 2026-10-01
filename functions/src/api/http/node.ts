@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { adminAuth } from '../../core/firebase';
+import { logger } from 'firebase-functions/v2';
+import { adminAuth, db } from '../../core/firebase';
 import { firestoreRemindersGateway } from '../../domain/reminders/firestoreRemindersGateway';
 import { processDueReminders } from '../../domain/reminders/remindersService';
 import { STAFF_CHANNELS } from '../../notifications/channels';
@@ -22,6 +23,24 @@ const deps: ServerDeps = {
     run: () => processDueReminders(firestoreRemindersGateway, STAFF_CHANNELS),
   },
   allowedOrigins: (process.env.CORS_ORIGINS ?? '').split(',').filter(Boolean),
+  // Una lectura liviana confirma que las credenciales de Firestore funcionan.
+  health: async () => {
+    let timer: NodeJS.Timeout | undefined;
+    try {
+      await Promise.race([
+        db.doc('settings/clinic').get(),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error('timeout')), 8000);
+        }),
+      ]);
+      return true;
+    } catch (err) {
+      logger.error('Health check: Firestore no responde', err);
+      return false;
+    } finally {
+      clearTimeout(timer);
+    }
+  },
 };
 
 function readBody(req: IncomingMessage): Promise<unknown> {
