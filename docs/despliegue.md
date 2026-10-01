@@ -4,6 +4,8 @@ Proyecto real: **`kinesalud-d9291`** (alias `prod` en `.firebaserc`). El desarro
 
 Producción **no recibe datos de demostración**: `npm run seed` solo funciona contra los emuladores. Los datos reales (espacios, servicios, personal, clientes) se cargan desde el propio sistema.
 
+> **¿Sin tarjeta?** La rama `despliegue-gratuito` publica el sistema completo con Firebase Spark y Vercel, sin plan Blaze. Su guía está en `docs/despliegue-gratuito.md`, dentro de esa rama.
+
 ## 1. Preparar el proyecto en la consola (una sola vez)
 
 Estos pasos los hace la persona dueña del proyecto en [console.firebase.google.com](https://console.firebase.google.com/project/kinesalud-d9291):

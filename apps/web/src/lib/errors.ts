@@ -38,7 +38,8 @@ function detailsOf(err: unknown): Record<string, unknown> | undefined {
 export function toAppError(err: unknown): AppError {
   if (err instanceof AppError) return err;
   const code = codeOf(err);
-  const message = err instanceof Error ? err.message : '';
+  // El SDK de Functions (v12) agrega el código HTTP al final: "… [400]". No es para el usuario.
+  const message = err instanceof Error ? err.message.replace(/\s*\[\d{3}\]$/, '') : '';
 
   switch (code) {
     case 'functions/invalid-argument':
