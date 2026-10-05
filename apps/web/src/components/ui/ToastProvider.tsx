@@ -58,7 +58,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               type={tone === 'error' || tone === 'warning' ? 'foreground' : 'background'}
               duration={tone === 'error' || tone === 'warning' ? 8000 : 4500}
               onOpenChange={(open) => (open ? undefined : close(t.id))}
-              onAnimationEnd={() => !t.open && remove(t.id)}
+              // Solo la animación de salida del aviso (las de sus iconos también burbujean).
+              onAnimationEnd={(e) => e.target === e.currentTarget && !t.open && remove(t.id)}
+              data-icon-entrance=""
               className={cn(
                 'animate-pop relative flex items-start gap-3 overflow-hidden rounded-md border border-border bg-surface py-3 pr-2 pl-4 shadow-md',
                 '[&>svg]:mt-0.5 [&>svg]:size-5 [&>svg]:shrink-0',

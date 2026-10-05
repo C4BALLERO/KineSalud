@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/plus-jakarta-sans';
 @import './tokens.css';
+@import './icon-motion.css';
 
 @layer base {
   :root {
