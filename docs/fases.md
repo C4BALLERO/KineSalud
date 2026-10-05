@@ -14,7 +14,7 @@
 | 12 · Seguimiento (y módulo de Servicios)                | ✅ Completada — pendiente de revisión   |
 | 13 · Recordatorios                                      | ✅ Completada — pendiente de revisión   |
 | 14 · Reportes                                           | ✅ Completada — pendiente de revisión   |
-| 15 · Seguridad                                          | ⏳                                      |
+| 15 · Seguridad                                          | ✅ Completada — pendiente de revisión   |
 | 16 · Pruebas y despliegue                               | ⏳                                      |
 
 ## Fase 5 — Layout principal
@@ -517,3 +517,27 @@ Los clientes no tienen la app, así que el recordatorio es **asistido**. El sist
 - **Contacto asistido en lugar de envío automático:** la API de WhatsApp Business tiene costo y requiere una verificación del negocio. El canal está desacoplado (`NotificationChannel`), así que se puede agregar en la etapa 2 sin tocar el dominio.
 - **Un recordatorio por cita, con su mismo id:** evita duplicados y simplifica el trigger.
 - **Push solo para el personal**, sin datos de pacientes. Requiere la clave Web Push del proyecto (ver `docs/despliegue.md`); sin ella, la opción no se ofrece.
+
+## Fase 15 — Seguridad
+
+Detalle de capas, pasos opcionales y riesgos residuales en [seguridad.md](seguridad.md).
+
+**Entregado**
+
+- **Sesiones revocadas al instante:** cada comando comprueba en Authentication que la cuenta siga habilitada y que el token sea posterior a la última revocación (`core/sessions.ts`). Al desactivar una cuenta, sus comandos fallan de inmediato y no recién al vencer el token.
+- **Pantalla Auditoría** (`/auditoria`, solo administración): actividad por rango de fechas (hasta 300 entradas por consulta), módulo y persona; acciones en lenguaje natural y un candado en cada consulta a información clínica.
+- **Cierre de sesión por inactividad:** 30 minutos sin uso en ninguna pestaña, con aviso y cuenta regresiva el último minuto. La pantalla de ingreso explica el motivo.
+- **Cabeceras de seguridad** en `firebase.json`: CSP, HSTS, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, además de las que ya estaban.
+- **App Check listo para activar:** la web lo inicializa con `VITE_APPCHECK_SITE_KEY` y los comandos lo exigen con `APPCHECK_ENFORCE=true`. Apagado por defecto.
+- **Reglas:** el registro de dispositivos push valida tipos y tamaños.
+- **Dependencias:** `npm audit` sin hallazgos (`@grpc/grpc-js` forzado a ≥ 1.14.5).
+- **Pruebas:**
+  - sesión revocada o cuenta deshabilitada (3 en el servidor);
+  - modelo de inactividad y de la auditoría (5 en la web);
+  - reglas de dispositivos y consulta de auditoría por rango (2).
+
+**Decisiones**
+
+- **Revocación en los comandos, no en las reglas:** consultar la cuenta en cada regla gastaría una lectura extra por consulta y la cuota gratuita. Las lecturas con un token revocado quedan como riesgo residual de hasta una hora (ver `seguridad.md`).
+- **App Check opcional:** activarlo exige crear claves en la cuenta del proyecto. Activarlo como obligatorio antes de que la web envíe tokens dejaría el sistema sin servicio.
+- **Auditoría solo de lectura y por rango:** la consulta usa el índice automático de `at`; los filtros de módulo y persona se aplican en el navegador para no crear índices compuestos.

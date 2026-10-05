@@ -96,7 +96,9 @@ Es un monorepo con _npm workspaces_.
 1. **UI.** Oculta lo que el rol no puede usar (`<Can>`, `RequirePermission`). Es solo experiencia de usuario, no seguridad.
 2. **Security Rules.** Limitan las lecturas por rol y por asignación, y bloquean las escrituras directas.
 3. **Cloud Functions.** Verifican autenticación, rol, permiso y alcance (`own`/`all`), validan con zod y aplican las reglas de negocio.
-4. **Auditoría.** Toda operación sobre datos clínicos queda registrada en `auditLogs`.
+4. **Auditoría.** Los cambios de datos y cada lectura de información clínica quedan en `auditLogs`, visibles en la pantalla Auditoría.
+
+Detalle, pasos opcionales (App Check) y riesgos residuales en [seguridad.md](seguridad.md).
 
 ## 6. Zona horaria
 

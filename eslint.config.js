@@ -6,7 +6,17 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['**/dist', '**/lib', '**/coverage', '**/node_modules', '.emulator-data'] },
+  {
+    ignores: [
+      '**/dist',
+      '**/lib',
+      '**/coverage',
+      '**/node_modules',
+      '.emulator-data',
+      '.vercel',
+      '.api-local',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

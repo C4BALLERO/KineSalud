@@ -181,6 +181,13 @@ const appRoutes: RouteObject[] = [
     },
   },
   {
+    path: 'auditoria',
+    lazy: guarded(
+      'audit.view',
+      async () => (await import('@/features/audit/pages/AuditPage')).AuditPage,
+    ),
+  },
+  {
     path: 'configuracion',
     lazy: guarded(
       'settings.manage',

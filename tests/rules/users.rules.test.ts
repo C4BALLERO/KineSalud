@@ -7,14 +7,19 @@ import {
 } from '@firebase/rules-unit-testing';
 import { readFileSync } from 'node:fs';
 import {
+  collection,
+  deleteDoc,
   doc,
   getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
   serverTimestamp,
   setDoc,
-  updateDoc,
-  collection,
-  getDocs,
   Timestamp,
+  updateDoc,
+  where,
 } from 'firebase/firestore';
 import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 
@@ -133,6 +138,21 @@ describe('auditLogs', () => {
 
   it('nadie escribe auditoría desde la web', async () => {
     await assertFails(setDoc(doc(db('admin', claims.admin), 'auditLogs', 'x'), { action: 'fake' }));
+  });
+
+  it('la pantalla de auditoría consulta por rango de fechas; solo la administración', async () => {
+    const byRange = (fs: ReturnType<typeof db>) =>
+      getDocs(
+        query(
+          collection(fs, 'auditLogs'),
+          where('at', '>=', Timestamp.fromMillis(Date.now() - 86_400_000)),
+          orderBy('at', 'desc'),
+          limit(300),
+        ),
+      );
+    await assertSucceeds(byRange(db('admin', claims.admin)));
+    await assertFails(byRange(db('recep', claims.recep)));
+    await assertFails(deleteDoc(doc(db('admin', claims.admin), 'auditLogs', 'a1')));
   });
 });
 

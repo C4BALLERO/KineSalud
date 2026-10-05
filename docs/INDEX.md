@@ -12,6 +12,7 @@ Se cargan al inicio de cada sesión: `CLAUDE.md` y los tres archivos de `.claude
 | [flujos.md](flujos.md)                           | Flujos de usuario principales                                  |
 | [instalacion.md](instalacion.md)                 | Instalación, emuladores, datos de demostración y verificación  |
 | [despliegue.md](despliegue.md)                   | Producción, primer administrador y costo $0 en Blaze           |
+| [seguridad.md](seguridad.md)                     | Capas de seguridad, App Check, auditoría y riesgos residuales  |
 | [integracion-chatbot.md](integracion-chatbot.md) | Contrato para conectar el chatbot (etapa 2)                    |
 | [adr/](adr/)                                     | Decisiones de arquitectura                                     |
 | [learnings/](learnings/)                         | Aprendizajes por tema (cargar solo si aplica)                  |
