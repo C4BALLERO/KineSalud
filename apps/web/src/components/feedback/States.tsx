@@ -34,6 +34,7 @@ function StateBase({
     >
       <span
         aria-hidden="true"
+        data-icon-entrance=""
         className={cn(
           'flex items-center justify-center rounded-full bg-surface-muted text-fg-muted',
           size === 'default' ? 'size-12 [&_svg]:size-6' : 'size-10 [&_svg]:size-5',

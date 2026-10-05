@@ -42,6 +42,7 @@ export function InlineAlert({
   return (
     <div
       role={tone === 'danger' ? 'alert' : 'status'}
+      data-icon-entrance=""
       className={cn(
         'flex items-start gap-3 rounded-md border px-4 py-3 [&>svg]:mt-0.5 [&>svg]:size-4.5 [&>svg]:shrink-0',
         tones[tone].box,

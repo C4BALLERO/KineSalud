@@ -115,7 +115,8 @@ En móvil, los inputs usan 16 px para evitar el zoom automático de iOS.
 - Duraciones: 150 ms (hover), 200 ms (popover y toast) y 250 ms (diálogo y panel).
 - La salida es más rápida que la entrada.
 - Se respeta `prefers-reduced-motion`.
-- No hay animaciones decorativas.
+- No hay animaciones decorativas en el contenido.
+- **Iconos animados** (`styles/icon-motion.css`, `lib/iconMotion.ts`): cada icono tiene un gesto propio que responde a la persona (la campana suena, el engranaje gira, las barras crecen, las marcas de verificación se dibujan), con resorte y en menos de un segundo. Se activa al señalar, enfocar con teclado o tocar el control que lo contiene; también al activarse un ítem de navegación y al aparecer avisos y estados. Solo se animan los iconos propios del control (hasta dos niveles), no las insignias de una fila. Un icono nuevo hereda el gesto por defecto (crece con resorte); para darle uno propio se agrega su clase `lucide-<nombre>` en la hoja.
 
 ## Objetivos táctiles
 

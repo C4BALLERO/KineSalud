@@ -1,0 +1,688 @@
+/*
+ * Movimiento de los iconos (Lucide).
+ *
+ * Cuándo:
+ *   - [data-icon-motion]: el control que contiene el icono está señalado, enfocado
+ *     con teclado o tocado (lo marca src/lib/iconMotion.ts);
+ *   - [aria-current='page']: el ítem de navegación se acaba de activar;
+ *   - [data-icon-entrance]: el aviso o estado acaba de aparecer.
+ * Cómo: cada icono tiene un gesto propio que anima sus partes (los trazos se
+ * eligen por posición: el orden de los trazos de Lucide es estable por versión).
+ * Los estados sostenidos (girar, levantar) usan transiciones con resorte, que
+ * se pueden interrumpir; los gestos (sonar, dibujar) son animaciones de una vez.
+ * Con "reducir movimiento" no se mueve nada.
+ */
+
+@layer base {
+  :root {
+    /* Resorte: sobrepasa ~7 % y se asienta. */
+    --ease-spring: linear(
+      0,
+      0.0018,
+      0.0069 1.15%,
+      0.0262 2.3%,
+      0.0642,
+      0.1143 5.18%,
+      0.2244 7.48%,
+      0.5881 13.8%,
+      0.7232,
+      0.8282 19.27%,
+      0.9086 22.01%,
+      0.9703,
+      1.0134 28.47%,
+      1.0442 32.24%,
+      1.0612 35.71%,
+      1.0684 39.69%,
+      1.0673 43.39%,
+      1.0587 47.76%,
+      1.0216 59.49%,
+      1.0061 67.07%,
+      0.9988 76.65%,
+      0.9989 89.38%,
+      1
+    );
+    --icon-hold: 480ms;
+    --icon-gesture: 640ms;
+  }
+
+  .lucide,
+  .lucide > * {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .lucide:not(.animate-spin),
+  .lucide > * {
+    transition:
+      transform var(--icon-hold) var(--ease-spring),
+      opacity 200ms var(--ease-standard);
+  }
+}
+
+/* ---------- Gestos reutilizables ---------- */
+
+@keyframes kv-icon-draw {
+  from {
+    stroke-dashoffset: var(--len);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes kv-icon-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-2.5px);
+  }
+  70% {
+    transform: translateY(0.5px);
+  }
+}
+@keyframes kv-icon-pop {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.35);
+  }
+}
+@keyframes kv-icon-ring {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  15% {
+    transform: rotate(16deg);
+  }
+  30% {
+    transform: rotate(-14deg);
+  }
+  45% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes kv-icon-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-1.5px) rotate(-4deg);
+  }
+  40% {
+    transform: translateX(1.5px) rotate(4deg);
+  }
+  60% {
+    transform: translateX(-1px) rotate(-2deg);
+  }
+  80% {
+    transform: translateX(1px) rotate(1deg);
+  }
+}
+@keyframes kv-icon-swing {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-12deg);
+  }
+  50% {
+    transform: rotate(9deg);
+  }
+  75% {
+    transform: rotate(-4deg);
+  }
+}
+@keyframes kv-icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes kv-icon-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.16);
+  }
+  30% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.1);
+  }
+}
+@keyframes kv-icon-grow {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes kv-icon-flip {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(-1);
+  }
+}
+@keyframes kv-icon-blink {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  45% {
+    transform: scaleY(0.1);
+  }
+}
+@keyframes kv-icon-scribble {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+  25% {
+    transform: translate(-1px, 1px) rotate(-10deg);
+  }
+  50% {
+    transform: translate(1px, 0) rotate(6deg);
+  }
+  75% {
+    transform: translate(-0.5px, 0.5px) rotate(-4deg);
+  }
+}
+@keyframes kv-icon-drop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(2.5px);
+  }
+}
+@keyframes kv-icon-arrive {
+  0% {
+    transform: scale(0.7);
+  }
+  55% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes kv-icon-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-20deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* ---------- Por defecto: el icono crece con resorte mientras se señala ---------- */
+
+.lucide[data-icon-motion]:not(.animate-spin) {
+  transform: scale(1.14);
+}
+
+/* ---------- Navegación ---------- */
+
+/* Inicio: los paneles laten en cascada. */
+.lucide-layout-dashboard[data-icon-motion] {
+  transform: none;
+}
+.lucide-layout-dashboard[data-icon-motion] > * {
+  animation: kv-icon-pop var(--icon-gesture) var(--ease-standard);
+}
+.lucide-layout-dashboard[data-icon-motion] > :nth-child(2) {
+  animation-delay: 70ms;
+}
+.lucide-layout-dashboard[data-icon-motion] > :nth-child(3) {
+  animation-delay: 140ms;
+}
+.lucide-layout-dashboard[data-icon-motion] > :nth-child(4) {
+  animation-delay: 210ms;
+}
+
+/* Calendarios: las argollas saltan; los días se encienden; las marcas se dibujan. */
+:is(
+  .lucide-calendar-days,
+  .lucide-calendar-check,
+  .lucide-calendar-plus,
+  .lucide-calendar-x-2,
+  .lucide-calendar-clock
+)[data-icon-motion] {
+  transform: none;
+}
+:is(.lucide-calendar-days, .lucide-calendar-check)[data-icon-motion] > :nth-child(-n + 2),
+.lucide-calendar-plus[data-icon-motion] > :is(:nth-child(2), :nth-child(6)),
+.lucide-calendar-x-2[data-icon-motion] > :is(:nth-child(1), :nth-child(6)),
+.lucide-calendar-clock[data-icon-motion] > :is(:nth-child(2), :nth-child(5)) {
+  animation: kv-icon-hop var(--icon-gesture) var(--ease-standard);
+}
+:is(.lucide-calendar-days, .lucide-calendar-check)[data-icon-motion] > :nth-child(2),
+.lucide-calendar-plus[data-icon-motion] > :nth-child(2),
+.lucide-calendar-x-2[data-icon-motion] > :nth-child(1),
+.lucide-calendar-clock[data-icon-motion] > :nth-child(2) {
+  animation-delay: 80ms;
+}
+.lucide-calendar-days[data-icon-motion] > :nth-child(n + 5) {
+  animation: kv-icon-pop 420ms var(--ease-standard) backwards;
+}
+.lucide-calendar-days[data-icon-motion] > :nth-child(6) {
+  animation-delay: 50ms;
+}
+.lucide-calendar-days[data-icon-motion] > :nth-child(7) {
+  animation-delay: 100ms;
+}
+.lucide-calendar-days[data-icon-motion] > :nth-child(8) {
+  animation-delay: 150ms;
+}
+.lucide-calendar-days[data-icon-motion] > :nth-child(9) {
+  animation-delay: 200ms;
+}
+.lucide-calendar-days[data-icon-motion] > :nth-child(10) {
+  animation-delay: 250ms;
+}
+.lucide-calendar-check[data-icon-motion] > :nth-child(5) {
+  --len: 9;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 420ms var(--ease-standard) 120ms backwards;
+}
+.lucide-calendar-plus[data-icon-motion] > :is(:nth-child(1), :nth-child(3)),
+.lucide-calendar-x-2[data-icon-motion] > :is(:nth-child(2), :nth-child(3)) {
+  transform: rotate(90deg);
+}
+.lucide-calendar-clock[data-icon-motion] > :nth-child(1) {
+  transform-box: view-box;
+  transform-origin: 16px 16px;
+  animation: kv-icon-spin 700ms var(--ease-standard);
+}
+
+/* Caja: la billetera se abre. */
+.lucide-wallet[data-icon-motion] {
+  transform: none;
+}
+.lucide-wallet[data-icon-motion] > :nth-child(1) {
+  transform-origin: 0% 100%;
+  transform: translateY(-1.5px) rotate(-7deg);
+}
+
+/* Personas: la de atrás se asoma, la de adelante se acerca. */
+.lucide-users[data-icon-motion] {
+  transform: none;
+}
+.lucide-users[data-icon-motion] > :is(:nth-child(2), :nth-child(3)) {
+  transform: translateX(1.5px);
+}
+.lucide-users[data-icon-motion] > :is(:nth-child(1), :nth-child(4)) {
+  transform: translateY(-1px) scale(1.04);
+}
+:is(.lucide-user-round, .lucide-user-check, .lucide-user-x, .lucide-user-plus)[data-icon-motion] {
+  transform: none;
+}
+.lucide-user-round[data-icon-motion] > :nth-child(1),
+:is(.lucide-user-x, .lucide-user-plus)[data-icon-motion] > :nth-child(2),
+.lucide-user-check[data-icon-motion] > :nth-child(3) {
+  transform: translateY(-1.5px);
+}
+:is(.lucide-user-x, .lucide-user-plus)[data-icon-motion] > :is(:nth-child(3), :nth-child(4)) {
+  transform: rotate(90deg);
+}
+.lucide-user-check[data-icon-motion] > :nth-child(1) {
+  --len: 9;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 420ms var(--ease-standard) backwards;
+}
+
+/* Tratamientos: el corazón late y el pulso se dibuja. */
+.lucide-heart-pulse[data-icon-motion] {
+  transform: none;
+  animation: kv-icon-beat 900ms var(--ease-standard);
+}
+.lucide-heart-pulse[data-icon-motion] > :nth-child(2) {
+  --len: 30;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 700ms var(--ease-standard);
+}
+.lucide-activity[data-icon-motion] {
+  transform: none;
+}
+.lucide-activity[data-icon-motion] > * {
+  --len: 52;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 800ms var(--ease-standard);
+}
+
+/* Personal y servicios: el estetoscopio y la etiqueta se balancean. */
+.lucide-stethoscope[data-icon-motion] {
+  transform: none;
+  transform-origin: 50% 0%;
+  animation: kv-icon-swing 750ms var(--ease-standard);
+}
+.lucide-tags[data-icon-motion] {
+  transform: none;
+  transform-origin: 15% 15%;
+  animation: kv-icon-swing 750ms var(--ease-standard);
+}
+
+/* Recordatorios y campana: suena, con el badajo a destiempo. */
+:is(.lucide-bell, .lucide-bell-ring)[data-icon-motion] {
+  transform: none;
+  transform-origin: 50% 8%;
+  animation: kv-icon-ring 800ms var(--ease-standard);
+}
+:is(.lucide-bell, .lucide-bell-ring)[data-icon-motion] > :nth-child(1) {
+  animation: kv-icon-shake 800ms var(--ease-standard) 60ms;
+}
+.lucide-bell-ring[data-icon-motion] > :is(:nth-child(2), :nth-child(4)) {
+  animation: kv-icon-pop 500ms var(--ease-standard) 120ms;
+}
+.lucide-concierge-bell[data-icon-motion] {
+  transform: none;
+  animation: kv-icon-drop 360ms var(--ease-standard);
+}
+.lucide-concierge-bell[data-icon-motion] > :is(:nth-child(3), :nth-child(4)) {
+  transform: translateY(1.5px);
+}
+
+/* Reportes: las barras crecen en cascada. */
+.lucide-chart-column[data-icon-motion] {
+  transform: none;
+}
+.lucide-chart-column[data-icon-motion] > :nth-child(n + 2) {
+  transform-origin: 50% 100%;
+  animation: kv-icon-grow 560ms var(--ease-spring) backwards;
+}
+.lucide-chart-column[data-icon-motion] > :nth-child(3) {
+  animation-delay: 70ms;
+}
+.lucide-chart-column[data-icon-motion] > :nth-child(2) {
+  animation-delay: 140ms;
+}
+
+/* Usuarios y auditoría. */
+.lucide-shield-check[data-icon-motion] {
+  transform: scale(1.08);
+}
+.lucide-shield-check[data-icon-motion] > :nth-child(2) {
+  --len: 9;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 420ms var(--ease-standard) 80ms backwards;
+}
+.lucide-scroll-text[data-icon-motion] {
+  transform: none;
+}
+.lucide-scroll-text[data-icon-motion] > :is(:nth-child(1), :nth-child(2)) {
+  --len: 6;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 380ms var(--ease-standard) backwards;
+}
+.lucide-scroll-text[data-icon-motion] > :nth-child(1) {
+  animation-delay: 110ms;
+}
+
+/* Configuración: el engranaje gira. */
+.lucide-settings[data-icon-motion] {
+  transform: rotate(90deg);
+}
+
+/* Navegación del menú. */
+.lucide-panel-left-close[data-icon-motion] {
+  transform: translateX(-1.5px);
+}
+.lucide-panel-left-open[data-icon-motion] {
+  transform: translateX(1.5px);
+}
+.lucide-log-out[data-icon-motion] {
+  transform: none;
+}
+.lucide-log-out[data-icon-motion] > :is(:nth-child(1), :nth-child(2)) {
+  transform: translateX(2px);
+}
+
+/* ---------- Acciones ---------- */
+
+:is(.lucide-search, .lucide-search-x)[data-icon-motion] {
+  transform: translate(-1px, -1px) rotate(-12deg) scale(1.08);
+}
+:is(.lucide-plus, .lucide-x, .lucide-circle-x)[data-icon-motion] {
+  transform: rotate(90deg);
+}
+.lucide-minus[data-icon-motion] {
+  transform: scaleX(1.25);
+}
+:is(.lucide-check, .lucide-check-check)[data-icon-motion] {
+  transform: scale(1.08);
+}
+:is(.lucide-check, .lucide-check-check)[data-icon-motion] > :nth-child(1) {
+  --len: 23;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 450ms var(--ease-standard);
+}
+.lucide-check-check[data-icon-motion] > :nth-child(2) {
+  --len: 13;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 360ms var(--ease-standard) 160ms backwards;
+}
+.lucide-circle-check[data-icon-motion] > :nth-child(2) {
+  --len: 12;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 420ms var(--ease-standard) 60ms backwards;
+}
+.lucide-circle-check-big[data-icon-motion] > :nth-child(2) {
+  --len: 19;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 450ms var(--ease-standard) 60ms backwards;
+}
+.lucide-copy-check[data-icon-motion] > :nth-child(1),
+.lucide-mail-check[data-icon-motion] > :nth-child(3) {
+  --len: 9;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 400ms var(--ease-standard) 60ms backwards;
+}
+:is(.lucide-pencil, .lucide-pencil-line, .lucide-clipboard-pen)[data-icon-motion] {
+  transform: none;
+  animation: kv-icon-scribble var(--icon-gesture) var(--ease-standard);
+}
+.lucide-pencil-line[data-icon-motion] > :nth-child(1) {
+  --len: 8;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 420ms var(--ease-standard) 120ms backwards;
+}
+.lucide-trash[data-icon-motion] {
+  transform: none;
+}
+.lucide-trash[data-icon-motion] > :is(:nth-child(4), :nth-child(5)) {
+  transform-box: view-box;
+  transform-origin: 3px 6px;
+  transform: translateY(-1.5px) rotate(-10deg);
+}
+.lucide-refresh-cw[data-icon-motion] {
+  transform: none;
+  animation: kv-icon-spin 700ms var(--ease-standard);
+}
+:is(.lucide-rotate-ccw-clock, .lucide-undo-2)[data-icon-motion] {
+  transform: rotate(-30deg);
+}
+.lucide-download[data-icon-motion] {
+  transform: none;
+}
+.lucide-download[data-icon-motion] > :is(:nth-child(1), :nth-child(3)) {
+  animation: kv-icon-drop 560ms var(--ease-standard);
+}
+.lucide-copy[data-icon-motion] {
+  transform: none;
+}
+.lucide-copy[data-icon-motion] > :nth-child(1) {
+  transform: translate(1px, 1px);
+}
+.lucide-copy[data-icon-motion] > :nth-child(2) {
+  transform: translate(-1px, -1px);
+}
+.lucide-eye[data-icon-motion] {
+  transform: none;
+  animation: kv-icon-blink 420ms var(--ease-standard);
+}
+.lucide-phone[data-icon-motion] {
+  transform: none;
+  animation: kv-icon-ring 700ms var(--ease-standard);
+}
+.lucide-message-circle[data-icon-motion] {
+  transform: rotate(-8deg) scale(1.1);
+}
+:is(.lucide-lock, .lucide-lock-keyhole)[data-icon-motion] {
+  transform: none;
+}
+.lucide-lock[data-icon-motion] > :nth-child(2),
+.lucide-lock-keyhole[data-icon-motion] > :nth-child(3) {
+  transform: translateY(-1.5px);
+}
+.lucide-key-round[data-icon-motion] {
+  transform: rotate(-25deg);
+}
+.lucide-power[data-icon-motion] {
+  transform: none;
+}
+.lucide-power[data-icon-motion] > :nth-child(1) {
+  transform: translateY(-1.5px);
+}
+:is(.lucide-chevron-right, .lucide-arrow-right)[data-icon-motion] {
+  transform: translateX(2px);
+}
+.lucide-chevron-left[data-icon-motion] {
+  transform: translateX(-2px);
+}
+.lucide-chevron-down[data-icon-motion] {
+  transform: translateY(2px);
+}
+.lucide-arrow-up-right[data-icon-motion] {
+  transform: translate(1.5px, -1.5px);
+}
+.lucide-arrow-down-right[data-icon-motion] {
+  transform: translate(1.5px, 1.5px);
+}
+.lucide-ellipsis[data-icon-motion] {
+  transform: none;
+}
+.lucide-ellipsis[data-icon-motion] > * {
+  animation: kv-icon-hop 500ms var(--ease-standard) backwards;
+}
+.lucide-ellipsis[data-icon-motion] > :nth-child(1) {
+  animation-delay: 80ms;
+}
+.lucide-ellipsis[data-icon-motion] > :nth-child(2) {
+  animation-delay: 160ms;
+}
+.lucide-link-2[data-icon-motion] {
+  transform: none;
+}
+.lucide-link-2[data-icon-motion] > :nth-child(1) {
+  transform: translateX(-1px);
+}
+.lucide-link-2[data-icon-motion] > :nth-child(2) {
+  transform: translateX(1px);
+}
+.lucide-link-2[data-icon-motion] > :nth-child(3) {
+  transform: scaleX(1.3);
+}
+.lucide-credit-card[data-icon-motion] {
+  transform: translateX(1.5px) rotate(-5deg);
+}
+.lucide-banknote[data-icon-motion] {
+  transform: none;
+}
+.lucide-banknote[data-icon-motion] > :nth-child(2) {
+  animation: kv-icon-flip 600ms var(--ease-standard);
+}
+.lucide-circle-dollar-sign[data-icon-motion] {
+  transform: none;
+  animation: kv-icon-flip 650ms var(--ease-standard);
+}
+.lucide-qr-code[data-icon-motion] {
+  transform: none;
+}
+.lucide-qr-code[data-icon-motion] > :nth-child(-n + 3) {
+  animation: kv-icon-pop 480ms var(--ease-standard) backwards;
+}
+.lucide-qr-code[data-icon-motion] > :nth-child(2) {
+  animation-delay: 70ms;
+}
+.lucide-qr-code[data-icon-motion] > :nth-child(3) {
+  animation-delay: 140ms;
+}
+.lucide-receipt-text[data-icon-motion] {
+  transform: none;
+}
+.lucide-receipt-text[data-icon-motion] > :nth-child(-n + 3) {
+  --len: 9;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 380ms var(--ease-standard) backwards;
+}
+.lucide-receipt-text[data-icon-motion] > :nth-child(3) {
+  animation-delay: 80ms;
+}
+.lucide-receipt-text[data-icon-motion] > :nth-child(1) {
+  animation-delay: 160ms;
+}
+.lucide-clipboard-list[data-icon-motion] {
+  transform: none;
+}
+.lucide-clipboard-list[data-icon-motion] > :is(:nth-child(3), :nth-child(4)) {
+  --len: 5;
+  stroke-dasharray: var(--len);
+  animation: kv-icon-draw 360ms var(--ease-standard) backwards;
+}
+.lucide-clipboard-list[data-icon-motion] > :nth-child(4) {
+  animation-delay: 100ms;
+}
+.lucide-plane[data-icon-motion] {
+  transform: translate(2px, -2px) rotate(-6deg);
+}
+.lucide-play[data-icon-motion] {
+  transform: translateX(1px) scale(1.12);
+}
+:is(.lucide-triangle-alert, .lucide-circle-alert, .lucide-shield-alert)[data-icon-motion] {
+  transform: none;
+  animation: kv-icon-shake 520ms var(--ease-standard);
+}
+
+/* ---------- Ítem de navegación recién activado ---------- */
+
+:is(nav, [role='navigation']) [aria-current='page'] .lucide {
+  animation: kv-icon-arrive 520ms var(--ease-standard);
+}
+
+/* ---------- Avisos y estados al aparecer ---------- */
+
+[data-icon-entrance] > .lucide,
+[data-icon-entrance] > span > .lucide {
+  animation: kv-icon-enter 560ms var(--ease-spring) backwards;
+}
+
+/* ---------- Reducir movimiento ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .lucide:not(.animate-spin),
+  .lucide:not(.animate-spin) > * {
+    transform: none !important;
+    animation: none !important;
+    stroke-dasharray: none !important;
+  }
+}
