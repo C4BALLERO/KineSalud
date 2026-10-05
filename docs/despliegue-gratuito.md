@@ -76,6 +76,12 @@ Después, en `https://<dominio>/recuperar-contrasena`, ingresa el correo y defin
 
 Sin este paso, los recordatorios se procesan igual mientras recepción tiene la app abierta, que es cuando se gestionan.
 
+## Seguridad
+
+Las cabeceras de seguridad (CSP, HSTS…) salen de `firebase.json`, las mismas que en Blaze. El servidor rechaza los tokens de cuentas desactivadas al instante (`verifyIdToken` con `checkRevoked`).
+
+App Check (ver [seguridad.md](seguridad.md)): después de configurar reCAPTCHA y `VITE_APPCHECK_SITE_KEY`, actívalo en el servidor con `npx vercel@62 env add APPCHECK_ENFORCE production` (valor `true`) y publica de nuevo.
+
 ## Alternativa: despliegue automático con cada push
 
 Si prefieres que Vercel compile solo al hacer push:

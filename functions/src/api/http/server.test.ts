@@ -115,6 +115,18 @@ describe('protocolo callable sobre HTTP', () => {
     expect(down).toMatchObject({ status: 503, body: { status: 'error' } });
   });
 
+  it('con App Check obligatorio, rechaza comandos sin un token válido', async () => {
+    const d = deps({ verifyAppCheck: async (t) => t === 'app-ok' });
+    const sin = await handleRequest(post('echo-run', { data: null }), d);
+    expect(sin.status).toBe(401);
+    expect(sin.body).toMatchObject({ error: { status: 'UNAUTHENTICATED' } });
+    const con = await handleRequest(
+      post('echo-run', { data: null }, { 'x-firebase-appcheck': 'app-ok' }),
+      d,
+    );
+    expect(con.status).toBe(200);
+  });
+
   it('CORS solo para los orígenes permitidos', async () => {
     const d = deps({ allowedOrigins: ['http://localhost:5173'] });
     const pre = await handleRequest(

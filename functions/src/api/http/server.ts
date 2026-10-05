@@ -38,6 +38,11 @@ export interface ServerDeps {
   allowedOrigins?: string[];
   /** Comprobación pública del servidor (GET /api/health): no devuelve datos. */
   health?(): Promise<boolean>;
+  /**
+   * App Check obligatorio (APPCHECK_ENFORCE=true): valida el encabezado
+   * X-Firebase-AppCheck que el SDK web agrega a cada comando.
+   */
+  verifyAppCheck?(token: string | undefined): Promise<boolean>;
 }
 
 const STATUS: Record<string, [number, string]> = {
@@ -116,6 +121,19 @@ export async function handleRequest(
   const command = deps.commands[req.route];
   if (!command) {
     return json(404, { error: { status: 'NOT_FOUND', message: 'Comando desconocido.' } }, cors);
+  }
+
+  if (deps.verifyAppCheck && !(await deps.verifyAppCheck(req.headers['x-firebase-appcheck']))) {
+    return json(
+      401,
+      {
+        error: {
+          status: 'UNAUTHENTICATED',
+          message: 'No se pudo verificar la aplicación. Recarga la página.',
+        },
+      },
+      cors,
+    );
   }
 
   try {

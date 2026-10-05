@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_VAPID_KEY?: string;
   /** Despliegue gratuito: base del servidor HTTP de comandos (p. ej. "/api"). */
   readonly VITE_API_URL?: string;
+  readonly VITE_APPCHECK_SITE_KEY?: string;
 }
 
 interface ImportMeta {

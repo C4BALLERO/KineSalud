@@ -75,7 +75,7 @@ Con la cuenta de administración, en este orden:
 
 ## Antes de cargar datos reales de pacientes
 
-El sistema ya valida todo en el servidor y las reglas impiden escrituras directas, pero la Fase 15 (Seguridad) agrega protecciones pensadas para datos clínicos reales: App Check, revisión final de permisos y de la auditoría. Hasta entonces conviene usar producción con datos de prueba.
+Revisa [seguridad.md](seguridad.md): activa App Check y la política de contraseñas, y limita las cuentas con acceso al proyecto de Google (ven los datos en la consola).
 
 ## Costo $0 en el plan Blaze
 

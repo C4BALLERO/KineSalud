@@ -144,7 +144,10 @@ service cloud.firestore {
         allow create, update: if isActive() && isSelf(uid)
           && request.resource.data.keys().hasOnly(['token', 'userAgent', 'createdAt'])
           && request.resource.data.token is string
+          && request.resource.data.token.size() > 0
           && request.resource.data.token.size() < 4096
+          && request.resource.data.get('userAgent', '') is string
+          && request.resource.data.get('userAgent', '').size() <= 512
           && request.resource.data.createdAt == request.time;
       }
     }

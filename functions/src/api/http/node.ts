@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { getAppCheck } from 'firebase-admin/app-check';
 import { logger } from 'firebase-functions/v2';
 import { adminAuth, db } from '../../core/firebase';
 import { firestoreRemindersGateway } from '../../domain/reminders/firestoreRemindersGateway';
@@ -12,8 +13,10 @@ const MAX_BODY = 1_000_000;
 
 const deps: ServerDeps = {
   commands: COMMANDS,
+  // checkRevoked: rechaza tokens de cuentas deshabilitadas o con sesiones
+  // revocadas (al desactivar una cuenta), igual que core/sessions.ts en Blaze.
   verifyIdToken: async (token) => {
-    const decoded = await adminAuth.verifyIdToken(token);
+    const decoded = await adminAuth.verifyIdToken(token, true);
     return { uid: decoded.uid, token: decoded as unknown as Record<string, unknown> };
   },
   before: beforeCommand as ServerDeps['before'],
@@ -23,6 +26,18 @@ const deps: ServerDeps = {
     run: () => processDueReminders(firestoreRemindersGateway, STAFF_CHANNELS),
   },
   allowedOrigins: (process.env.CORS_ORIGINS ?? '').split(',').filter(Boolean),
+  verifyAppCheck:
+    process.env.APPCHECK_ENFORCE === 'true'
+      ? async (token) => {
+          if (!token) return false;
+          try {
+            await getAppCheck().verifyToken(token);
+            return true;
+          } catch {
+            return false;
+          }
+        }
+      : undefined,
   // Una lectura liviana confirma que las credenciales de Firestore funcionan.
   health: async () => {
     let timer: NodeJS.Timeout | undefined;

@@ -12,6 +12,7 @@ import { PasswordInput } from '@/components/ui/PasswordInput';
 import { signIn } from '../api/authApi';
 import { authErrorMessage } from '../api/authErrors';
 import { AuthLayout } from '../components/AuthLayout';
+import { IDLE_SIGNOUT_FLAG } from '../idle/IdleSignOut';
 
 const loginSchema = z.object({
   email: emailSchema,
@@ -19,8 +20,20 @@ const loginSchema = z.object({
 });
 type LoginValues = z.infer<typeof loginSchema>;
 
+/** ¿La sesión anterior se cerró por inactividad? Se lee una sola vez y se borra. */
+function consumeIdleFlag(): boolean {
+  try {
+    const flagged = sessionStorage.getItem(IDLE_SIGNOUT_FLAG) === '1';
+    sessionStorage.removeItem(IDLE_SIGNOUT_FLAG);
+    return flagged;
+  } catch {
+    return false;
+  }
+}
+
 export function LoginPage() {
   const [authError, setAuthError] = useState<string | null>(null);
+  const [idleSignOut] = useState(consumeIdleFlag);
   const {
     register,
     handleSubmit,
@@ -52,6 +65,11 @@ export function LoginPage() {
 
       <form noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
         {authError && <InlineAlert tone="danger" title={authError} />}
+        {!authError && idleSignOut && (
+          <InlineAlert tone="info" title="Cerramos tu sesión por inactividad.">
+            Pasaron 30 minutos sin uso. Ingresa de nuevo para continuar.
+          </InlineAlert>
+        )}
 
         <FormField label="Correo electrónico" error={errors.email?.message}>
           {(p) => (

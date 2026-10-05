@@ -13,4 +13,4 @@
 | Primer administrador en producción    | `scripts/bootstrap-admin.mjs`                                                                                                                         |
 | Documentación                         | `docs/` (índice en `docs/INDEX.md`)                                                                                                                   |
 
-Módulos: auth/users, dashboard, clients, staff, settings, services, appointments (agenda), cash (caja y cobros), treatments, clinical (seguimiento), reminders (recordatorios y notificaciones), reports. Faltan las Fases 15 (seguridad) y 16 (pruebas finales).
+Módulos: auth/users (con cierre por inactividad), dashboard, clients, staff, settings, services, appointments (agenda), cash (caja y cobros), treatments, clinical (seguimiento), reminders (recordatorios y notificaciones), reports, audit. Seguridad en `docs/seguridad.md`. Falta la Fase 16 (pruebas finales).

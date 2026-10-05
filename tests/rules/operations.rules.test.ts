@@ -377,4 +377,15 @@ describe('recordatorios y notificaciones', () => {
       }),
     );
   });
+
+  it('el registro de dispositivo no acepta campos extra ni valores desmedidos', async () => {
+    const fs = db('r', claims.recep);
+    const device = doc(fs, 'users', 'r', 'devices', 'd2');
+    const base = { token: 'abc', userAgent: 'Chrome', createdAt: serverTimestamp() };
+    await assertFails(setDoc(device, { ...base, role: 'ADMINISTRADOR' }));
+    await assertFails(setDoc(device, { ...base, token: '' }));
+    await assertFails(setDoc(device, { ...base, userAgent: 'x'.repeat(513) }));
+    await assertFails(setDoc(device, { ...base, userAgent: 42 }));
+    await assertFails(setDoc(device, { ...base, createdAt: new Date('2020-01-01') }));
+  });
 });

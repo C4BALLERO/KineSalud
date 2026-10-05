@@ -1,4 +1,5 @@
 import { initializeApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { connectAuthEmulator, getAuth, type Auth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore, type Firestore } from 'firebase/firestore';
 import { connectFunctionsEmulator, getFunctions, type Functions } from 'firebase/functions';
@@ -27,6 +28,16 @@ if (!usingEmulators && !config.apiKey) {
 }
 
 export const firebaseApp: FirebaseApp = initializeApp(config);
+
+// App Check (opcional, ver docs/seguridad.md): con la clave pública de reCAPTCHA v3,
+// cada petición a Firebase y al servidor lleva una prueba de que sale de esta web.
+// Se inicializa antes que los demás servicios para que sus primeras peticiones la incluyan.
+if (env.VITE_APPCHECK_SITE_KEY && !usingEmulators) {
+  initializeAppCheck(firebaseApp, {
+    provider: new ReCaptchaV3Provider(env.VITE_APPCHECK_SITE_KEY),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
 export const auth: Auth = getAuth(firebaseApp);
 auth.languageCode = 'es';
 export const db: Firestore = getFirestore(firebaseApp);

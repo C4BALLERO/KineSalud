@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from 'react';
 import { Outlet } from 'react-router';
+import { IdleSignOut } from '@/features/auth/idle/IdleSignOut';
 import { BREAKPOINTS, useMediaQuery } from '@/hooks/useMediaQuery';
 import { BottomNav } from './BottomNav';
 import { Sidebar } from './Sidebar';
@@ -50,6 +51,7 @@ export function AppShell() {
       </div>
 
       <BottomNav className="md:hidden" />
+      <IdleSignOut />
     </div>
   );
 }

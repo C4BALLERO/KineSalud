@@ -11,7 +11,7 @@
 // en el despliegue con Blaze: Vite la incorpora al compilar y no hace falta cargarla en Vercel.
 import { build } from 'esbuild';
 import { execSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -88,11 +88,11 @@ writeFileSync(
   ),
 );
 
-const security = {
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-};
+// Mismas cabeceras de seguridad (CSP, HSTS…) que Firebase Hosting: una sola fuente.
+const hosting = JSON.parse(readFileSync(`${root}firebase.json`, 'utf8')).hosting;
+const security = Object.fromEntries(
+  hosting.headers.find((h) => h.source === '**').headers.map((h) => [h.key, h.value]),
+);
 writeFileSync(
   `${out}/config.json`,
   JSON.stringify(

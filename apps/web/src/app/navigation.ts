@@ -4,6 +4,7 @@ import {
   ChartColumn,
   HeartPulse,
   LayoutDashboard,
+  ScrollText,
   Settings,
   ShieldCheck,
   Stethoscope,
@@ -122,6 +123,14 @@ export const NAV_ITEMS: NavItem[] = [
     icon: ShieldCheck,
     group: 'administracion',
     visible: (s) => hasPermission(s, 'users.manage'),
+  },
+  {
+    id: 'auditoria',
+    to: '/auditoria',
+    label: 'Auditoría',
+    icon: ScrollText,
+    group: 'administracion',
+    visible: (s) => hasPermission(s, 'audit.view'),
   },
   {
     id: 'configuracion',
