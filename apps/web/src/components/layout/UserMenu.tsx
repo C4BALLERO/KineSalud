@@ -1,4 +1,4 @@
-import { ChevronDown, LogOut, UserRound } from 'lucide-react';
+import { ChevronDown, LogOut, Monitor, Moon, Sun, UserRound } from 'lucide-react';
 import { ROLE_LABELS } from '@kinesalud/shared';
 import { useNavigate } from 'react-router';
 import { Avatar } from '@/components/ui/Avatar';
@@ -6,15 +6,20 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
+import { useTheme } from '@/components/theme/theme-context';
 import { useRequiredSession, useSession } from '@/features/auth/session';
 
 export function UserMenu() {
   const session = useRequiredSession();
   const { signOut } = useSession();
   const navigate = useNavigate();
+  const { preference, setPreference } = useTheme();
 
   return (
     <DropdownMenu>
@@ -43,6 +48,19 @@ export function UserMenu() {
         >
           Mi cuenta
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>Tema</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={preference} onValueChange={setPreference}>
+          <DropdownMenuRadioItem value="system" icon={<Monitor aria-hidden="true" />}>
+            Según el equipo
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="light" icon={<Sun aria-hidden="true" />}>
+            Claro
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="dark" icon={<Moon aria-hidden="true" />}>
+            Oscuro
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
         {/* Al cerrar sesión, ProtectedRoute redirige al login. */}
         <DropdownMenuItem icon={<LogOut aria-hidden="true" />} onSelect={() => void signOut()}>

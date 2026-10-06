@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 import { TooltipProvider } from '@/components/ui/Tooltip';
 import { FirebaseSessionProvider } from '@/features/auth/FirebaseSessionProvider';
@@ -9,9 +10,11 @@ import { queryClient } from '@/lib/queryClient';
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <FirebaseSessionProvider>
-        <UiProviders>{children}</UiProviders>
-      </FirebaseSessionProvider>
+      <ThemeProvider>
+        <FirebaseSessionProvider>
+          <UiProviders>{children}</UiProviders>
+        </FirebaseSessionProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
