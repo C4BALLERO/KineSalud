@@ -39,7 +39,7 @@ export function NotificationsButton() {
           {unread.length > 0 && (
             <span
               aria-hidden="true"
-              className="tabular absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[0.6875rem] leading-4 font-semibold text-white ring-2 ring-surface"
+              className="tabular absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[0.6875rem] leading-4 font-semibold text-on-danger ring-2 ring-surface"
             >
               {unread.length > 9 ? '9+' : unread.length}
             </span>

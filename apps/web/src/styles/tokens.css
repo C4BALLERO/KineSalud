@@ -61,6 +61,7 @@
   --color-warning-border: #fde68a;
   --color-danger: #b91c1c;
   --color-danger-hover: #991b1b;
+  --color-on-danger: #ffffff;
   --color-danger-subtle: #fef2f2;
   --color-danger-border: #fecaca;
   --color-info: #1d4ed8;
@@ -145,4 +146,79 @@
   /* ---------- Layout ---------- */
   --container-content: 90rem; /* 1440 */
   --container-form: 40rem; /* 640 */
+}
+
+/*
+ * Modo oscuro: negro con azul eléctrico.
+ * Se activa con data-theme="dark" en <html> (preferencia de la persona o del
+ * sistema; ver src/lib/theme.ts y public/theme-init.js). Solo cambia los colores:
+ * los componentes siguen usando los mismos tokens.
+ * Contrastes (WCAG 2.2 AA) en docs/design-system.md: texto ≥ 4.5:1, controles ≥ 3:1.
+ */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+
+    /* Azul eléctrico: acción primaria, enlaces y foco (5.8:1 sobre las superficies).
+     * Sobre él, texto casi negro (6.1:1): el blanco no alcanza contraste en un azul así de luminoso. */
+    --color-primary: #3d8bff;
+    --color-primary-hover: #6aa6ff;
+    --color-primary-subtle: #0c1a38;
+    --color-primary-border: #1f3d78;
+    --color-on-primary: #03060d;
+
+    --color-secondary: #38c4ff; /* cian eléctrico, acento puntual */
+    --color-secondary-subtle: #06202e;
+    --color-on-secondary: #03060d;
+
+    --color-canvas: #05070c; /* negro con un matiz azul */
+    --color-surface: #0b0f18;
+    --color-surface-muted: #141b28;
+    --color-overlay: rgb(0 0 0 / 0.68);
+
+    --color-fg: #e9eefb; /* 16.5:1 */
+    --color-fg-muted: #a5b1c9; /* 8.9:1 */
+    --color-fg-subtle: #8692ab; /* ≥ 5.5:1 en todas las superficies */
+
+    --color-border: #1d2534;
+    --color-border-strong: #2b3548;
+    --color-border-control: #66738d; /* 4.0:1 */
+
+    --color-success: #4ade80;
+    --color-success-subtle: #0a2416;
+    --color-success-border: #14532d;
+    --color-warning: #fbbf24;
+    --color-warning-subtle: #2a1d04;
+    --color-warning-border: #713f12;
+    --color-danger: #ff6b6b;
+    --color-danger-hover: #ff8f8f;
+    --color-on-danger: #03060d;
+    --color-danger-subtle: #2e0c0c;
+    --color-danger-border: #7f1d1d;
+    --color-info: #60a5fa;
+    --color-info-subtle: #0b1a33;
+    --color-info-border: #1e3a8a;
+    --color-neutral: #a5b1c9;
+    --color-neutral-subtle: #141b28;
+    --color-neutral-border: #2b3548;
+
+    --color-cat-fisioterapia: #38bdf8;
+    --color-cat-fisioterapia-subtle: #062030;
+    --color-cat-rehabilitacion: #a3e635;
+    --color-cat-rehabilitacion-subtle: #16220a;
+    --color-cat-estetica: #f472b6;
+    --color-cat-estetica-subtle: #2a0b1c;
+
+    --color-chart-1: #3d8bff;
+    --color-chart-2: #ff9466;
+
+    /* Sombras: el negro no proyecta sombra visible; un filo azul tenue separa las capas. */
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+    --shadow-md: 0 0 0 1px rgb(61 139 255 / 0.1), 0 8px 20px -4px rgb(0 0 0 / 0.7);
+    --shadow-lg: 0 0 0 1px rgb(61 139 255 / 0.14), 0 24px 48px -8px rgb(0 0 0 / 0.8);
+  }
 }

@@ -18,7 +18,7 @@ const variants: Record<ButtonVariant, string> = {
   secondary:
     'bg-surface text-fg border border-border-strong hover:bg-surface-muted active:bg-surface-muted',
   ghost: 'text-fg-muted hover:bg-surface-muted hover:text-fg active:bg-surface-muted',
-  danger: 'bg-danger text-white hover:bg-danger-hover active:bg-danger-hover',
+  danger: 'bg-danger text-on-danger hover:bg-danger-hover active:bg-danger-hover',
 };
 
 /* Altura mínima 44 px en táctil (sm/md crecen en pantallas pequeñas). */

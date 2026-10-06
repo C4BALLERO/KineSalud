@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react';
 import { DropdownMenu as RadixMenu } from 'radix-ui';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
@@ -74,6 +75,51 @@ export function DropdownMenuItem({
         </>
       )}
     </RadixMenu.Item>
+  );
+}
+
+/** Opciones excluyentes (p. ej. el tema): cada ítem anuncia si está elegido. */
+export function DropdownMenuRadioGroup<T extends string>({
+  value,
+  onValueChange,
+  children,
+}: {
+  value: T;
+  onValueChange: (value: T) => void;
+  children: ReactNode;
+}) {
+  return (
+    <RadixMenu.RadioGroup value={value} onValueChange={(v) => onValueChange(v as T)}>
+      {children}
+    </RadixMenu.RadioGroup>
+  );
+}
+
+export function DropdownMenuRadioItem({
+  value,
+  icon,
+  children,
+}: {
+  value: string;
+  icon?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <RadixMenu.RadioItem
+      value={value}
+      // Mantener el menú abierto: se ve el cambio de tema al instante.
+      onSelect={(e) => e.preventDefault()}
+      className={cn(
+        'flex h-11 cursor-pointer items-center gap-2.5 rounded-sm px-2.5 text-body-sm text-fg outline-none select-none md:h-9',
+        'data-[highlighted]:bg-surface-muted data-[state=checked]:font-semibold [&_svg]:size-4 [&_svg]:shrink-0',
+      )}
+    >
+      {icon}
+      <span className="flex-1">{children}</span>
+      <RadixMenu.ItemIndicator>
+        <Check aria-hidden="true" className="text-primary" />
+      </RadixMenu.ItemIndicator>
+    </RadixMenu.RadioItem>
   );
 }
 

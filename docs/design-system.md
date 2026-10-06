@@ -67,6 +67,27 @@ Siempre van acompañados de texto o icono; el color nunca es la única señal.
 - **Accesibilidad:** el desglose por estado va en el tooltip y en el nombre accesible de cada barra.
 - **Estados de cita:** usan los colores de estado, siempre con icono y texto.
 
+## Modo oscuro (negro y azul eléctrico)
+
+- **Cómo se elige:** menú de usuario → **Tema**: «Según el equipo» (predeterminado), «Claro» u «Oscuro». La preferencia es de cada navegador (`localStorage`, clave `kinesalud:theme`) y se sincroniza entre pestañas.
+- **Cómo funciona:** `data-theme="dark"` en `<html>` redefine los mismos tokens (`styles/tokens.css`); los componentes no cambian. `public/theme-init.js` lo aplica antes del primer pintado (archivo externo por la CSP) para que no parpadee. `color-scheme: dark` oscurece los controles nativos (fecha, barras de desplazamiento).
+- **Paleta:** fondo `#05070C`, superficies `#0B0F18` y `#141B28`, texto `#E9EEFB`; acción primaria azul eléctrico `#3D8BFF` (hover `#6AA6FF`) con texto casi negro encima; acento cian `#38C4FF`.
+- **Contraste (WCAG 2.2 AA):**
+
+| Par                                          | Contraste      |
+| -------------------------------------------- | -------------- |
+| Texto principal / superficie                 | 16,5:1         |
+| Texto secundario / superficie                | 8,9:1          |
+| Metadatos / superficie atenuada              | 5,5:1          |
+| Azul eléctrico / superficie                  | 5,8:1          |
+| Texto sobre botón primario                   | 6,1:1          |
+| Borde de controles / superficie              | 4,0:1 (≥ 3:1)  |
+| Semánticos sobre su fondo suave              | 6,5:1 a 9,9:1  |
+| Categorías y series de gráficos / superficie | 5,8:1 a 12,7:1 |
+
+- **Por qué texto oscuro sobre el azul:** un azul eléctrico luminoso no alcanza 4,5:1 con texto blanco y, a la vez, 4,5:1 como enlace sobre negro. Con texto casi negro cumple ambos.
+- **Sombras:** sobre negro no se ven; los menús y diálogos llevan un filo azul tenue.
+
 ## Tipografía
 
 Se usa una sola familia: **Plus Jakarta Sans Variable**, auto-alojada. Las horas, tablas y KPIs usan cifras tabulares (clase `tabular`).

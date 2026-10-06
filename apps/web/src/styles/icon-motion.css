@@ -663,6 +663,22 @@
   animation: kv-icon-shake 520ms var(--ease-standard);
 }
 
+/* Tema: el sol gira, la luna se mece, el monitor se enciende. */
+.lucide-sun[data-icon-motion] {
+  transform: rotate(45deg) scale(1.1);
+}
+.lucide-moon[data-icon-motion] {
+  transform: none;
+  transform-origin: 70% 30%;
+  animation: kv-icon-swing 700ms var(--ease-standard);
+}
+.lucide-monitor[data-icon-motion] {
+  transform: none;
+}
+.lucide-monitor[data-icon-motion] > :nth-child(1) {
+  animation: kv-icon-pop 480ms var(--ease-standard);
+}
+
 /* ---------- Ítem de navegación recién activado ---------- */
 
 :is(nav, [role='navigation']) [aria-current='page'] .lucide {
