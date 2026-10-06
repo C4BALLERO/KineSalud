@@ -60,6 +60,7 @@ const vars = (values: Record<string, number>) => values as CSSProperties;
 export function LandingPage() {
   const { status } = useSession();
   const root = useRef<HTMLDivElement>(null);
+  const hero = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const signedIn = status === 'signed-in';
 
@@ -90,11 +91,60 @@ export function LandingPage() {
     return () => document.documentElement.removeAttribute('data-landing');
   }, []);
 
+  // Paralaje de la portada: el texto sube y se desvanece, el video se acerca.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const reduced =
+      typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let frame = 0;
+    const onScroll = () => {
+      setScrolled(window.scrollY > 12);
+      if (reduced || frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const el = hero.current;
+        if (!el) return;
+        const progress = Math.min(1, Math.max(0, window.scrollY / el.offsetHeight));
+        el.style.setProperty('--lp-p', progress.toFixed(3));
+      });
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  // Tarjetas que se inclinan hacia el cursor con un foco de luz que lo sigue.
+  useEffect(() => {
+    const el = root.current;
+    const reduced =
+      typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!el || reduced) return;
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') return;
+      const card = (e.target as Element | null)?.closest<HTMLElement>('.lp-card');
+      if (!card) return;
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width;
+      const y = (e.clientY - r.top) / r.height;
+      card.style.setProperty('--mx', `${(x * 100).toFixed(1)}%`);
+      card.style.setProperty('--my', `${(y * 100).toFixed(1)}%`);
+      card.style.setProperty('--ry', `${((x - 0.5) * 8).toFixed(2)}deg`);
+      card.style.setProperty('--rx', `${((0.5 - y) * 8).toFixed(2)}deg`);
+    };
+    const onOut = (e: PointerEvent) => {
+      const card = (e.target as Element | null)?.closest<HTMLElement>('.lp-card');
+      if (!card || (e.relatedTarget instanceof Node && card.contains(e.relatedTarget))) return;
+      card.style.removeProperty('--rx');
+      card.style.removeProperty('--ry');
+    };
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerout', onOut);
+    return () => {
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerout', onOut);
+    };
   }, []);
 
   return (
@@ -146,77 +196,88 @@ export function LandingPage() {
 
       <main id="contenido">
         {/* ---------- Portada ---------- */}
-        <section id="inicio" className="relative overflow-hidden">
-          <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pt-10 pb-16 md:grid-cols-[1.1fr_1fr] md:px-6 md:pt-16 md:pb-24">
-            <div className="flex flex-col gap-6">
-              <p className="lp-eyebrow inline-flex w-fit items-center gap-2 rounded-full border border-primary-border bg-primary-subtle px-3 py-1 text-caption font-semibold text-primary">
-                <span aria-hidden="true" className="lp-dot" />
-                Fisioterapia · Rehabilitación · Estética
-              </p>
-              <h1 className="text-[2.5rem] leading-[1.08] font-bold tracking-tight text-fg md:text-[3.5rem]">
-                {HEADLINE.map((w, i) => (
-                  // El espacio va fuera del bloque animado: dentro de un inline-block se pierde.
-                  <Fragment key={i}>
-                    <span className="lp-word" style={vars({ '--i': i })}>
-                      {i === 2 || i === 5 ? <span className="lp-gradient-text">{w}</span> : w}
-                    </span>
-                    {i < HEADLINE.length - 1 ? ' ' : ''}
-                  </Fragment>
-                ))}
-              </h1>
-              <p
-                className="lp-fade max-w-xl text-body text-fg-muted md:text-[1.0625rem] md:leading-7"
-                style={vars({ '--i': 7 })}
-              >
-                En Kinesalud y Vida te acompañamos con un plan de tratamiento a tu medida y un
-                seguimiento cercano de tu evolución, sesión a sesión, en {CLINIC.city}.
-              </p>
-              <div className="lp-fade flex flex-wrap gap-3" style={vars({ '--i': 9 })}>
-                <Button asChild size="lg">
-                  <a href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
-                    <WhatsAppIcon />
-                    Agenda por WhatsApp
-                  </a>
-                </Button>
-                <Button asChild size="lg" variant="secondary">
-                  <a href="#ubicacion">
-                    <MapPin aria-hidden="true" />
-                    Cómo llegar
-                  </a>
-                </Button>
-              </div>
+        <section id="inicio" ref={hero} className="lp-hero relative px-2 pt-2 md:px-4 md:pt-3">
+          <div className="lp-hero-frame relative isolate overflow-hidden rounded-[2rem] border border-border">
+            {/* Video de fondo translúcido (HyperFrames) con velo hacia el texto. */}
+            <div aria-hidden="true" className="lp-hero-media absolute inset-0 -z-10">
+              <LoopVideo
+                name="kinesalud-ambient"
+                className="lp-hero-video size-full object-cover"
+              />
+              <div className="lp-hero-shade absolute inset-0" />
             </div>
 
-            <div className="lp-hero-media relative mx-auto w-full max-w-md">
-              <div className="lp-video-frame relative aspect-square overflow-hidden rounded-[2rem] border border-primary-border shadow-lg">
-                <HeroVideo />
-              </div>
-              <span className="lp-chip lp-chip-a">
-                <CalendarCheck aria-hidden="true" className="size-4 text-primary" />
-                Atención con cita previa
-              </span>
-              <span className="lp-chip lp-chip-b">
-                <MapPin aria-hidden="true" className="size-4 text-primary" />
-                Cochabamba
-              </span>
-            </div>
-          </div>
-
-          {/* Cinta de especialidades */}
-          <div
-            aria-hidden="true"
-            className="lp-glass relative overflow-hidden border-y border-border py-3"
-          >
-            <div className="lp-marquee-track flex w-max gap-10 pr-10 whitespace-nowrap">
-              {[...MARQUEE, ...MARQUEE].map((m, i) => (
-                <span
-                  key={i}
-                  className="flex items-center gap-10 text-body-sm font-semibold tracking-wide text-fg-muted uppercase"
+            <div className="lp-hero-content mx-auto grid min-h-[34rem] max-w-6xl items-center gap-10 px-6 pt-16 pb-12 md:min-h-[40rem] md:grid-cols-[1.3fr_0.7fr] md:px-10 md:pt-20">
+              <div className="flex flex-col gap-6">
+                <p className="lp-eyebrow inline-flex w-fit items-center gap-2 rounded-full border border-primary-border bg-primary-subtle px-3 py-1 text-caption font-semibold text-primary">
+                  <span aria-hidden="true" className="lp-dot" />
+                  Fisioterapia · Rehabilitación · Estética
+                </p>
+                <h1 className="text-[2.75rem] leading-[1.04] font-bold tracking-tight text-fg md:text-[4.25rem]">
+                  {HEADLINE.map((w, i) => (
+                    // El espacio va fuera del bloque animado: dentro de un inline-block se pierde.
+                    <Fragment key={i}>
+                      <span className="lp-word" style={vars({ '--i': i })}>
+                        {i === 2 || i === 5 ? <span className="lp-gradient-text">{w}</span> : w}
+                      </span>
+                      {i < HEADLINE.length - 1 ? ' ' : ''}
+                    </Fragment>
+                  ))}
+                </h1>
+                <p
+                  className="lp-fade max-w-xl text-body text-fg-muted md:text-[1.125rem] md:leading-8"
+                  style={vars({ '--i': 7 })}
                 >
-                  {m}
-                  <span className="size-1.5 rounded-full bg-primary" />
+                  En Kinesalud y Vida te acompañamos con un plan de tratamiento a tu medida y un
+                  seguimiento cercano de tu evolución, sesión a sesión, en {CLINIC.city}.
+                </p>
+                <div className="lp-fade flex flex-wrap gap-3" style={vars({ '--i': 9 })}>
+                  <Button asChild size="lg" className="lp-cta rounded-full px-7">
+                    <a href={LINKS.whatsapp} target="_blank" rel="noopener noreferrer">
+                      <WhatsAppIcon />
+                      Agenda por WhatsApp
+                    </a>
+                  </Button>
+                  <Button asChild size="lg" variant="secondary" className="rounded-full px-7">
+                    <a href="#ubicacion">
+                      <MapPin aria-hidden="true" />
+                      Cómo llegar
+                    </a>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="lp-hero-card relative mx-auto w-full max-w-xs md:max-w-sm">
+                <div className="lp-video-frame relative aspect-square overflow-hidden rounded-[1.75rem] border border-primary-border shadow-lg">
+                  <LoopVideo name="kinesalud-hero" className="size-full object-cover" />
+                </div>
+                <span className="lp-chip lp-chip-a">
+                  <CalendarCheck aria-hidden="true" className="size-4" />
+                  Atención con cita previa
                 </span>
-              ))}
+                <span className="lp-chip lp-chip-b">
+                  <MapPin aria-hidden="true" className="size-4" />
+                  Cochabamba
+                </span>
+              </div>
+            </div>
+
+            {/* Cinta de especialidades dentro de la portada, como la fila de marcas de la referencia. */}
+            <div
+              aria-hidden="true"
+              className="relative overflow-hidden border-t border-border py-5"
+            >
+              <div className="lp-marquee-track flex w-max gap-12 pr-12 whitespace-nowrap">
+                {[...MARQUEE, ...MARQUEE].map((m, i) => (
+                  <span
+                    key={i}
+                    className="flex items-center gap-12 text-[1.375rem] font-semibold tracking-tight text-fg/80"
+                  >
+                    {m}
+                    <span className="lp-marquee-dot" />
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -256,14 +317,20 @@ export function LandingPage() {
         </Section>
 
         {/* ---------- Cómo trabajamos ---------- */}
-        <Section id="proceso" eyebrow="Cómo trabajamos" title="Tu recuperación, paso a paso" muted>
+        <Section
+          id="proceso"
+          video
+          eyebrow="Cómo trabajamos"
+          title="Tu recuperación, paso a paso"
+          muted
+        >
           <ol className="grid gap-5 md:grid-cols-4">
             {STEPS.map((s, i) => (
               <li
                 key={s.title}
                 data-reveal
                 style={vars({ '--d': i })}
-                className="relative flex flex-col gap-2 rounded-2xl border border-border bg-surface p-5"
+                className="lp-card relative flex flex-col gap-2 rounded-2xl border border-border bg-surface p-5"
               >
                 <span className="lp-step-number tabular" aria-hidden="true">
                   {String(i + 1).padStart(2, '0')}
@@ -371,7 +438,7 @@ export function LandingPage() {
         </Section>
 
         {/* ---------- Contacto ---------- */}
-        <Section id="contacto" eyebrow="Contacto" title="Escríbenos o llámanos">
+        <Section id="contacto" video eyebrow="Contacto" title="Escríbenos o llámanos">
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <ContactCard
               index={0}
@@ -467,8 +534,11 @@ export function LandingPage() {
   );
 }
 
-/** Video de marca hecho con HyperFrames. Sin "reducir movimiento" se reproduce en bucle. */
-function HeroVideo() {
+/**
+ * Video en bucle hecho con HyperFrames (WebM y MP4 en /media). Decorativo:
+ * con "reducir movimiento" se muestra su imagen fija.
+ */
+function LoopVideo({ name, className }: { name: string; className?: string }) {
   const [still, setStill] = useState(
     () =>
       typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -481,31 +551,24 @@ function HeroVideo() {
     return () => media.removeEventListener('change', onChange);
   }, []);
 
+  const poster = `/media/${name}-poster.jpg`;
   if (still) {
-    return (
-      <img
-        src="/media/kinesalud-hero-poster.jpg"
-        alt=""
-        className="size-full object-cover"
-        width={800}
-        height={800}
-      />
-    );
+    return <img src={poster} alt="" className={className} />;
   }
   return (
     <video
-      className="size-full object-cover"
+      className={className}
       autoPlay
       muted
       loop
       playsInline
       preload="auto"
-      poster="/media/kinesalud-hero-poster.jpg"
+      poster={poster}
       aria-hidden="true"
       tabIndex={-1}
     >
-      <source src="/media/kinesalud-hero.webm" type="video/webm" />
-      <source src="/media/kinesalud-hero.mp4" type="video/mp4" />
+      <source src={`/media/${name}.webm`} type="video/webm" />
+      <source src={`/media/${name}.mp4`} type="video/mp4" />
     </video>
   );
 }
@@ -516,6 +579,7 @@ function Section({
   title,
   intro,
   muted,
+  video,
   children,
 }: {
   id: string;
@@ -523,14 +587,22 @@ function Section({
   title: string;
   intro?: string;
   muted?: boolean;
+  /** Fondo de video translúcido (el ambiente de marca) detrás de la sección. */
+  video?: boolean;
   children: ReactNode;
 }) {
   return (
     <section
       id={id}
       aria-labelledby={`${id}-titulo`}
-      className={cn('relative scroll-mt-16', muted && 'lp-band')}
+      className={cn('relative isolate scroll-mt-16 overflow-hidden', muted && 'lp-band')}
     >
+      {video && (
+        <div aria-hidden="true" className="absolute inset-0 -z-10">
+          <LoopVideo name="kinesalud-ambient" className="lp-section-video size-full object-cover" />
+          <div className="lp-section-shade absolute inset-0" />
+        </div>
+      )}
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-16 md:px-6 md:py-24">
         <div data-reveal className="flex max-w-2xl flex-col gap-3">
           <p className="text-overline text-primary uppercase">{eyebrow}</p>

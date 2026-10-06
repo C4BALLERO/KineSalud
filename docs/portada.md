@@ -11,7 +11,13 @@
 - Animaciones: titular palabra por palabra, bloques que aparecen al hacer scroll, cinta de especialidades, tarjetas que se elevan. Con "reducir movimiento", todo queda quieto y el video se reemplaza por su imagen fija.
 - La CSP permite `https://www.google.com` en `frame-src` para el mapa (`firebase.json`).
 
-## Video de marca (HyperFrames)
+## Videos (HyperFrames)
+
+- **Fondo de ambiente** (`videos/kinesalud-ambient`, 1280 × 720, 12 s en bucle exacto): auroras, ondas de movimiento con destellos y partículas en la paleta de marca. Va a pantalla completa y translúcido en la portada (con un velo hacia el texto, acercamiento lento y paralaje al hacer scroll) y detrás de "Cómo trabajamos" y "Contacto". En la web: `kinesalud-ambient.webm` (206 KB) y `.mp4` (507 KB).
+- **Video de marca** (`videos/kinesalud-hero`): el recuadro con el logo, junto al titular.
+- **Artlist:** el conector está configurado, pero sus modelos de video con IA requieren una suscripción de pago (la cuenta actual es de prueba). Con suscripción, un video realista de fisioterapia puede reemplazar el fondo de ambiente: misma ruta en `/media`, mismo nombre.
+
+### Video de marca
 
 Fuente en `videos/kinesalud-hero/` (composición HTML + GSAP, 1080 × 1080, 10 s, en bucle). Las salidas no se versionan; la web usa las versiones optimizadas de `apps/web/public/media/` (MP4 236 KB, WebM 156 KB, imagen fija).
 

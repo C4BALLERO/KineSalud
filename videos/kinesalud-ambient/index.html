@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1280, height=720" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        /* Paleta de marca Kinesalud y Vida. */
+        --deep: #071f21;
+        --deep-2: #0d3836;
+        --teal: #55a8ad;
+        --teal-deep: #28727a;
+        --sage: #84c3a6;
+        --mint: #c9f1e0;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1280px;
+        height: 720px;
+        overflow: hidden;
+        background: var(--deep);
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        background: radial-gradient(120% 120% at 70% 30%, var(--deep-2) 0%, var(--deep) 65%);
+      }
+      .aurora {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(70px);
+      }
+      #aurora-a {
+        width: 620px;
+        height: 620px;
+        left: 520px;
+        top: -220px;
+        background: var(--teal);
+        opacity: 0.55;
+      }
+      #aurora-b {
+        width: 520px;
+        height: 520px;
+        left: 860px;
+        top: 260px;
+        background: var(--sage);
+        opacity: 0.45;
+      }
+      #aurora-c {
+        width: 460px;
+        height: 460px;
+        left: 140px;
+        top: 300px;
+        background: var(--teal-deep);
+        opacity: 0.6;
+      }
+      #aurora-d {
+        width: 300px;
+        height: 300px;
+        left: 980px;
+        top: -60px;
+        background: var(--mint);
+        opacity: 0.18;
+      }
+      #ribbons {
+        position: absolute;
+        inset: 0;
+        width: 1280px;
+        height: 720px;
+      }
+      #particles {
+        position: absolute;
+        inset: 0;
+      }
+      .particle {
+        position: absolute;
+        border-radius: 50%;
+        background: var(--mint);
+        box-shadow: 0 0 12px rgba(201, 241, 224, 0.8);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="12"
+      data-fps="30"
+      data-width="1280"
+      data-height="720"
+    >
+      <div id="aurora-a" class="aurora" data-layout-allow-overflow="true"></div>
+      <div id="aurora-b" class="aurora" data-layout-allow-overflow="true"></div>
+      <div id="aurora-c" class="aurora" data-layout-allow-overflow="true"></div>
+      <div id="aurora-d" class="aurora" data-layout-allow-overflow="true"></div>
+
+      <!-- Cintas de movimiento: ondas que cruzan el cuadro con un destello que las recorre. -->
+      <svg id="ribbons" viewBox="0 0 1280 720" aria-hidden="true">
+        <defs>
+          <linearGradient id="ribbon-grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#55a8ad" stop-opacity="0" />
+            <stop offset="35%" stop-color="#55a8ad" />
+            <stop offset="70%" stop-color="#84c3a6" />
+            <stop offset="100%" stop-color="#c9f1e0" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <g id="ribbon-group" data-layout-allow-overflow="true" fill="none" stroke="url(#ribbon-grad)" stroke-linecap="round"></g>
+      </svg>
+
+      <div id="particles"></div>
+    </div>
+    <script>
+      // Generador determinista (misma salida en cada render): nada de Math.random.
+      let seed = 20261006;
+      const rand = () => {
+        seed = (seed * 1664525 + 1013904223) % 4294967296;
+        return seed / 4294967296;
+      };
+
+      // Ondas: base y forma fijas; el destello recorre cada una (dashoffset entero = bucle exacto).
+      const ns = 'http://www.w3.org/2000/svg';
+      const group = document.getElementById('ribbon-group');
+      const ribbons = [];
+      for (let i = 0; i < 7; i++) {
+        const baseY = 140 + i * 72;
+        const amp = 40 + rand() * 70;
+        const phase = rand() * Math.PI * 2;
+        let d = '';
+        for (let x = -80; x <= 1360; x += 40) {
+          const y = baseY + Math.sin(x / 210 + phase) * amp + Math.sin(x / 90 + phase * 2) * 12;
+          d += (d ? ' L' : 'M') + x + ' ' + y.toFixed(1);
+        }
+        const glow = document.createElementNS(ns, 'path');
+        glow.setAttribute('d', d);
+        glow.setAttribute('stroke-width', '1.2');
+        glow.setAttribute('opacity', (0.12 + rand() * 0.12).toFixed(2));
+        group.appendChild(glow);
+
+        const spark = document.createElementNS(ns, 'path');
+        spark.setAttribute('d', d);
+        spark.setAttribute('id', 'ribbon-spark-' + i);
+        spark.setAttribute('stroke-width', (2 + rand() * 2).toFixed(1));
+        spark.setAttribute('pathLength', '1');
+        spark.setAttribute('stroke-dasharray', '0.22 0.78');
+        spark.setAttribute('opacity', (0.45 + rand() * 0.35).toFixed(2));
+        group.appendChild(spark);
+        ribbons.push({ el: spark, offset: rand(), dir: i % 2 === 0 ? -1 : 1 });
+      }
+
+      // Partículas que flotan y titilan.
+      const particles = document.getElementById('particles');
+      const dots = [];
+      for (let i = 0; i < 40; i++) {
+        const p = document.createElement('span');
+        const size = 2 + rand() * 4;
+        p.className = 'particle';
+        p.id = 'particle-' + i;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = (rand() * 1240 + 20).toFixed(0) + 'px';
+        p.style.top = (rand() * 680 + 20).toFixed(0) + 'px';
+        particles.appendChild(p);
+        dots.push(p);
+      }
+
+      const tl = gsap.timeline({ paused: true });
+
+      // Auroras: ida y vuelta en 12 s (vuelven exactamente al inicio).
+      tl.fromTo('#aurora-a', { x: 0, y: 0, scale: 1 }, { x: -180, y: 120, scale: 1.2, duration: 6, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 0);
+      tl.fromTo('#aurora-b', { x: 0, y: 0 }, { x: -220, y: -140, duration: 6, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 0);
+      tl.fromTo('#aurora-c', { x: 0, y: 0, scale: 1 }, { x: 260, y: -90, scale: 1.15, duration: 6, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 0);
+      tl.fromTo('#aurora-d', { x: 0, y: 0 }, { x: -140, y: 160, duration: 3, ease: 'sine.inOut', yoyo: true, repeat: 3 }, 0);
+
+      // Destellos que recorren las ondas: el desplazamiento cambia en un entero (bucle sin salto).
+      ribbons.forEach(({ el, offset, dir }) => {
+        tl.fromTo(el, { attr: { 'stroke-dashoffset': offset } }, { attr: { 'stroke-dashoffset': offset + dir * 2 }, duration: 12, ease: 'none' }, 0);
+      });
+      tl.fromTo('#ribbon-group', { y: 0 }, { y: -26, duration: 6, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 0);
+
+      // Partículas: periodos de 2, 3 o 6 s con cantidad par de medios ciclos.
+      dots.forEach((p, i) => {
+        const d = [2, 3, 6][i % 3];
+        const halves = 12 / d;
+        tl.fromTo(p, { y: 0, opacity: 0.25 }, { y: -(16 + (i % 5) * 8), opacity: 0.9, duration: d, ease: 'sine.inOut', yoyo: true, repeat: halves - 1 }, (i % 4) * 0);
+      });
+
+      window.__timelines['main'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
