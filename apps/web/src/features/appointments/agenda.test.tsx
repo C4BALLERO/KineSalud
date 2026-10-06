@@ -47,7 +47,7 @@ function appt(over: Partial<AgendaAppointment> = {}): AgendaAppointment {
 }
 
 const frontDesk: AppointmentPermissions = {
-  manageAll: true,
+  canManage: true,
   canConfirm: true,
   canMarkAttendance: true,
   canCorrect: false,
@@ -98,8 +98,8 @@ describe('acciones de la cita', () => {
     expect(actions[1]?.reason).toMatch(/desde la hora de inicio/);
   });
 
-  it('el profesional no cancela ni reprograma; las citas cerradas no tienen acciones', () => {
-    const own: AppointmentPermissions = { ...frontDesk, manageAll: false };
+  it('sin acceso a la cita no se cancela ni reprograma; las cerradas no tienen acciones', () => {
+    const own: AppointmentPermissions = { ...frontDesk, canManage: false };
     expect(availableActions(appt(), own, after).map((a) => a.action)).toEqual([
       'ATENDER',
       'NO_ASISTIO',

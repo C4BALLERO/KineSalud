@@ -10,6 +10,7 @@ import {
   createProfessional,
   linkAccount,
   removeException,
+  setMyServices,
   setSchedule,
   updateProfessional,
 } from './staffService';
@@ -20,6 +21,7 @@ class InMemoryStaff implements StaffGateway {
   services = [
     { id: 'srv-fisio', name: 'Fisioterapia lumbar', category: 'FISIOTERAPIA' as const },
     { id: 'srv-facial', name: 'Limpieza facial', category: 'ESTETICA' as const },
+    { id: 'srv-cervical', name: 'Fisioterapia cervical', category: 'FISIOTERAPIA' as const },
   ];
   opening: ProfessionalDoc['weeklySchedule'] | null = {
     mon: [{ start: '08:00', end: '12:00' }],
@@ -148,6 +150,44 @@ describe('fichas de profesionales', () => {
     const count = staff.audits.length;
     await updateProfessional(staff, admin, { ...input, professionalId: proId, phone: '71111111' });
     expect(staff.audits).toHaveLength(count);
+  });
+});
+
+describe('servicios que ofrece el profesional', () => {
+  const self = (): Actor => ({
+    type: 'USER',
+    uid: 'u-diego',
+    role: 'PROFESIONAL',
+    professionalId: proId,
+    channel: 'web',
+  });
+
+  it('marca sus servicios y audita qué agregó y qué quitó', async () => {
+    await setMyServices(staff, self(), { serviceIds: ['srv-cervical', 'srv-cervical'] });
+    expect(staff.professionals.get(proId)?.serviceIds).toEqual(['srv-cervical']);
+    expect(staff.audits.at(-1)).toMatchObject({
+      action: 'professional.services',
+      entityId: proId,
+      meta: { added: ['srv-cervical'], removed: ['srv-fisio'] },
+    });
+    const count = staff.audits.length;
+    await setMyServices(staff, self(), { serviceIds: ['srv-cervical'] });
+    expect(staff.audits).toHaveLength(count);
+  });
+
+  it('solo elige servicios de sus áreas de atención', async () => {
+    await expectDomainError(
+      setMyServices(staff, self(), { serviceIds: ['srv-facial'] }),
+      'invalid-argument',
+      /no pertenece a las áreas/,
+    );
+  });
+
+  it('exige una cuenta vinculada a una ficha', async () => {
+    await expectDomainError(
+      setMyServices(staff, recep, { serviceIds: ['srv-fisio'] }),
+      'permission-denied',
+    );
   });
 });
 

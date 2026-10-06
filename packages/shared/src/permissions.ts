@@ -84,6 +84,8 @@ export const ROLE_PERMISSIONS: Record<Role, PermissionMap> = {
   PROFESIONAL: {
     'staff.read': 'own',
     'clients.read': 'own',
+    /** Registra pacientes nuevos (quedan asignados a su ficha) y edita los suyos. */
+    'clients.write': 'own',
     'appointments.read': 'own',
     'appointments.manage': 'own',
     'attendance.mark': 'own',

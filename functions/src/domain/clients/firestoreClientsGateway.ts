@@ -19,7 +19,7 @@ function duplicateCi(existingClientId: string): DomainError {
 
 /** Implementación con el Admin SDK. El CI único se garantiza con transacciones. */
 export const firestoreClientsGateway: ClientsGateway = {
-  async create(fields, createdBy) {
+  async create(fields, createdBy, assignedProfessionalIds = []) {
     const ref = clients().doc();
     await db.runTransaction(async (tx) => {
       const indexRef = ciIndex().doc(fields.ci);
@@ -29,7 +29,7 @@ export const firestoreClientsGateway: ClientsGateway = {
       tx.set(ref, {
         ...fields,
         status: 'ACTIVO',
-        assignedProfessionalIds: [],
+        assignedProfessionalIds,
         stats: { lastVisitAt: null, activeTreatments: 0, noShowCount: 0 },
         createdAt: FieldValue.serverTimestamp(),
         createdBy,
@@ -37,6 +37,15 @@ export const firestoreClientsGateway: ClientsGateway = {
       });
     });
     return ref.id;
+  },
+
+  async assignProfessional(clientId, professionalId) {
+    await clients()
+      .doc(clientId)
+      .update({
+        assignedProfessionalIds: FieldValue.arrayUnion(professionalId),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
   },
 
   async get(clientId) {

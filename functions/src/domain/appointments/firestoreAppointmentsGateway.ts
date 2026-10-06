@@ -117,6 +117,7 @@ export function bookingTx(tx: Transaction): BookingTx {
         firstName: snap.get('firstName'),
         lastName: snap.get('lastName'),
         status: snap.get('status'),
+        assignedProfessionalIds: snap.get('assignedProfessionalIds') ?? [],
       };
     },
 

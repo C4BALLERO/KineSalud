@@ -21,6 +21,7 @@ import { ListSkeleton, LoadingRegion, Skeleton } from '@/components/ui/Skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useToast } from '@/components/ui/toast-context';
 import { useRequiredSession } from '@/features/auth/session';
+import { useBookingScope } from '@/features/appointments/hooks/useBookingScope';
 import { useNow } from '@/hooks/useNow';
 import { usePermission, usePermissionScope } from '@/hooks/usePermission';
 import { toAppError } from '@/lib/errors';
@@ -55,6 +56,9 @@ export function ClientProfilePage() {
   const tab: Tab = tabParam && TABS.includes(tabParam) ? tabParam : 'resumen';
 
   const canWrite = usePermission('clients.write');
+  // Activar o desactivar clientes es tarea de recepción o administración.
+  const canSetStatus = usePermissionScope('clients.write') === 'all';
+  const { canBook } = useBookingScope();
   const canReadClinical = usePermission('clinical.read');
   const canManageTreatments = usePermission('treatments.manage');
   // El profesional solo ve sus propias citas y tratamientos con el paciente.
@@ -140,7 +144,7 @@ export function ClientProfilePage() {
     }
   };
 
-  const scheduleButton = canWrite && active && (
+  const scheduleButton = canBook && active && (
     <Button asChild>
       <Link to={`/agenda/nueva?cliente=${c.id}`}>
         <CalendarPlus aria-hidden="true" />
@@ -171,35 +175,37 @@ export function ClientProfilePage() {
                   Editar
                 </Link>
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="secondary"
-                    aria-label="Más acciones"
-                    className="w-11 px-0 md:w-10"
-                  >
-                    <MoreHorizontal aria-hidden="true" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {active ? (
-                    <DropdownMenuItem
-                      destructive
-                      icon={<UserX aria-hidden="true" />}
-                      onSelect={() => setConfirmStatus(true)}
+              {canSetStatus && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="secondary"
+                      aria-label="Más acciones"
+                      className="w-11 px-0 md:w-10"
                     >
-                      Desactivar cliente
-                    </DropdownMenuItem>
-                  ) : (
-                    <DropdownMenuItem
-                      icon={<UserCheck aria-hidden="true" />}
-                      onSelect={() => setConfirmStatus(true)}
-                    >
-                      Reactivar cliente
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      <MoreHorizontal aria-hidden="true" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {active ? (
+                      <DropdownMenuItem
+                        destructive
+                        icon={<UserX aria-hidden="true" />}
+                        onSelect={() => setConfirmStatus(true)}
+                      >
+                        Desactivar cliente
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem
+                        icon={<UserCheck aria-hidden="true" />}
+                        onSelect={() => setConfirmStatus(true)}
+                      >
+                        Reactivar cliente
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </>
           )
         }

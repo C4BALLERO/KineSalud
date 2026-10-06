@@ -17,6 +17,7 @@ import {
   changeAppointmentStatus,
   correctAppointmentStatus,
   createAppointment,
+  listSlots,
   rescheduleAppointment,
 } from './appointmentsService';
 
@@ -67,7 +68,11 @@ class InMemoryBooking implements AppointmentsGateway {
   ];
   clients = new Map<
     string,
-    ClientRef & { assigned: string[]; noShow: number; lastVisitAt: Date | null }
+    Omit<ClientRef, 'assignedProfessionalIds'> & {
+      assigned: string[];
+      noShow: number;
+      lastVisitAt: Date | null;
+    }
   >([
     [
       'cli-1',
@@ -152,7 +157,8 @@ function inMemoryTx(self: InMemoryBooking): BookingTx {
       return self.services.find((s) => s.id === id) ?? null;
     },
     async getClient(id) {
-      return self.clients.get(id) ?? null;
+      const c = self.clients.get(id);
+      return c ? { ...c, assignedProfessionalIds: [...c.assigned] } : null;
     },
     async getTreatment(id) {
       return self.treatments.get(id) ?? null;
@@ -281,8 +287,43 @@ describe('agendar', () => {
     );
   });
 
-  it('solo recepción o administración agendan; el cliente debe estar activo', async () => {
-    await rejects(createAppointment(gw, diego, base, NOW), 'permission-denied');
+  it('el profesional agenda solo en su agenda y a sus pacientes', async () => {
+    // Carla todavía no es paciente de Diego.
+    await rejects(createAppointment(gw, diego, base, NOW), 'permission-denied', /tus pacientes/);
+    gw.clients.get('cli-1')!.assigned.push('diego');
+    await rejects(
+      createAppointment(gw, diego, { ...base, professionalId: 'ana' }, NOW),
+      'permission-denied',
+      'Solo puedes agendar citas en tu propia agenda.',
+    );
+    const { appointmentId } = await createAppointment(gw, diego, base, NOW);
+    expect(gw.appointments.get(appointmentId)).toMatchObject({
+      professionalId: 'diego',
+      createdBy: 'u-diego',
+    });
+  });
+
+  it('al profesional solo se le sugieren horarios de su propia agenda', async () => {
+    gw.rooms.push({ ...gw.rooms[0]!, id: 'c2', name: 'Camilla 2' });
+    gw.clients.get('cli-2')!.assigned.push('diego');
+    // La mañana de Diego queda llena; Ana sigue libre en la otra camilla.
+    for (const start of ['08:00', '09:00', '10:00', '11:00']) {
+      await createAppointment(gw, recep, { ...base, start }, NOW);
+    }
+    const busy = { ...base, clientId: 'cli-2', start: '09:30' };
+    const fromRecep = (await createAppointment(gw, recep, busy, NOW).catch(
+      (e: unknown) => e,
+    )) as DomainError;
+    const fromDiego = (await createAppointment(gw, diego, busy, NOW).catch(
+      (e: unknown) => e,
+    )) as DomainError;
+    const proposed = (err: DomainError) =>
+      (err.details!.alternatives as { professionalId: string }[]).map((x) => x.professionalId);
+    expect(proposed(fromRecep)).toContain('ana');
+    expect(proposed(fromDiego)).toEqual([]);
+  });
+
+  it('el cliente debe estar activo', async () => {
     await rejects(
       createAppointment(gw, recep, { ...base, clientId: 'cli-off' }, NOW),
       'failed-precondition',
@@ -335,6 +376,59 @@ describe('reprogramar', () => {
     });
     expect(gw.clients.get('cli-1')?.assigned).toEqual(['diego', 'ana']);
   });
+
+  it('el profesional reprograma solo sus citas y dentro de su agenda', async () => {
+    const { appointmentId } = await createAppointment(gw, recep, base, NOW);
+    const move = { appointmentId, professionalId: 'diego', date: DAY, start: '10:00' };
+    await rejects(
+      rescheduleAppointment(gw, ana, { ...move, professionalId: 'ana' }, NOW),
+      'permission-denied',
+      'Solo puedes reprogramar tus propias citas.',
+    );
+    await rejects(
+      rescheduleAppointment(gw, diego, { ...move, professionalId: 'ana' }, NOW),
+      'permission-denied',
+      'Solo puedes agendar citas en tu propia agenda.',
+    );
+    await rescheduleAppointment(gw, diego, move, NOW);
+    expect(gw.appointments.get(appointmentId)?.startAt).toEqual(clinicDateTime(DAY, '10:00'));
+  });
+});
+
+describe('horarios libres', () => {
+  it('el profesional ve solo sus horarios, descontando las camillas que ocupan otros', async () => {
+    // Ana ocupa la única camilla a las 09:00 (Diego no puede ver esa cita).
+    await createAppointment(gw, recep, { ...base, professionalId: 'ana' }, NOW);
+    const { slots } = await listSlots(
+      gw,
+      diego,
+      { date: DAY, serviceId: 'lumbar', professionalId: 'ana' },
+      NOW,
+    );
+    expect(slots.length).toBeGreaterThan(0);
+    expect(slots.every((x) => x.professionalId === 'diego')).toBe(true);
+    const starts = slots.map((x) => x.start);
+    expect(starts).toContain('08:00');
+    expect(starts).not.toContain('09:00');
+  });
+
+  it('al reprogramar, el horario de la propia cita cuenta como libre', async () => {
+    const { appointmentId } = await createAppointment(gw, recep, base, NOW);
+    const request = { date: DAY, serviceId: 'lumbar', clientId: 'cli-1' };
+    const starts = async (actor: Actor, ignoreAppointmentId: string | null) =>
+      (await listSlots(gw, actor, { ...request, ignoreAppointmentId }, NOW)).slots.map(
+        (x) => x.start,
+      );
+    expect(await starts(diego, null)).not.toContain('09:00');
+    expect(await starts(diego, appointmentId)).toContain('09:00');
+    // Ana no puede liberar el horario de una cita ajena.
+    expect(await starts(ana, appointmentId)).not.toContain('09:00');
+  });
+
+  it('recepción ve los horarios de todo el consultorio', async () => {
+    const { slots } = await listSlots(gw, recep, { date: DAY, serviceId: 'lumbar' }, NOW);
+    expect(new Set(slots.map((x) => x.professionalId))).toEqual(new Set(['diego', 'ana']));
+  });
 });
 
 describe('estados', () => {
@@ -348,15 +442,18 @@ describe('estados', () => {
     );
     await changeAppointmentStatus(gw, diego, { appointmentId, action: 'CONFIRMAR' }, NOW);
     expect(gw.appointments.get(appointmentId)?.status).toBe('CONFIRMADA');
+    // Cancela solo sus propias citas.
     await rejects(
-      changeAppointmentStatus(
-        gw,
-        diego,
-        { appointmentId, action: 'CANCELAR', reason: 'Enfermo' },
-        NOW,
-      ),
+      changeAppointmentStatus(gw, ana, { appointmentId, action: 'CANCELAR', reason: 'Viaje' }, NOW),
       'permission-denied',
     );
+    await changeAppointmentStatus(
+      gw,
+      diego,
+      { appointmentId, action: 'CANCELAR', reason: 'Enfermo' },
+      NOW,
+    );
+    expect(gw.appointments.get(appointmentId)?.status).toBe('CANCELADA');
   });
 
   it('atender suma la sesión al tratamiento y registra la última visita', async () => {

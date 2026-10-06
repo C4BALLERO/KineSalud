@@ -163,6 +163,11 @@ export type SetClientStatusInput = z.input<typeof setClientStatusInputSchema>;
 
 export interface CreateClientResult {
   clientId: string;
+  /**
+   * El profesional registró un carnet que ya existía con el mismo nombre: no se
+   * duplicó, se lo agregó a sus pacientes.
+   */
+  linked?: boolean;
 }
 
 /** Edad cumplida a una fecha dada (ambas `YYYY-MM-DD`). */

@@ -26,7 +26,6 @@ import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/toast-context';
 import { useClient, type ClientListItem } from '@/features/clients/api/clients';
 import { useNow } from '@/hooks/useNow';
-import { usePermissionScope } from '@/hooks/usePermission';
 import { toAppError } from '@/lib/errors';
 import { cn } from '@/utils/cn';
 import { capitalizeFirst, formatDayLong, formatDayShort } from '@/utils/format';
@@ -34,11 +33,13 @@ import {
   useAgendaAppointments,
   useClientActiveTreatments,
   useCreateAppointment,
+  useServerSlots,
 } from '../api/appointments';
 import { ClientPicker } from '../components/ClientPicker';
 import { NoSlotsAlert } from '../components/NoSlotsAlert';
 import { SlotPicker } from '../components/SlotPicker';
 import { useAgendaCatalogs } from '../hooks/useAgendaCatalogs';
+import { useBookingScope } from '../hooks/useBookingScope';
 import { alternativesOf, buildDayContext, openingRangesOn } from '../model';
 
 type ClientChoice = Pick<ClientListItem, 'id' | 'fullName' | 'status'>;
@@ -111,6 +112,10 @@ function Step({
  * confirmar. Los horarios se calculan con el mismo algoritmo que valida el
  * servidor; si alguien ocupa el horario mientras tanto, se ofrecen alternativas
  * sin perder lo ya elegido.
+ *
+ * El profesional agenda solo en su propia agenda, a sus pacientes y los
+ * servicios que ofrece. Como no puede leer las citas ajenas (que también ocupan
+ * camillas y cabinas), sus horarios libres los calcula el servidor.
  */
 export function NewAppointmentPage() {
   const [params] = useSearchParams();
@@ -119,7 +124,7 @@ export function NewAppointmentPage() {
   const now = useNow();
   const today = toDateKey(now);
   const create = useCreateAppointment();
-  const clinicWide = usePermissionScope('appointments.manage') === 'all';
+  const { canBook, ownAgenda } = useBookingScope();
 
   const initialDate = params.get('fecha');
   const initialTime = params.get('hora');
@@ -128,7 +133,8 @@ export function NewAppointmentPage() {
   const [picked, setPicked] = useState<ClientChoice | null | undefined>(undefined);
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [treatmentId, setTreatmentId] = useState<string | null>(null);
-  const [professionalId, setProfessionalId] = useState(params.get('profesional') ?? '');
+  const [chosenProfessional, setProfessionalId] = useState(params.get('profesional') ?? '');
+  const professionalId = ownAgenda ?? chosenProfessional;
   const [date, setDate] = useState(initialDate && initialDate >= today ? initialDate : today);
   const [slot, setSlot] = useState<Slot | null>(null);
   const [keepSuggestion, setKeepSuggestion] = useState(true);
@@ -148,8 +154,15 @@ export function NewAppointmentPage() {
         : null;
 
   const catalogs = useAgendaCatalogs(date);
-  const day = useAgendaAppointments(null, date, date);
-  const treatments = useClientActiveTreatments(client?.id ?? null);
+  // El profesional solo puede leer sus propias citas (le sirven para explicar
+  // por qué un día no tiene horarios); los horarios libres vienen del servidor.
+  const day = useAgendaAppointments(ownAgenda, date, date, canBook);
+  const treatments = useClientActiveTreatments(client?.id ?? null, ownAgenda);
+  const serverSlots = useServerSlots(
+    ownAgenda && serviceId
+      ? { date, serviceId, clientId: client?.id ?? null, professionalId: ownAgenda }
+      : null,
+  );
 
   // Llegada desde un tratamiento (?tratamiento=): se preselecciona una sola vez,
   // cuando se cargan los tratamientos activos del cliente.
@@ -165,9 +178,9 @@ export function NewAppointmentPage() {
     }
   }
 
-  if (!clinicWide) {
+  if (!canBook) {
     return (
-      <NoPermissionState description="Las citas las agendan recepción y administración. Desde tu agenda puedes confirmar y registrar la asistencia de tus citas." />
+      <NoPermissionState description="Tu cuenta no está vinculada a una ficha de profesional. Pide a la administración que la vincule para agendar en tu agenda." />
     );
   }
   if (catalogs.status === 'loading' || (params.get('cliente') && prefilled.status === 'loading')) {
@@ -182,7 +195,10 @@ export function NewAppointmentPage() {
     return <ErrorState description={catalogs.error.message} onRetry={catalogs.retry} />;
   }
 
-  const { professionals, services, rooms, clinic } = catalogs.data;
+  const { professionals, services: allServices, rooms, clinic } = catalogs.data;
+  const me = ownAgenda ? professionals.find((p) => p.id === ownAgenda) : undefined;
+  // El profesional agenda solo los servicios que ofrece.
+  const services = me ? allServices.filter((s) => me.serviceIds.includes(s.id)) : allServices;
   const service = services.find((s) => s.id === serviceId) ?? null;
   const treatmentList = treatments.status === 'success' ? treatments.data : [];
   const treatment = treatmentList.find((t) => t.id === treatmentId) ?? null;
@@ -206,7 +222,12 @@ export function NewAppointmentPage() {
   const slotRequest = service
     ? { service, clientId: client?.id ?? null, professionalId: professionalId || null }
     : null;
-  const slots = dayContext && slotRequest ? findSlots(dayContext, slotRequest) : [];
+  const slots = ownAgenda
+    ? (serverSlots.data?.slots ?? [])
+    : dayContext && slotRequest
+      ? findSlots(dayContext, slotRequest)
+      : [];
+  const slotsLoading = day.status !== 'success' || (!!ownAgenda && serverSlots.isPending);
   // Si se llegó desde un hueco de la agenda, ese horario queda preseleccionado
   // (solo hasta que se cambie la fecha, el profesional o el servicio).
   const suggested =
@@ -254,6 +275,7 @@ export function NewAppointmentPage() {
       setServerError({ message: toAppError(err).message, alternatives: alternativesOf(err) });
       setSlot(null);
       setEditing(null);
+      if (ownAgenda) void serverSlots.refetch();
     }
   };
 
@@ -267,9 +289,13 @@ export function NewAppointmentPage() {
   return (
     <>
       <PageHeader
-        back={{ to: '/agenda', label: 'Agenda' }}
+        back={{ to: '/agenda', label: ownAgenda ? 'Mi agenda' : 'Agenda' }}
         title="Nueva cita"
-        description="Los horarios que se ofrecen ya consideran el horario del profesional, sus ausencias y los espacios libres."
+        description={
+          ownAgenda
+            ? 'Agenda a tus pacientes en tu propia agenda. Los horarios ya consideran tu horario, tus ausencias y los espacios libres.'
+            : 'Los horarios que se ofrecen ya consideran el horario del profesional, sus ausencias y los espacios libres.'
+        }
       />
       {!clinic && (
         <InlineAlert
@@ -300,6 +326,7 @@ export function NewAppointmentPage() {
             onEdit={() => setEditing(1)}
           >
             <ClientPicker
+              professionalId={ownAgenda}
               selectedId={client?.id ?? null}
               onSelect={(c) => {
                 setPicked(c);
@@ -337,7 +364,7 @@ export function NewAppointmentPage() {
                     const t = treatmentList.find((x) => x.id === id)!;
                     setTreatmentId(t.id);
                     setServiceId(t.serviceId);
-                    setProfessionalId(t.professionalId);
+                    if (!ownAgenda) setProfessionalId(t.professionalId);
                     resetSlot();
                     setEditing(null);
                   }}
@@ -352,6 +379,18 @@ export function NewAppointmentPage() {
                 <p className="text-body-sm font-medium text-fg">
                   {treatmentList.length > 0 ? 'O elige un servicio' : 'Elige el servicio'}
                 </p>
+                {me && !services.some((s) => s.active) && (
+                  <InlineAlert tone="warning" title="Aún no marcaste los servicios que ofreces.">
+                    Elígelos en{' '}
+                    <Link
+                      to="/mi-cuenta"
+                      className="font-medium text-primary underline underline-offset-2"
+                    >
+                      Mi cuenta
+                    </Link>{' '}
+                    para poder agendarlos.
+                  </InlineAlert>
+                )}
                 {TREATMENT_CATEGORIES.map((c) => {
                   const list = services.filter((s) => s.category === c && s.active);
                   if (list.length === 0) return null;
@@ -437,28 +476,39 @@ export function NewAppointmentPage() {
                     />
                   )}
                 </FormField>
-                <FormField
-                  label="Profesional"
-                  hint={eligible.length === 0 ? 'Nadie realiza este servicio todavía.' : undefined}
-                >
-                  {(p) => (
-                    <Select
-                      {...p}
-                      value={professionalId}
-                      onChange={(e) => {
-                        setProfessionalId(e.target.value);
-                        resetSlot();
-                      }}
-                    >
-                      <option value="">Cualquiera disponible</option>
-                      {eligible.map((pr) => (
-                        <option key={pr.id} value={pr.id}>
-                          {pr.displayName}
-                        </option>
-                      ))}
-                    </Select>
-                  )}
-                </FormField>
+                {me ? (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-body-sm font-medium text-fg">Profesional</span>
+                    <p className="flex min-h-10 items-center text-body-sm text-fg">
+                      {me.displayName} (tu agenda)
+                    </p>
+                  </div>
+                ) : (
+                  <FormField
+                    label="Profesional"
+                    hint={
+                      eligible.length === 0 ? 'Nadie realiza este servicio todavía.' : undefined
+                    }
+                  >
+                    {(p) => (
+                      <Select
+                        {...p}
+                        value={professionalId}
+                        onChange={(e) => {
+                          setProfessionalId(e.target.value);
+                          resetSlot();
+                        }}
+                      >
+                        <option value="">Cualquiera disponible</option>
+                        {eligible.map((pr) => (
+                          <option key={pr.id} value={pr.id}>
+                            {pr.displayName}
+                          </option>
+                        ))}
+                      </Select>
+                    )}
+                  </FormField>
+                )}
               </div>
             )}
           </Step>
@@ -496,7 +546,11 @@ export function NewAppointmentPage() {
             )}
             {!service ? (
               <p className="text-body-sm text-fg-muted">Elige primero el servicio.</p>
-            ) : day.status !== 'success' ? (
+            ) : ownAgenda && serverSlots.isError ? (
+              <InlineAlert tone="danger" title="No se pudieron calcular los horarios libres.">
+                {toAppError(serverSlots.error).message}
+              </InlineAlert>
+            ) : slotsLoading ? (
               <div className="flex flex-wrap gap-2" aria-busy="true">
                 {Array.from({ length: 8 }, (_, i) => (
                   <Skeleton key={i} className="h-9 w-16" />

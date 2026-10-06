@@ -19,6 +19,7 @@ import { SearchInput } from '@/components/ui/SearchInput';
 import { ListSkeleton } from '@/components/ui/Skeleton';
 import { useRequiredSession } from '@/features/auth/session';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useBookingScope } from '@/features/appointments/hooks/useBookingScope';
 import { usePermission, usePermissionScope } from '@/hooks/usePermission';
 import { formatCi, formatPhone, formatRelative } from '@/utils/format';
 import {
@@ -45,6 +46,7 @@ export function ClientsPage() {
   const session = useRequiredSession();
   const clinicWide = usePermissionScope('clients.read') === 'all';
   const canWrite = usePermission('clients.write');
+  const { canBook } = useBookingScope();
   const [params, setParams] = useSearchParams();
 
   const search = params.get('q') ?? '';
@@ -149,7 +151,7 @@ export function ClientsPage() {
             Editar datos
           </DropdownMenuItem>
         )}
-        {canWrite && c.status === 'ACTIVO' && (
+        {canBook && c.status === 'ACTIVO' && (
           <DropdownMenuItem
             asLink={`/agenda/nueva?cliente=${c.id}`}
             icon={<CalendarPlus aria-hidden="true" />}

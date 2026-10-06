@@ -21,6 +21,7 @@ import { Stat } from '@/components/ui/StatCard';
 import { useRequiredSession } from '@/features/auth/session';
 import { usePendingReminders } from '@/features/reminders/api/reminders';
 import { useExceptions } from '@/features/staff/api/staff';
+import { useBookingScope } from '@/features/appointments/hooks/useBookingScope';
 import { useNow } from '@/hooks/useNow';
 import { usePermission, usePermissionScope } from '@/hooks/usePermission';
 import { capitalizeFirst, formatDayLong, greetingFor } from '@/utils/format';
@@ -63,6 +64,7 @@ export function DashboardPage() {
   const monday = isSunday ? addDays(today, 1) : startOfWeek(today);
 
   const clinicWide = usePermissionScope('appointments.read') === 'all';
+  const { canBook } = useBookingScope();
   const scope = clinicWide ? null : session.professionalId;
   // Un ADMINISTRADOR que también atiende puede filtrar la agenda a sus citas.
   const [onlyMine, setOnlyMine] = useState(false);
@@ -158,7 +160,7 @@ export function DashboardPage() {
         description={capitalizeFirst(formatDayLong(today))}
         actions={
           // En escritorio "Nueva cita" ya está en la barra superior.
-          clinicWide && (
+          canBook && (
             <Button asChild className="md:hidden">
               <Link to="/agenda/nueva">
                 <CalendarPlus aria-hidden="true" />
@@ -301,7 +303,7 @@ export function DashboardPage() {
                   title="Sin citas próximas"
                   description="No hay citas programadas para los próximos días."
                   action={
-                    clinicWide && (
+                    canBook && (
                       <Button asChild>
                         <Link to="/agenda/nueva">Agendar una cita</Link>
                       </Button>

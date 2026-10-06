@@ -69,6 +69,15 @@ export const updateProfessionalInputSchema = professionalInputSchema.extend({
 });
 export type UpdateProfessionalInput = z.input<typeof updateProfessionalInputSchema>;
 
+/** El profesional elige los servicios que ofrece (su propia ficha). */
+export const setMyServicesInputSchema = z.object({
+  serviceIds: z
+    .array(idSchema)
+    .max(50)
+    .transform((v) => [...new Set(v)]),
+});
+export type SetMyServicesInput = z.input<typeof setMyServicesInputSchema>;
+
 export const setProfessionalActiveInputSchema = z.object({
   professionalId: idSchema,
   active: z.boolean(),
