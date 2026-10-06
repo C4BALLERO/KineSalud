@@ -26,9 +26,9 @@ const SERVICE_ICONS: Record<(typeof SERVICES)[number]['tone'], LucideIcon> = {
   estetica: Sparkles,
 };
 const SERVICE_TONES: Record<(typeof SERVICES)[number]['tone'], string> = {
-  fisioterapia: 'bg-cat-fisioterapia-subtle text-cat-fisioterapia',
-  rehabilitacion: 'bg-cat-rehabilitacion-subtle text-cat-rehabilitacion',
-  estetica: 'bg-cat-estetica-subtle text-cat-estetica',
+  fisioterapia: 'lp-icon-tile',
+  rehabilitacion: 'lp-icon-tile',
+  estetica: 'lp-icon-tile',
 };
 
 const NAV = [
@@ -84,6 +84,12 @@ export function LandingPage() {
     return () => observer.disconnect();
   }, []);
 
+  // El fondo del documento acompaña la estética (rebote del scroll, barras nativas).
+  useEffect(() => {
+    document.documentElement.setAttribute('data-landing', '');
+    return () => document.documentElement.removeAttribute('data-landing');
+  }, []);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
@@ -92,7 +98,12 @@ export function LandingPage() {
   }, []);
 
   return (
-    <div ref={root} className="lp min-h-dvh bg-canvas text-fg">
+    <div ref={root} className="lp min-h-dvh text-fg">
+      <div aria-hidden="true" className="lp-ambient">
+        <span className="lp-blob lp-blob-a" />
+        <span className="lp-blob lp-blob-b" />
+        <span className="lp-blob lp-blob-c" />
+      </div>
       <a
         href="#contenido"
         className="sr-only z-50 rounded-md bg-primary px-4 py-2 text-body-sm font-semibold text-on-primary focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
@@ -136,10 +147,6 @@ export function LandingPage() {
       <main id="contenido">
         {/* ---------- Portada ---------- */}
         <section id="inicio" className="relative overflow-hidden">
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-            <span className="lp-blob lp-blob-a" />
-            <span className="lp-blob lp-blob-b" />
-          </div>
           <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pt-10 pb-16 md:grid-cols-[1.1fr_1fr] md:px-6 md:pt-16 md:pb-24">
             <div className="flex flex-col gap-6">
               <p className="lp-eyebrow inline-flex w-fit items-center gap-2 rounded-full border border-primary-border bg-primary-subtle px-3 py-1 text-caption font-semibold text-primary">
@@ -198,7 +205,7 @@ export function LandingPage() {
           {/* Cinta de especialidades */}
           <div
             aria-hidden="true"
-            className="relative overflow-hidden border-y border-border bg-surface py-3"
+            className="lp-glass relative overflow-hidden border-y border-border py-3"
           >
             <div className="lp-marquee-track flex w-max gap-10 pr-10 whitespace-nowrap">
               {[...MARQUEE, ...MARQUEE].map((m, i) => (
@@ -406,7 +413,7 @@ export function LandingPage() {
       </main>
 
       {/* ---------- Pie ---------- */}
-      <footer className="border-t border-border bg-surface">
+      <footer className="lp-footer relative border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pt-10 pb-24 md:flex-row md:items-center md:justify-between md:px-6 md:pr-24 md:pb-10">
           <div className="flex flex-col gap-2">
             <Logo size="sm" />
@@ -522,7 +529,7 @@ function Section({
     <section
       id={id}
       aria-labelledby={`${id}-titulo`}
-      className={cn('scroll-mt-16', muted && 'bg-surface-muted/60')}
+      className={cn('relative scroll-mt-16', muted && 'lp-band')}
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-16 md:px-6 md:py-24">
         <div data-reveal className="flex max-w-2xl flex-col gap-3">

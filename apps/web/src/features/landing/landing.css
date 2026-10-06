@@ -1,11 +1,123 @@
 /*
- * Página pública del consultorio: movimiento moderno pero sereno.
- * Todo se apoya en los tokens (claro y oscuro) y respeta "reducir movimiento".
+ * Página pública del consultorio con la estética del video de marca:
+ * verde azulado profundo, luces difusas que derivan, textos menta y salvia,
+ * tarjetas de vidrio y etiquetas claras. Es igual en modo claro y oscuro:
+ * la portada redefine los tokens solo dentro de `.lp`.
+ * Contrastes (texto ≥ 4,5:1 sobre fondo y vidrio): docs/portada.md.
  */
 
 .lp {
+  --lp-deep: #0b2f31;
+  --lp-deep-2: #103f3d;
+  --lp-teal: #55a8ad;
+  --lp-teal-deep: #28727a;
+  --lp-sage: #84c3a6;
+  --lp-mint: #c9f1e0;
   --lp-whatsapp: #128c4a; /* verde WhatsApp oscurecido: icono blanco ≥ 3:1 */
+
+  /* Tokens del sistema de diseño, en la paleta del video. */
+  --color-canvas: var(--lp-deep);
+  --color-surface: rgb(242 251 248 / 0.06);
+  --color-surface-muted: rgb(242 251 248 / 0.1);
+  --color-fg: #f2fbf8;
+  --color-fg-muted: #b9d9d2;
+  --color-fg-subtle: #a9cfc7;
+  --color-border: rgb(242 251 248 / 0.12);
+  --color-border-strong: rgb(242 251 248 / 0.22);
+  --color-border-control: #6f9993;
+  --color-primary: var(--lp-sage);
+  --color-primary-hover: #9fd3bb;
+  --color-primary-subtle: rgb(132 195 166 / 0.14);
+  --color-primary-border: rgb(132 195 166 / 0.38);
+  --color-on-primary: #062224;
+  --color-secondary: var(--lp-mint);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-md: 0 10px 24px -8px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 28px 60px -16px rgb(0 0 0 / 0.6);
+
+  position: relative;
+  isolation: isolate;
+  color-scheme: dark;
+  background: radial-gradient(120% 90% at 20% 0%, var(--lp-deep-2) 0%, var(--lp-deep) 55%);
   scroll-behavior: smooth;
+}
+/* Fondo del documento (rebote del scroll y barras nativas) mientras se ve la portada. */
+html[data-landing] {
+  background: var(--lp-deep, #0b2f31);
+  color-scheme: dark;
+}
+
+/* Luces difusas fijas detrás de todo el contenido, como en el video. */
+.lp-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.lp-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(100px);
+  will-change: transform;
+  animation: lp-float 18s ease-in-out infinite alternate;
+}
+.lp-blob-a {
+  width: 42rem;
+  height: 42rem;
+  left: -14rem;
+  top: -14rem;
+  background: var(--lp-teal);
+  opacity: 0.4;
+}
+.lp-blob-b {
+  width: 36rem;
+  height: 36rem;
+  right: -12rem;
+  bottom: -10rem;
+  background: var(--lp-sage);
+  opacity: 0.32;
+  animation-duration: 22s;
+  animation-direction: alternate-reverse;
+}
+.lp-blob-c {
+  width: 24rem;
+  height: 24rem;
+  right: 18%;
+  top: 30%;
+  background: var(--lp-teal-deep);
+  opacity: 0.5;
+  animation-duration: 26s;
+}
+@keyframes lp-float {
+  to {
+    transform: translate(4rem, 3rem) scale(1.15);
+  }
+}
+
+/* Vidrio: tarjetas y franjas dejan ver las luces del fondo. */
+.lp .bg-surface,
+.lp-glass {
+  background-color: rgb(242 251 248 / 0.06);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
+}
+.lp-band {
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgb(0 0 0 / 0.16) 12%,
+    rgb(0 0 0 / 0.16) 88%,
+    transparent
+  );
+}
+.lp-footer {
+  background: rgb(0 0 0 / 0.22);
+}
+.lp-icon-tile {
+  background: linear-gradient(135deg, rgb(132 195 166 / 0.22), rgb(85 168 173 / 0.12));
+  color: var(--lp-mint);
+  box-shadow: inset 0 0 0 1px rgb(132 195 166 / 0.3);
 }
 
 /* ---------- Navegación: se vuelve "vidrio" al bajar ---------- */
@@ -16,41 +128,13 @@
     backdrop-filter 250ms var(--ease-standard);
 }
 .lp-nav[data-scrolled] {
-  background-color: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  background-color: rgb(11 47 49 / 0.72);
   border-color: var(--color-border);
-  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  backdrop-filter: blur(16px) saturate(1.3);
 }
 
 /* ---------- Portada ---------- */
-.lp-blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(80px);
-  opacity: 0.35;
-  animation: lp-float 16s ease-in-out infinite alternate;
-}
-.lp-blob-a {
-  width: 34rem;
-  height: 34rem;
-  left: -10rem;
-  top: -12rem;
-  background: var(--color-primary);
-}
-.lp-blob-b {
-  width: 28rem;
-  height: 28rem;
-  right: -8rem;
-  top: 6rem;
-  background: var(--color-secondary);
-  animation-duration: 20s;
-  animation-direction: alternate-reverse;
-}
-@keyframes lp-float {
-  to {
-    transform: translate(3rem, 2rem) scale(1.12);
-  }
-}
-
 .lp-dot {
   width: 0.5rem;
   height: 0.5rem;
@@ -79,7 +163,7 @@
   }
 }
 .lp-gradient-text {
-  background: linear-gradient(100deg, var(--color-primary), var(--color-secondary));
+  background: linear-gradient(100deg, var(--lp-mint), var(--lp-sage) 60%, var(--lp-teal));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -108,7 +192,8 @@
 .lp-video-frame {
   background: var(--color-surface-muted);
   box-shadow:
-    0 0 0 6px color-mix(in srgb, var(--color-primary) 10%, transparent),
+    0 0 0 8px rgb(242 251 248 / 0.06),
+    0 0 80px -20px rgb(132 195 166 / 0.45),
     var(--shadow-lg);
 }
 .lp-chip {
@@ -116,16 +201,17 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.875rem;
+  padding: 0.55rem 1rem;
   border-radius: 9999px;
-  border: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
-  backdrop-filter: blur(10px);
-  box-shadow: var(--shadow-md);
-  font-size: var(--text-caption);
+  background: rgb(250 253 252 / 0.94);
+  box-shadow: 0 12px 28px -10px rgb(0 0 0 / 0.55);
+  font-size: var(--text-body-sm);
   font-weight: 600;
-  color: var(--color-fg);
+  color: var(--lp-deep);
   animation: lp-bob 6s ease-in-out infinite;
+}
+.lp-chip svg {
+  color: var(--lp-teal-deep);
 }
 /* Fuera del cuadro del video, para no tapar su texto. */
 .lp-chip-a {
@@ -177,8 +263,10 @@
 @media (hover: hover) {
   .lp-card:hover {
     transform: translateY(-6px);
-    box-shadow: var(--shadow-lg);
     border-color: var(--color-primary-border);
+    box-shadow:
+      var(--shadow-lg),
+      0 0 48px -12px rgb(132 195 166 / 0.45);
   }
   .lp-card:hover .lp-card-icon {
     transform: rotate(-8deg) scale(1.08);
@@ -201,15 +289,13 @@
   position: absolute;
   inset: 8%;
   border-radius: 9999px;
-  background: radial-gradient(circle, var(--color-primary-subtle), transparent 70%);
+  background: radial-gradient(circle, rgb(132 195 166 / 0.28), transparent 68%);
   animation: lp-dot 6s ease-in-out infinite;
 }
 .lp-map {
   border: 0;
-}
-:root[data-theme='dark'] .lp-map {
-  /* El mapa de Google no tiene modo oscuro: se atenúa para no encandilar. */
-  filter: invert(0.9) hue-rotate(180deg) saturate(0.8);
+  /* El mapa de Google no tiene tema oscuro: se invierte y se tiñe hacia el verde azulado. */
+  filter: invert(0.92) hue-rotate(160deg) saturate(0.55) brightness(0.92) contrast(0.95);
 }
 
 .lp-social {
