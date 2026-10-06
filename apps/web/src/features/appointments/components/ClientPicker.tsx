@@ -9,6 +9,7 @@ import { ListSkeleton } from '@/components/ui/Skeleton';
 import {
   matchesAllTerms,
   useClientsList,
+  useMyPatients,
   type ClientListItem,
 } from '@/features/clients/api/clients';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -17,27 +18,49 @@ import { formatCi, formatPhone } from '@/utils/format';
 
 const MAX_RESULTS = 8;
 
-/** Buscar y elegir un cliente activo (por nombre, carnet o teléfono). */
+/**
+ * Buscar y elegir un cliente activo (por nombre, carnet o teléfono). Con
+ * `professionalId`, solo entre los pacientes de ese profesional (el rol
+ * PROFESIONAL no puede ver a los demás clientes).
+ */
 export function ClientPicker({
   selectedId,
   onSelect,
+  professionalId = null,
 }: {
   selectedId: string | null;
   onSelect: (client: ClientListItem) => void;
+  professionalId?: string | null;
 }) {
   const [text, setText] = useState('');
   const search = useDebouncedValue(text.trim(), 300);
-  const results = useClientsList(
+  const ownPatients = !!professionalId;
+  const list = useClientsList(
     { search, status: 'ACTIVO', sort: 'apellido' },
-    search.length >= 2,
+    !ownPatients && search.length >= 2,
   );
-  const items =
-    results.status === 'success'
-      ? results.data.pages
-          .flatMap((p) => p.items)
-          .filter((c) => matchesAllTerms(c, search))
-          .slice(0, MAX_RESULTS)
+  const patients = useMyPatients(professionalId);
+  // Sus pacientes se listan desde el inicio; la búsqueda filtra en el navegador.
+  const needsText = !ownPatients && search.length < 2;
+  const results: { status: 'pending' | 'error' | 'success'; message?: string } = ownPatients
+    ? patients.status === 'loading'
+      ? { status: 'pending' }
+      : patients.status === 'error'
+        ? { status: 'error', message: patients.error.message }
+        : { status: 'success' }
+    : list.status === 'error'
+      ? { status: 'error', message: list.error.message }
+      : { status: list.status };
+  const found = ownPatients
+    ? patients.status === 'success'
+      ? patients.data
+          .filter((c) => c.status === 'ACTIVO')
+          .sort((a, b) => a.lastName.localeCompare(b.lastName, 'es'))
+      : []
+    : list.status === 'success'
+      ? list.data.pages.flatMap((p) => p.items)
       : [];
+  const items = found.filter((c) => matchesAllTerms(c, search)).slice(0, MAX_RESULTS);
 
   return (
     <div className="flex flex-col gap-3">
@@ -47,15 +70,17 @@ export function ClientPicker({
         value={text}
         onChange={setText}
       />
-      {search.length < 2 ? (
+      {needsText ? (
         <p className="text-body-sm text-fg-muted">Escribe al menos 2 caracteres para buscar.</p>
       ) : results.status === 'pending' ? (
         <ListSkeleton rows={3} label="Buscando clientes…" />
       ) : results.status === 'error' ? (
-        <InlineAlert tone="danger" title={results.error.message} />
+        <InlineAlert tone="danger" title={results.message ?? ''} />
       ) : items.length === 0 ? (
         <p role="status" className="text-body-sm text-fg-muted">
-          No hay clientes activos que coincidan con “{search}”.
+          {ownPatients && !search
+            ? 'Aún no tienes pacientes activos. Registra uno nuevo para agendarle una cita.'
+            : `No hay ${ownPatients ? 'pacientes' : 'clientes'} activos que coincidan con “${search}”.`}
         </p>
       ) : (
         <ul
@@ -88,7 +113,7 @@ export function ClientPicker({
       <Button asChild variant="ghost" size="sm" className="w-fit">
         <Link to="/clientes/nuevo?volver=cita">
           <UserPlus aria-hidden="true" />
-          Registrar un cliente nuevo
+          {ownPatients ? 'Registrar un paciente nuevo' : 'Registrar un cliente nuevo'}
         </Link>
       </Button>
     </div>

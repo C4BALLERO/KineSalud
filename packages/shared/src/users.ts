@@ -84,5 +84,6 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   ADMINISTRADOR: 'Acceso completo: usuarios, configuración, personal, reportes e historia clínica.',
   RECEPCIONISTA:
     'Clientes, agenda, confirmaciones y recordatorios. Sin acceso a información clínica.',
-  PROFESIONAL: 'Su agenda, sus pacientes y el registro clínico de las sesiones que atiende.',
+  PROFESIONAL:
+    'Agenda sus citas, registra a sus pacientes, elige los servicios que ofrece y lleva el registro clínico de las sesiones que atiende.',
 };

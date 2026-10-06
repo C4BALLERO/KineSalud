@@ -7,7 +7,6 @@ import {
   canRecordSession,
   hasPermission,
   PAYMENT_METHOD_LABELS,
-  permissionScope,
   type AppointmentAction,
 } from '@kinesalud/shared';
 import {
@@ -124,7 +123,7 @@ function Detail({ appointment: a }: { appointment: AgendaAppointment }) {
   const [pending, setPending] = useState<AppointmentAction | null>(null);
 
   const permissions: AppointmentPermissions = {
-    manageAll: permissionScope(session, 'appointments.manage') === 'all',
+    canManage: canAccessRecord(session, 'appointments.manage', [a.professionalId]),
     canConfirm: canAccessRecord(session, 'appointments.manage', [a.professionalId]),
     canMarkAttendance: canAccessRecord(session, 'attendance.mark', [a.professionalId]),
     canCorrect: hasPermission(session, 'appointments.correct'),

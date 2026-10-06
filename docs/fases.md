@@ -541,3 +541,12 @@ Detalle de capas, pasos opcionales y riesgos residuales en [seguridad.md](seguri
 - **Revocación en los comandos, no en las reglas:** consultar la cuenta en cada regla gastaría una lectura extra por consulta y la cuota gratuita. Las lecturas con un token revocado quedan como riesgo residual de hasta una hora (ver `seguridad.md`).
 - **App Check opcional:** activarlo exige crear claves en la cuenta del proyecto. Activarlo como obligatorio antes de que la web envíe tokens dejaría el sistema sin servicio.
 - **Auditoría solo de lectura y por rango:** la consulta usa el índice automático de `at`; los filtros de módulo y persona se aplican en el navegador para no crear índices compuestos.
+
+## Ajuste — Autoservicio del profesional
+
+Pedido del usuario: que el profesional pueda agendar sus citas, registrar pacientes nuevos y marcar los servicios que ofrece.
+
+- **Permisos:** `clients.write` pasa a alcance `own` para PROFESIONAL. `appointments.manage` ya era `own`; ahora cubre agendar, reprogramar y cancelar en su propia agenda.
+- **Servidor:** `appointments-create`, `appointments-reschedule` y la cancelación aceptan el alcance propio (su agenda y sus pacientes). Hay un comando nuevo, `appointments-slots`, que calcula los horarios libres sin exponer citas ajenas. `clients-create` asigna el paciente al profesional o lo vincula si el carnet ya existe con el mismo nombre. `clients-update` solo funciona sobre sus pacientes. `staff-setMyServices` es nuevo.
+- **Web:** el profesional ve "Nueva cita" con su agenda fija, solo sus pacientes y los servicios que ofrece. Puede reprogramar y cancelar sus citas y registrar pacientes, y tiene el panel "Servicios que ofrezco" en Mi cuenta.
+- **Pruebas:** servicios de citas (agenda propia, sugerencias, horarios libres), clientes (asignación, vinculación, carnet ajeno) y personal (servicios propios), además de `useBookingScope` en la web.

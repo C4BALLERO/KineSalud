@@ -148,8 +148,8 @@ export function openingRangesOn(
 /* ---------- Acciones disponibles para quien mira la cita ---------- */
 
 export interface AppointmentPermissions {
-  /** Agendar, reprogramar y cancelar (recepción y administración). */
-  manageAll: boolean;
+  /** Reprogramar y cancelar: recepción/administración o el profesional de la cita. */
+  canManage: boolean;
   /** Confirmar: recepción/administración o el profesional de la cita. */
   canConfirm: boolean;
   /** Registrar asistencia: recepción/administración o el profesional de la cita. */
@@ -173,7 +173,7 @@ export function availableActions(
   // Las citas cerradas solo se corrigen (administración), no se operan desde aquí.
   if (!OPEN_APPOINTMENT_STATUSES.includes(appointment.status)) return [];
   return APPOINTMENT_ACTIONS.filter((action) => {
-    if (action === 'CANCELAR') return permissions.manageAll;
+    if (action === 'CANCELAR') return permissions.canManage;
     if (action === 'CONFIRMAR') return permissions.canConfirm && appointment.status === 'PENDIENTE';
     return permissions.canMarkAttendance;
   }).map((action) => {
@@ -187,7 +187,7 @@ export function canRescheduleNow(
   appointment: Pick<AgendaAppointment, 'status'>,
   permissions: AppointmentPermissions,
 ): boolean {
-  return permissions.manageAll && canReschedule(appointment).ok;
+  return permissions.canManage && canReschedule(appointment).ok;
 }
 
 /** Alternativas que devuelve el servidor cuando el horario elegido ya no está libre. */

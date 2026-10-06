@@ -8,6 +8,7 @@ import type {
   ProfessionalExceptionDoc,
   ProfessionalInput,
   RemoveExceptionInput,
+  SetMyServicesInput,
   SetProfessionalActiveInput,
   SetScheduleInput,
   UpdateProfessionalInput,
@@ -122,5 +123,13 @@ export function useLinkAccount() {
   return useMutation({
     mutationFn: (input: LinkAccountInput) =>
       callFunction<LinkAccountInput>('staff-linkAccount', input),
+  });
+}
+
+/** El profesional marca los servicios que ofrece (dentro de sus áreas). */
+export function useSetMyServices() {
+  return useMutation({
+    mutationFn: (input: SetMyServicesInput) =>
+      callFunction<SetMyServicesInput>('staff-setMyServices', input),
   });
 }

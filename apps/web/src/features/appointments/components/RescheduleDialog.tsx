@@ -19,14 +19,20 @@ import { capitalizeFirst, formatDayLong, formatTime } from '@/utils/format';
 import {
   useAgendaAppointments,
   useRescheduleAppointment,
+  useServerSlots,
   type AgendaAppointment,
 } from '../api/appointments';
 import { useAgendaCatalogs } from '../hooks/useAgendaCatalogs';
+import { useBookingScope } from '../hooks/useBookingScope';
 import { alternativesOf, buildDayContext } from '../model';
 import { NoSlotsAlert } from './NoSlotsAlert';
 import { SlotPicker } from './SlotPicker';
 
-/** Reprogramar: nueva fecha, profesional y horario libre (la cita vuelve a Pendiente). */
+/**
+ * Reprogramar: nueva fecha, profesional y horario libre (la cita vuelve a
+ * Pendiente). El profesional mueve sus citas solo dentro de su agenda, con los
+ * horarios libres que calcula el servidor.
+ */
 export function RescheduleDialog({
   appointment,
   onClose,
@@ -38,25 +44,41 @@ export function RescheduleDialog({
   const now = useNow();
   const today = toDateKey(now);
   const reschedule = useRescheduleAppointment();
+  const { ownAgenda } = useBookingScope();
   const [date, setDate] = useState(appointment.date >= today ? appointment.date : today);
-  const [professionalId, setProfessionalId] = useState(appointment.professionalId);
+  const [chosenProfessional, setProfessionalId] = useState(appointment.professionalId);
+  const professionalId = ownAgenda ?? chosenProfessional;
   const [slot, setSlot] = useState<Slot | null>(null);
   const [error, setError] = useState<{ message: string; alternatives: SlotAlternative[] } | null>(
     null,
   );
 
   const catalogs = useAgendaCatalogs(date);
-  const day = useAgendaAppointments(null, date, date, !!date);
+  const day = useAgendaAppointments(ownAgenda, date, date, !!date);
+  const serverSlots = useServerSlots(
+    ownAgenda && date >= today
+      ? {
+          date,
+          serviceId: appointment.serviceId,
+          clientId: appointment.clientId,
+          professionalId: ownAgenda,
+          ignoreAppointmentId: appointment.id,
+        }
+      : null,
+  );
 
-  const ready = catalogs.status === 'success' && day.status === 'success';
+  const ready =
+    catalogs.status === 'success' &&
+    day.status === 'success' &&
+    (!ownAgenda || date < today || !serverSlots.isPending);
   const service = ready
     ? catalogs.data.services.find((s) => s.id === appointment.serviceId)
     : undefined;
   const professionals = ready
     ? catalogs.data.professionals.filter(
         (p) =>
-          (p.active && p.serviceIds.includes(appointment.serviceId)) ||
-          p.id === appointment.professionalId,
+          p.id === professionalId ||
+          (!ownAgenda && p.active && p.serviceIds.includes(appointment.serviceId)),
       )
     : [];
   const dayContext =
@@ -79,7 +101,13 @@ export function RescheduleDialog({
         professionalId,
       }
     : null;
-  const slots = dayContext && slotRequest ? findSlots(dayContext, slotRequest) : [];
+  const slots = ownAgenda
+    ? date >= today
+      ? (serverSlots.data?.slots ?? [])
+      : []
+    : dayContext && slotRequest
+      ? findSlots(dayContext, slotRequest)
+      : [];
 
   const submit = async (target: { start: string; professionalId: string }) => {
     setError(null);
@@ -98,6 +126,7 @@ export function RescheduleDialog({
     } catch (err) {
       setError({ message: toAppError(err).message, alternatives: alternativesOf(err) });
       setSlot(null);
+      if (ownAgenda) void serverSlots.refetch();
     }
   };
 
@@ -167,7 +196,7 @@ export function RescheduleDialog({
                   setProfessionalId(e.target.value);
                   setSlot(null);
                 }}
-                disabled={!ready}
+                disabled={!ready || !!ownAgenda}
               >
                 {professionals.map((pr) => (
                   <option key={pr.id} value={pr.id}>
@@ -179,7 +208,11 @@ export function RescheduleDialog({
           </FormField>
         </div>
 
-        {!ready ? (
+        {ownAgenda && serverSlots.isError ? (
+          <InlineAlert tone="danger" title="No se pudieron calcular los horarios libres.">
+            {toAppError(serverSlots.error).message}
+          </InlineAlert>
+        ) : !ready ? (
           <div className="flex flex-wrap gap-2" aria-busy="true">
             {Array.from({ length: 8 }, (_, i) => (
               <Skeleton key={i} className="h-9 w-16" />

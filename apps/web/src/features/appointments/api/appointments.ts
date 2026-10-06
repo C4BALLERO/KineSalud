@@ -6,9 +6,11 @@ import type {
   CreateAppointmentInput,
   CreateAppointmentResult,
   DateKey,
+  ListSlotsInput,
+  ListSlotsResult,
   RescheduleAppointmentInput,
 } from '@kinesalud/shared';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   collection,
   doc,
@@ -104,14 +106,19 @@ export function useAppointmentEvents(id: string | null) {
   );
 }
 
-/** Tratamientos activos del cliente (para vincular la cita a una sesión). */
-export function useClientActiveTreatments(clientId: string | null) {
+/**
+ * Tratamientos activos del cliente (para vincular la cita a una sesión). Con
+ * `professionalId`, solo los de ese profesional (obligatorio para el rol
+ * PROFESIONAL según las reglas).
+ */
+export function useClientActiveTreatments(clientId: string | null, professionalId: string | null) {
   return useLiveQuery(
-    clientId ? `treatments|active|client|${clientId}` : null,
+    clientId ? `treatments|active|client|${clientId}|${professionalId ?? 'all'}` : null,
     () =>
       query(
         collection(db, 'treatments'),
         where('clientId', '==', clientId),
+        ...(professionalId ? [where('professionalId', '==', professionalId)] : []),
         where('status', '==', 'ACTIVO'),
       ),
     (d) => {
@@ -127,6 +134,20 @@ export function useClientActiveTreatments(clientId: string | null) {
       };
     },
   );
+}
+
+/**
+ * Horarios libres calculados en el servidor. Los usa el profesional: no puede
+ * leer las citas ajenas que ocupan camillas y cabinas, y el servidor sí las
+ * considera. Recepción y administración los calculan en el navegador.
+ */
+export function useServerSlots(input: ListSlotsInput | null) {
+  return useQuery({
+    queryKey: ['appointments', 'slots', input],
+    enabled: !!input,
+    staleTime: 0,
+    queryFn: () => callFunction<ListSlotsInput, ListSlotsResult>('appointments-slots', input!),
+  });
 }
 
 /* ---------- Comandos (la agenda se actualiza sola por las suscripciones) ---------- */

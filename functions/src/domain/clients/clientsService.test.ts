@@ -25,12 +25,22 @@ class InMemoryClientsGateway implements ClientsGateway {
       );
     }
   }
-  async create(fields: ClientFields) {
+  async create(fields: ClientFields, _createdBy: string | null, assigned: string[] = []) {
     this.assertCiFree(fields.ci);
     const id = `cli-${++this.seq}`;
     this.ciIndex.set(fields.ci, id);
-    this.clients.set(id, { id, ...fields, status: 'ACTIVO' });
+    this.clients.set(id, {
+      id,
+      ...fields,
+      status: 'ACTIVO',
+      assignedProfessionalIds: [...assigned],
+    });
     return id;
+  }
+  async assignProfessional(id: string, professionalId: string) {
+    const c = this.clients.get(id)!;
+    const ids = new Set([...(c.assignedProfessionalIds ?? []), professionalId]);
+    this.clients.set(id, { ...c, assignedProfessionalIds: [...ids] });
   }
   async get(id: string) {
     return this.clients.get(id) ?? null;
@@ -95,10 +105,51 @@ describe('clientsService', () => {
     });
   });
 
-  it('el PROFESIONAL no puede registrar ni editar clientes', async () => {
-    await expect(createClient(gw, prof, carla)).rejects.toMatchObject({
+  it('el PROFESIONAL registra pacientes que quedan asignados a su ficha', async () => {
+    const { clientId, linked } = await createClient(gw, prof, carla);
+    expect(linked).toBeUndefined();
+    expect(gw.clients.get(clientId)?.assignedProfessionalIds).toEqual(['p1']);
+    expect(gw.audits.at(-1)).toMatchObject({ action: 'client.create', entityId: clientId });
+  });
+
+  it('si el carnet ya existe con el mismo nombre, el PROFESIONAL lo suma a sus pacientes', async () => {
+    const { clientId } = await createClient(gw, recep, carla);
+    const res = await createClient(gw, prof, {
+      ...carla,
+      firstName: 'CARLA',
+      lastName: 'Rojas vda.',
+    });
+    expect(res).toEqual({ clientId, linked: true });
+    expect(gw.clients.get(clientId)?.assignedProfessionalIds).toEqual(['p1']);
+    expect(gw.audits.at(-1)).toMatchObject({ action: 'client.link', entityId: clientId });
+  });
+
+  it('si el carnet ya existe con otro nombre, el PROFESIONAL no ve al cliente ajeno', async () => {
+    await createClient(gw, recep, carla);
+    const err = await createClient(gw, prof, { ...carla, firstName: 'Luis' }).catch((e) => e);
+    expect(err).toMatchObject({ code: 'already-exists', details: { field: 'ci' } });
+    expect(err.details.clientId).toBeUndefined();
+  });
+
+  it('el PROFESIONAL sin ficha vinculada no registra pacientes', async () => {
+    const sinFicha: Actor = { ...prof, professionalId: undefined };
+    await expect(createClient(gw, sinFicha, carla)).rejects.toMatchObject({
       code: 'permission-denied',
     });
+  });
+
+  it('el PROFESIONAL edita solo a sus pacientes y no los desactiva', async () => {
+    const mine = await createClient(gw, prof, carla);
+    const other = await createClient(gw, recep, { ...carla, ci: '5500000', firstName: 'Luis' });
+    await expect(
+      updateClient(gw, prof, { clientId: mine.clientId, ...carla, email: 'c@correo.bo' }),
+    ).resolves.toBeUndefined();
+    await expect(
+      updateClient(gw, prof, { clientId: other.clientId, ...carla, ci: '5500000' }),
+    ).rejects.toMatchObject({ code: 'permission-denied' });
+    await expect(
+      setClientStatus(gw, prof, { clientId: mine.clientId, status: 'INACTIVO' }),
+    ).rejects.toMatchObject({ code: 'permission-denied' });
   });
 
   it('valida los datos con el esquema compartido', async () => {

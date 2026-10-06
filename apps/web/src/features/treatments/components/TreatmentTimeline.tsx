@@ -24,7 +24,7 @@ export function TreatmentTimeline({
   scheduleHref,
 }: {
   items: TimelineItem[];
-  /** Enlace para agendar las sesiones que faltan (recepción y administración). */
+  /** Enlace para agendar las sesiones que faltan (recepción, administración o su profesional). */
   scheduleHref?: string;
 }) {
   return (

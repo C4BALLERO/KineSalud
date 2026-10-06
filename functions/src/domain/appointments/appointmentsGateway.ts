@@ -26,6 +26,8 @@ export interface ClientRef {
   firstName: string;
   lastName: string;
   status: ClientStatus;
+  /** Profesionales que atienden al cliente (el profesional agenda solo a los suyos). */
+  assignedProfessionalIds: string[];
 }
 
 export interface TreatmentRef {

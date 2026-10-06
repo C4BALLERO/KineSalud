@@ -167,6 +167,24 @@ export interface SlotAlternative {
   professionalName: string;
 }
 
+/**
+ * Horarios libres calculados en el servidor (con todas las citas del día). Lo usa
+ * el profesional, que no ve las citas de los demás pero comparte los espacios.
+ */
+export const listSlotsInputSchema = z.object({
+  date: dateSchema,
+  serviceId: idSchema,
+  clientId: idSchema.nullable().default(null),
+  professionalId: idSchema.nullable().default(null),
+  /** Cita que se reprograma: su horario actual cuenta como libre. */
+  ignoreAppointmentId: idSchema.nullable().default(null),
+});
+export type ListSlotsInput = z.input<typeof listSlotsInputSchema>;
+
+export interface ListSlotsResult {
+  slots: { start: string; end: string; professionalId: string; roomId: string }[];
+}
+
 /* ---------- Historial de la cita ---------- */
 
 export const APPOINTMENT_EVENT_TYPES = [

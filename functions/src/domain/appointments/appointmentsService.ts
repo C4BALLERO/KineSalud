@@ -10,8 +10,10 @@ import {
   correctAppointmentStatusInputSchema,
   createAppointmentInputSchema,
   findSlots,
+  listSlotsInputSchema,
   nearestSlots,
   PAID_CANCEL_REASON,
+  permissionScope,
   rescheduleAppointmentInputSchema,
   SLOT_CONFLICTS,
   toDateKey,
@@ -21,17 +23,13 @@ import {
   type CreateAppointmentResult,
   type DateKey,
   type DayContext,
+  type ListSlotsResult,
   type SlotAlternative,
   type SlotRequest,
 } from '@kinesalud/shared';
 import type { Actor } from '../../core/actor';
 import { DomainError } from '../../core/errors';
-import {
-  parseInput,
-  requireClinicWide,
-  requirePermission,
-  requireRecordAccess,
-} from '../../core/guards';
+import { parseInput, requirePermission, requireRecordAccess } from '../../core/guards';
 import { auditActor } from '../audit';
 import type {
   AppointmentsGateway,
@@ -90,15 +88,20 @@ async function loadDay(tx: BookingTx, date: DateKey, now: Date): Promise<LoadedD
   };
 }
 
-/** Error de horario ocupado con hasta 3 alternativas cercanas (mismo profesional primero). */
+/**
+ * Error de horario ocupado con hasta 3 alternativas cercanas (mismo profesional
+ * primero). Con `sameOnly`, solo se sugieren horarios de la misma agenda.
+ */
 function slotError(
   day: LoadedDay,
   conflict: keyof typeof SLOT_CONFLICTS,
   request: SlotRequest & { professionalId: string; start: string },
+  sameOnly = false,
 ): DomainError {
   const nameOf = (id: string) => day.professionals.find((p) => p.id === id)?.displayName ?? '';
   const same = findSlots(day.ctx, { ...request });
-  const pool = same.length > 0 ? same : findSlots(day.ctx, { ...request, professionalId: null });
+  const pool =
+    same.length > 0 || sameOnly ? same : findSlots(day.ctx, { ...request, professionalId: null });
   const alternatives: SlotAlternative[] = nearestSlots(pool, request.start).map((s) => ({
     start: s.start,
     professionalId: s.professionalId,
@@ -124,6 +127,28 @@ function sourceOf(actor: Actor) {
   return actor.type === 'CHATBOT' ? 'CHATBOT' : actor.type === 'SYSTEM' ? 'SYSTEM' : 'WEB';
 }
 
+/**
+ * Profesional cuya agenda propia administra el actor, o null si administra la
+ * agenda de todo el consultorio (recepción y administración).
+ */
+function ownAgenda(actor: Actor): string | null {
+  requirePermission(actor, 'appointments.manage');
+  const scope = permissionScope(
+    { role: actor.role!, professionalId: actor.professionalId },
+    'appointments.manage',
+  );
+  if (scope === 'all') return null;
+  if (!actor.professionalId) {
+    throw new DomainError(
+      'permission-denied',
+      'Tu cuenta no está vinculada a una ficha de profesional. Pide a la administración que la vincule.',
+    );
+  }
+  return actor.professionalId;
+}
+
+const OWN_AGENDA_ONLY = 'Solo puedes agendar citas en tu propia agenda.';
+
 const timeOf = (d: Date) => {
   const m = clinicMinutesOf(d);
   return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
@@ -137,12 +162,11 @@ export async function createAppointment(
   data: unknown,
   now = new Date(),
 ): Promise<CreateAppointmentResult> {
-  requireClinicWide(
-    actor,
-    'appointments.manage',
-    'Solo recepción o administración pueden agendar citas.',
-  );
+  const own = ownAgenda(actor);
   const input = parseInput(createAppointmentInputSchema, data);
+  if (own && input.professionalId !== own) {
+    throw new DomainError('permission-denied', OWN_AGENDA_ONLY, { field: 'professionalId' });
+  }
 
   const appointmentId = await gateway.run(async (tx) => {
     await tx.lockDay(input.date);
@@ -155,6 +179,14 @@ export async function createAppointment(
     ]);
 
     if (!client) throw new DomainError('not-found', 'El cliente no existe.');
+    // El profesional no ve a los clientes ajenos: agenda solo a sus pacientes.
+    if (own && !client.assignedProfessionalIds.includes(own)) {
+      throw new DomainError(
+        'permission-denied',
+        'Ese cliente no está entre tus pacientes. Regístralo desde Mis pacientes.',
+        { field: 'clientId' },
+      );
+    }
     if (client.status !== 'ACTIVO') {
       throw new DomainError(
         'failed-precondition',
@@ -195,7 +227,7 @@ export async function createAppointment(
       start: input.start,
     };
     const result = checkSlot(day.ctx, { ...request, roomId: input.roomId });
-    if (!result.ok) throw slotError(day, result.conflict, request);
+    if (!result.ok) throw slotError(day, result.conflict, request, Boolean(own));
 
     const professional = day.professionals.find((p) => p.id === input.professionalId)!;
     const room = day.rooms.find((r) => r.id === result.roomId)!;
@@ -252,6 +284,45 @@ export async function createAppointment(
   return { appointmentId };
 }
 
+/* ---------- Horarios libres ---------- */
+
+/**
+ * Horarios libres de un día para un servicio. Lo usa el profesional, que no
+ * puede leer las citas ajenas que ocupan camillas y cabinas: el servidor las
+ * considera sin exponerlas. Con agenda propia, solo devuelve sus horarios.
+ */
+export async function listSlots(
+  gateway: AppointmentsGateway,
+  actor: Actor,
+  data: unknown,
+  now = new Date(),
+): Promise<ListSlotsResult> {
+  const own = ownAgenda(actor);
+  const input = parseInput(listSlotsInputSchema, data);
+  const professionalId = own ?? input.professionalId;
+
+  return gateway.run(async (tx) => {
+    const [day, service, client] = await Promise.all([
+      loadDay(tx, input.date, now),
+      tx.getService(input.serviceId),
+      input.clientId ? tx.getClient(input.clientId) : Promise.resolve(null),
+    ]);
+    if (!service) throw new DomainError('not-found', 'El servicio no existe.');
+    // El cliente solo cuenta (para no superponer sus citas) si el actor puede verlo,
+    // y solo se ignora una cita propia (la que se está reprogramando).
+    const clientId =
+      client && (!own || client.assignedProfessionalIds.includes(own)) ? client.id : null;
+    const ignoreAppointmentId = day.ctx.appointments.some(
+      (a) => a.id === input.ignoreAppointmentId && (!own || a.professionalId === own),
+    )
+      ? input.ignoreAppointmentId
+      : null;
+    return {
+      slots: findSlots(day.ctx, { service, clientId, professionalId, ignoreAppointmentId }),
+    };
+  });
+}
+
 /* ---------- Reprogramar ---------- */
 
 export async function rescheduleAppointment(
@@ -260,16 +331,18 @@ export async function rescheduleAppointment(
   data: unknown,
   now = new Date(),
 ): Promise<void> {
-  requireClinicWide(
-    actor,
-    'appointments.manage',
-    'Solo recepción o administración pueden reprogramar citas.',
-  );
+  const own = ownAgenda(actor);
   const input = parseInput(rescheduleAppointmentInputSchema, data);
+  if (own && input.professionalId !== own) {
+    throw new DomainError('permission-denied', OWN_AGENDA_ONLY, { field: 'professionalId' });
+  }
 
   await gateway.run(async (tx) => {
     const current = await tx.getAppointment(input.appointmentId);
     if (!current) throw new DomainError('not-found', 'La cita no existe.');
+    if (own && current.professionalId !== own) {
+      throw new DomainError('permission-denied', 'Solo puedes reprogramar tus propias citas.');
+    }
     const allowed = canReschedule(current);
     if (!allowed.ok) throw new DomainError('failed-precondition', allowed.reason);
 
@@ -289,7 +362,7 @@ export async function rescheduleAppointment(
       ignoreAppointmentId: current.id,
     };
     const result = checkSlot(day.ctx, { ...request, roomId: input.roomId });
-    if (!result.ok) throw slotError(day, result.conflict, request);
+    if (!result.ok) throw slotError(day, result.conflict, request, Boolean(own));
 
     const professional = day.professionals.find((p) => p.id === input.professionalId)!;
     const room = day.rooms.find((r) => r.id === result.roomId)!;
@@ -367,15 +440,8 @@ export async function changeAppointmentStatus(
     const current = await tx.getAppointment(input.appointmentId);
     if (!current) throw new DomainError('not-found', 'La cita no existe.');
 
-    // El profesional confirma y registra asistencia de sus propias citas; cancelar
-    // es tarea de recepción o administración.
-    if (input.action === 'CANCELAR') {
-      requireClinicWide(
-        actor,
-        'appointments.manage',
-        'Solo recepción o administración pueden cancelar citas.',
-      );
-    } else if (input.action === 'CONFIRMAR') {
+    // El profesional confirma, cancela y registra asistencia solo de sus propias citas.
+    if (input.action === 'CANCELAR' || input.action === 'CONFIRMAR') {
       requireRecordAccess(actor, 'appointments.manage', [current.professionalId]);
     } else {
       requireRecordAccess(actor, 'attendance.mark', [current.professionalId]);

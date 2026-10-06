@@ -216,7 +216,7 @@ export function ClientForm({ defaultValues, submitLabel, cancelTo, onSubmit }: C
         <FormField
           label="Notas"
           optional
-          hint="Visibles para recepción y administración. No registres aquí información clínica: esa se guarda en la historia clínica."
+          hint="Visibles para el equipo que atiende al cliente. No registres aquí información clínica: esa se guarda en la historia clínica."
           error={errors.adminNotes?.message}
           className="md:col-span-6"
         >

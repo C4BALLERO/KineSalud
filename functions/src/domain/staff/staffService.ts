@@ -8,6 +8,7 @@ import {
   professionalDisplayName,
   removeExceptionInputSchema,
   setProfessionalActiveInputSchema,
+  setMyServicesInputSchema,
   setScheduleInputSchema,
   toDateKey,
   updateProfessionalInputSchema,
@@ -30,7 +31,10 @@ async function loadProfessional(gateway: StaffGateway, id: string): Promise<Stor
 }
 
 /** Los servicios deben existir y pertenecer a las áreas del profesional. */
-async function assertServices(gateway: StaffGateway, data: ProfessionalData): Promise<void> {
+async function assertServices(
+  gateway: StaffGateway,
+  data: Pick<ProfessionalData, 'categories' | 'serviceIds'>,
+): Promise<void> {
   if (data.serviceIds.length === 0) return;
   const services = await gateway.getServices(data.serviceIds);
   if (services.length !== data.serviceIds.length) {
@@ -108,6 +112,42 @@ export async function updateProfessional(
     entity: 'professionals',
     entityId: professionalId,
     meta: { fields: changed },
+  });
+}
+
+/**
+ * El profesional elige qué servicios ofrece, dentro de sus áreas de atención
+ * (las áreas las define la administración). Solo esos servicios se le pueden
+ * agendar.
+ */
+export async function setMyServices(
+  gateway: StaffGateway,
+  actor: Actor,
+  data: unknown,
+): Promise<void> {
+  if (!actor.role || !actor.professionalId) {
+    throw new DomainError(
+      'permission-denied',
+      'Tu cuenta no está vinculada a una ficha de profesional. Pide a la administración que la vincule.',
+    );
+  }
+  const { serviceIds } = parseInput(setMyServicesInputSchema, data);
+  const current = await loadProfessional(gateway, actor.professionalId);
+  await assertServices(gateway, { categories: current.categories, serviceIds });
+
+  const sorted = (ids: readonly string[]) => [...ids].sort().join(',');
+  if (sorted(current.serviceIds) === sorted(serviceIds)) return;
+
+  await gateway.updateProfessional(current.id, { serviceIds });
+  await gateway.audit({
+    actor: auditActor(actor),
+    action: 'professional.services',
+    entity: 'professionals',
+    entityId: current.id,
+    meta: {
+      added: serviceIds.filter((id) => !current.serviceIds.includes(id)),
+      removed: current.serviceIds.filter((id) => !serviceIds.includes(id)),
+    },
   });
 }
 

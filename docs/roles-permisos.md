@@ -6,7 +6,7 @@
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **ADMINISTRADOR** | Gestiona el consultorio completo: usuarios, configuración, personal y reportes. Puede estar vinculado a una ficha de profesional y atender con agenda propia |
 | **RECEPCIONISTA** | Opera el día a día: clientes, agenda, confirmaciones y recordatorios. **Nunca** accede a información clínica                                                 |
-| **PROFESIONAL**   | Atiende a sus pacientes: su agenda, registro de sesiones y evolución clínica de los pacientes asignados                                                      |
+| **PROFESIONAL**   | Atiende a sus pacientes: agenda sus citas, registra pacientes nuevos, elige los servicios que ofrece y lleva la evolución clínica de sus pacientes           |
 
 El rol se guarda como **custom claim** de Firebase Authentication (`role`, `professionalId`, `active`). Solo lo asigna la Cloud Function de gestión de usuarios, y el documento `users/{uid}` lo refleja para mostrarlo en pantalla.
 
@@ -26,7 +26,7 @@ Alcances:
 | `staff.read`           |      all      |      all      |     own     |
 | `staff.manage`         |      all      |       —       |      —      |
 | `clients.read`         |      all      |      all      |     own     |
-| `clients.write`        |      all      |      all      |      —      |
+| `clients.write`        |      all      |      all      |     own     |
 | `appointments.read`    |      all      |      all      |     own     |
 | `appointments.manage`  |      all      |      all      |     own     |
 | `appointments.correct` |      all      |       —       |      —      |
@@ -74,10 +74,19 @@ La UI nunca es la barrera de seguridad; solo mejora la experiencia.
 
 ### Citas: qué puede hacer cada rol
 
-- **Agendar, reprogramar y cancelar** exige `appointments.manage` con alcance `all`: recepción y administración. El profesional (alcance `own`) no crea ni cancela citas.
+- **Agendar, reprogramar y cancelar** exige `appointments.manage`. Recepción y administración (alcance `all`) agendan en cualquier agenda.
+- **El profesional** (alcance `own`) agenda, reprograma y cancela **solo en su propia agenda**, a **sus pacientes** y con **los servicios que ofrece**. Necesita una ficha vinculada a su cuenta. Si el horario elegido se ocupa, solo se le sugieren alternativas de su agenda.
+- **Horarios libres del profesional:** las reglas no le dejan leer las citas ajenas, que también ocupan camillas y cabinas. Por eso sus horarios los calcula el servidor (`appointments-slots`) con todas las citas del día, sin exponer los datos ajenos.
 - **Confirmar** una cita: `appointments.manage` sobre esa cita. Lo hacen recepción, administración o el profesional de la cita.
 - **Registrar asistencia** (atendida o no asistió): `attendance.mark` sobre esa cita, desde la hora de inicio.
 - **Corregir un estado final** (`appointments.correct`): solo la administración, con motivo obligatorio que queda en el historial y en la auditoría.
+
+### Clientes y servicios: qué puede hacer el profesional
+
+- **Registrar pacientes** (`clients.write` con alcance `own`): el paciente queda asignado a su ficha y aparece en "Mis pacientes".
+- **Carnet ya registrado:** el profesional no ve a los clientes ajenos. Si el carnet existe con el mismo nombre, el sistema suma ese cliente a sus pacientes en lugar de duplicarlo (y lo audita como `client.link`). Si el nombre no coincide, rechaza el registro sin revelar los datos del otro cliente.
+- **Editar** solo a sus pacientes. Activar o desactivar clientes sigue siendo tarea de recepción y administración.
+- **Servicios que ofrece:** en "Mi cuenta" marca los servicios de sus áreas de atención (`staff-setMyServices`, auditado como `professional.services`). Solo esos servicios se le pueden agendar. Las áreas de atención las define la administración.
 
 ### Caja y cobros: qué puede hacer cada rol
 
@@ -88,7 +97,7 @@ La UI nunca es la barrera de seguridad; solo mejora la experiencia.
 ### Tratamientos: qué puede hacer cada rol
 
 - **Recepción y administración** abren, editan, finalizan, suspenden y reactivan cualquier tratamiento (`treatments.manage` con alcance `all`), y agendan sus sesiones.
-- **El profesional** (alcance `own`) abre tratamientos solo a su nombre y para sus pacientes, y gestiona los suyos. No los reasigna a otro profesional ni agenda citas.
+- **El profesional** (alcance `own`) abre tratamientos solo a su nombre y para sus pacientes, gestiona los suyos y agenda sus sesiones en su agenda. No los reasigna a otro profesional.
 
 ### Reportes: qué ve cada rol
 

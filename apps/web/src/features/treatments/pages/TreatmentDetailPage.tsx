@@ -106,7 +106,8 @@ function Detail({ treatment: t }: { treatment: TreatmentItem }) {
   const appointments = useTreatmentAppointments(t.id, clinicWide ? null : session.professionalId);
   const canManage = canAccessRecord(session, 'treatments.manage', [t.professionalId]);
   const canReassign = permissionScope(session, 'treatments.manage') === 'all';
-  const canSchedule = permissionScope(session, 'appointments.manage') === 'all';
+  // El profesional agenda las sesiones de sus propios tratamientos.
+  const canSchedule = canAccessRecord(session, 'appointments.manage', [t.professionalId]);
 
   const progress =
     appointments.status === 'success' ? treatmentProgress(t, appointments.data) : null;

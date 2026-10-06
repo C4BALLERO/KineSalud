@@ -22,6 +22,14 @@ describe('permisos por rol', () => {
     expect(canAccessRecord(prof, 'clinical.read', ['p2'])).toBe(false);
   });
 
+  it('el PROFESIONAL agenda y registra pacientes solo en su propia agenda', () => {
+    const prof = { role: 'PROFESIONAL' as const, professionalId: 'p1' };
+    expect(permissionScope(prof, 'appointments.manage')).toBe('own');
+    expect(permissionScope(prof, 'clients.write')).toBe('own');
+    expect(canAccessRecord(prof, 'clients.write', ['p1', 'p2'])).toBe(true);
+    expect(canAccessRecord(prof, 'clients.write', ['p2'])).toBe(false);
+  });
+
   it('un PROFESIONAL sin ficha vinculada no accede a registros propios', () => {
     expect(canAccessRecord({ role: 'PROFESIONAL' }, 'clients.read', ['p1'])).toBe(false);
   });

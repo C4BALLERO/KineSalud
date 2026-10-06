@@ -34,6 +34,7 @@ import { AgendaList } from '../components/AgendaList';
 import { AppointmentDetailSheet } from '../components/AppointmentDetailSheet';
 import { TimeGrid, type GridColumn } from '../components/TimeGrid';
 import { useAgendaCatalogs } from '../hooks/useAgendaCatalogs';
+import { useBookingScope } from '../hooks/useBookingScope';
 import { gridBounds, openingRangesOn, professionalRanges, type AgendaView } from '../model';
 
 const isDateKey = (v: string | null): v is string => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v);
@@ -46,7 +47,7 @@ const isDateKey = (v: string | null): v is string => !!v && /^\d{4}-\d{2}-\d{2}$
 export function AgendaPage() {
   const session = useRequiredSession();
   const clinicWide = usePermissionScope('appointments.read') === 'all';
-  const canCreate = usePermissionScope('appointments.manage') === 'all';
+  const canCreate = useBookingScope().canBook;
   const now = useNow();
   const today = toDateKey(now);
   const desktop = useMediaQuery(BREAKPOINTS.md);
