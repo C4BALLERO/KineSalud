@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
 import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton';
+import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 import { Stat } from '@/components/ui/StatCard';
 import {
   useCashSession,
@@ -141,13 +142,22 @@ export function AdminIncomePanel({
       {stats.status === 'success' && view && (
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-8">
-            <Stat label="Hoy" value={formatMoney(view.todayCents)} />
+            <Stat
+              label="Hoy"
+              value={<AnimatedNumber value={view.todayCents} format={formatMoney} />}
+            />
             <Stat
               label={`En ${monthName(month)}`}
-              value={formatMoney(stats.data.totalCents)}
+              value={<AnimatedNumber value={stats.data.totalCents} format={formatMoney} />}
               hint={`${stats.data.count} ${stats.data.count === 1 ? 'cobro' : 'cobros'}`}
             />
-            <Stat label="Sesiones por cobrar" value={unpaid ?? '—'} hint="Atendidas y sin pagar" />
+            <Stat
+              label="Sesiones por cobrar"
+              value={
+                unpaid === null || unpaid === undefined ? '—' : <AnimatedNumber value={unpaid} />
+              }
+              hint="Atendidas y sin pagar"
+            />
           </div>
           <CashStatus />
           <div className="flex flex-col gap-2">
@@ -205,10 +215,16 @@ export function FrontDeskIncomePanel({ today }: { today: string }) {
           <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-8">
             <Stat
               label="Cobrado hoy"
-              value={formatMoney(sums.total)}
+              value={<AnimatedNumber value={sums.total} format={formatMoney} />}
               hint={`${sums.count} ${sums.count === 1 ? 'cobro' : 'cobros'}`}
             />
-            <Stat label="Sesiones por cobrar" value={unpaid ?? '—'} hint="Atendidas y sin pagar" />
+            <Stat
+              label="Sesiones por cobrar"
+              value={
+                unpaid === null || unpaid === undefined ? '—' : <AnimatedNumber value={unpaid} />
+              }
+              hint="Atendidas y sin pagar"
+            />
           </div>
           <CashStatus />
           <IncomeBreakdown
@@ -254,12 +270,12 @@ export function ProfessionalIncomePanel({
         <div className="grid grid-cols-2 gap-5 sm:gap-8">
           <Stat
             label="Hoy"
-            value={formatMoney(view.todayCents)}
+            value={<AnimatedNumber value={view.todayCents} format={formatMoney} />}
             hint={`${view.todayCount} ${view.todayCount === 1 ? 'sesión cobrada' : 'sesiones cobradas'}`}
           />
           <Stat
             label={`En ${monthName(month)}`}
-            value={formatMoney(view.monthCents)}
+            value={<AnimatedNumber value={view.monthCents} format={formatMoney} />}
             hint={`${view.monthCount} ${view.monthCount === 1 ? 'sesión cobrada' : 'sesiones cobradas'}`}
           />
         </div>

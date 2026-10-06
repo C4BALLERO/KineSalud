@@ -2,6 +2,7 @@
 @import '@fontsource-variable/plus-jakarta-sans';
 @import './tokens.css';
 @import './icon-motion.css';
+@import './motion.css';
 
 @layer base {
   :root {

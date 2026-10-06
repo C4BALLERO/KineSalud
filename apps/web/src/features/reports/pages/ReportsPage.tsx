@@ -36,6 +36,7 @@ import { useNow } from '@/hooks/useNow';
 import { usePermission } from '@/hooks/usePermission';
 import { toAppError } from '@/lib/errors';
 import { formatDateRange, formatMoney } from '@/utils/format';
+import { compactMoney } from '@/components/charts/scale';
 import { useDailyIncome, useDailyStats, useRebuildReports } from '../api/reports';
 import { StatusChart, ValueChart } from '../components/ReportCharts';
 import {
@@ -599,7 +600,11 @@ function IncomeSection({ days, range }: { days: DailyIncomeDoc[]; range: Range }
           value={count > 0 ? formatMoney(Math.round(total / count)) : '—'}
         />
       </div>
-      <ValueChart buckets={incomeSeries(days, range)} format={formatMoney} />
+      <ValueChart
+        buckets={incomeSeries(days, range)}
+        format={formatMoney}
+        formatTick={compactMoney}
+      />
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="flex flex-col gap-3">
           <h3 className="text-body-sm font-semibold text-fg">Por medio de pago</h3>

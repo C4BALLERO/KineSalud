@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from 'react';
-import { Outlet } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 import { IdleSignOut } from '@/features/auth/idle/IdleSignOut';
 import { BREAKPOINTS, useMediaQuery } from '@/hooks/useMediaQuery';
 import { BottomNav } from './BottomNav';
@@ -16,6 +16,7 @@ import { useReminderTick } from '@/features/reminders/hooks/useReminderTick';
 export function AppShell() {
   useReminderTick();
   const isDesktop = useMediaQuery(BREAKPOINTS.xl);
+  const { pathname } = useLocation();
   // null = automático según el ancho de pantalla; boolean = elección del usuario.
   const [userCollapsed, setUserCollapsed] = useState<boolean | null>(null);
   const collapsed = userCollapsed ?? !isDesktop;
@@ -46,7 +47,10 @@ export function AppShell() {
           tabIndex={-1}
           className="mx-auto w-full max-w-(--container-content) flex-1 px-4 pt-6 pb-[calc(var(--bottomnav-height)+2rem)] focus:outline-none md:px-6 md:pb-10 lg:px-8"
         >
-          <Outlet />
+          {/* Cada pantalla entra con un fundido y sus bloques en cascada (styles/motion.css). */}
+          <div key={pathname} className="kv-page">
+            <Outlet />
+          </div>
         </main>
       </div>
 
