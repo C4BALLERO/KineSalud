@@ -25,8 +25,13 @@ export const CLINIC = {
 
 const WHATSAPP_MESSAGE = 'Hola, quisiera agendar una cita en Kinesalud y Vida.';
 
+/** Enlace de WhatsApp con un mensaje ya escrito. */
+export function whatsappLink(message: string = WHATSAPP_MESSAGE): string {
+  return `https://wa.me/${CLINIC.phoneE164.replace('+', '')}?text=${encodeURIComponent(message)}`;
+}
+
 export const LINKS = {
-  whatsapp: `https://wa.me/${CLINIC.phoneE164.replace('+', '')}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`,
+  whatsapp: whatsappLink(),
   call: `tel:${CLINIC.phoneE164}`,
   email: `mailto:${CLINIC.email}`,
   directions: `https://www.google.com/maps/dir/?api=1&destination=${CLINIC.coordinates.lat},${CLINIC.coordinates.lng}`,
@@ -40,6 +45,7 @@ export const SERVICES = [
     description:
       'Tratamiento del dolor y de lesiones musculares y articulares, con terapia manual y fisioterapia instrumental como la electroterapia.',
     tone: 'fisioterapia',
+    tags: ['Terapia manual', 'Electroterapia', 'Dolor muscular'],
   },
   {
     key: 'rehabilitacion',
@@ -47,6 +53,7 @@ export const SERVICES = [
     description:
       'Recupera fuerza y movilidad después de una lesión, una cirugía o un tiempo de inactividad, con un plan de ejercicios guiado sesión a sesión.',
     tone: 'rehabilitacion',
+    tags: ['Ejercicio guiado', 'Movilidad', 'Plan por sesiones'],
   },
   {
     key: 'estetica',
@@ -54,6 +61,7 @@ export const SERVICES = [
     description:
       'Tratamientos corporales y faciales pensados para tu bienestar, en un espacio tranquilo y con atención personalizada.',
     tone: 'estetica',
+    tags: ['Corporal', 'Facial', 'Bienestar'],
   },
 ] as const;
 

@@ -1,5 +1,11 @@
 import {
+  Award,
+  BellRing,
   CalendarCheck,
+  ClipboardList,
+  HeartHandshake,
+  Stethoscope,
+  TrendingUp,
   Clock,
   HeartPulse,
   LogIn,
@@ -17,7 +23,7 @@ import { Logo } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/Button';
 import { useSession } from '@/features/auth/session';
 import { cn } from '@/utils/cn';
-import { CLINIC, LINKS, SERVICES, STEPS } from './content';
+import { CLINIC, LINKS, SERVICES, STEPS, whatsappLink } from './content';
 import './landing.css';
 
 const SERVICE_ICONS: Record<(typeof SERVICES)[number]['tone'], LucideIcon> = {
@@ -36,6 +42,13 @@ const NAV = [
   { href: '#nosotros', label: 'Nosotros' },
   { href: '#ubicacion', label: 'Ubicación' },
   { href: '#contacto', label: 'Contacto' },
+];
+
+const STEP_ICONS: LucideIcon[] = [Stethoscope, ClipboardList, TrendingUp, BellRing];
+const VALUES: { t: string; d: string; icon: LucideIcon }[] = [
+  { t: 'Cercanía', d: 'Te escuchamos y te explicamos cada paso.', icon: HeartHandshake },
+  { t: 'Profesionalismo', d: 'Licenciados en fisioterapia a tu cuidado.', icon: Award },
+  { t: 'Constancia', d: 'Medimos tu evolución para ajustar el plan.', icon: TrendingUp },
 ];
 
 const HEADLINE = ['Recupera', 'tu', 'movimiento,', 'cuida', 'tu', 'bienestar'];
@@ -289,7 +302,7 @@ export function LandingPage() {
           title="Tres áreas, un mismo cuidado"
           intro="Cada tratamiento empieza con una evaluación y un plan pensado para ti."
         >
-          <ul className="grid gap-5 md:grid-cols-3">
+          <ul className="grid gap-6 md:grid-cols-3">
             {SERVICES.map((s, i) => {
               const Icon = SERVICE_ICONS[s.tone];
               return (
@@ -297,19 +310,51 @@ export function LandingPage() {
                   key={s.key}
                   data-reveal
                   style={vars({ '--d': i })}
-                  className="lp-card flex flex-col gap-4 rounded-2xl border border-border bg-surface p-6"
+                  className="lp-card group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface"
                 >
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      'lp-card-icon flex size-12 items-center justify-center rounded-xl',
-                      SERVICE_TONES[s.tone],
-                    )}
-                  >
-                    <Icon className="size-6" />
-                  </span>
-                  <h3 className="text-h2 text-fg">{s.title}</h3>
-                  <p className="text-body-sm text-fg-muted">{s.description}</p>
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <LoopVideo
+                      name={`servicio-${s.key}`}
+                      className="lp-service-video size-full object-cover"
+                    />
+                    <div aria-hidden="true" className="lp-service-shade absolute inset-0" />
+                    <span aria-hidden="true" className="lp-service-number tabular">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <div className="relative flex flex-1 flex-col gap-3 px-6 pb-6">
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        'lp-card-icon -mt-7 flex size-14 items-center justify-center rounded-2xl',
+                        SERVICE_TONES[s.tone],
+                      )}
+                    >
+                      <Icon className="size-7" />
+                    </span>
+                    <h3 className="text-[1.375rem] leading-tight font-bold text-fg">{s.title}</h3>
+                    <p className="text-body-sm text-fg-muted">{s.description}</p>
+                    <ul aria-label={`Incluye en ${s.title}`} className="flex flex-wrap gap-2">
+                      {s.tags.map((t) => (
+                        <li key={t} className="lp-tag">
+                          {t}
+                        </li>
+                      ))}
+                    </ul>
+                    <a
+                      href={whatsappLink(
+                        `Hola, quisiera información sobre ${s.title.toLowerCase()} en Kinesalud y Vida.`,
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="lp-card-link mt-auto pt-2"
+                    >
+                      Consultar por WhatsApp
+                      <span aria-hidden="true" className="lp-arrow">
+                        →
+                      </span>
+                    </a>
+                  </div>
                 </li>
               );
             })}
@@ -324,29 +369,50 @@ export function LandingPage() {
           title="Tu recuperación, paso a paso"
           muted
         >
-          <ol className="grid gap-5 md:grid-cols-4">
-            {STEPS.map((s, i) => (
-              <li
-                key={s.title}
-                data-reveal
-                style={vars({ '--d': i })}
-                className="lp-card relative flex flex-col gap-2 rounded-2xl border border-border bg-surface p-5"
-              >
-                <span className="lp-step-number tabular" aria-hidden="true">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <h3 className="text-h3 text-fg">{s.title}</h3>
-                <p className="text-body-sm text-fg-muted">{s.text}</p>
-              </li>
-            ))}
+          <ol className="lp-steps relative grid gap-5 md:grid-cols-4">
+            {STEPS.map((s, i) => {
+              const Icon = STEP_ICONS[i] ?? Sparkles;
+              return (
+                <li
+                  key={s.title}
+                  data-reveal
+                  style={vars({ '--d': i })}
+                  className="lp-card relative flex flex-col gap-3 rounded-3xl border border-border bg-surface p-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <span
+                      aria-hidden="true"
+                      className="lp-icon-tile flex size-12 items-center justify-center rounded-2xl"
+                    >
+                      <Icon className="size-6" />
+                    </span>
+                    <span className="lp-step-number tabular" aria-hidden="true">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <h3 className="text-h2 text-fg">{s.title}</h3>
+                  <p className="text-body-sm text-fg-muted">{s.text}</p>
+                </li>
+              );
+            })}
           </ol>
         </Section>
 
         {/* ---------- Sobre nosotros ---------- */}
         <Section id="nosotros" eyebrow="Sobre nosotros" title="Un centro de fisioterapia cercano">
           <div className="grid items-center gap-10 md:grid-cols-[1fr_1.1fr]">
-            <div data-reveal className="lp-about-art relative mx-auto w-full max-w-sm">
-              <Logo variant="brand" size="lg" className="relative z-10 h-auto w-full" />
+            <div
+              data-reveal
+              className="lp-about-art relative mx-auto aspect-square w-full max-w-md overflow-hidden rounded-[2rem] border border-primary-border"
+            >
+              <LoopVideo
+                name="kinesalud-ambient"
+                className="absolute inset-0 size-full object-cover"
+              />
+              <div aria-hidden="true" className="lp-about-shade absolute inset-0" />
+              <div className="absolute inset-0 z-10 flex items-center justify-center p-10">
+                <Logo variant="brand" size="lg" className="lp-about-logo h-auto w-full" />
+              </div>
             </div>
             <div className="flex flex-col gap-5">
               <p data-reveal className="text-body text-fg-muted md:text-[1.0625rem] md:leading-7">
@@ -356,19 +422,21 @@ export function LandingPage() {
                 sesión.
               </p>
               <ul className="grid gap-3 sm:grid-cols-3">
-                {[
-                  { t: 'Cercanía', d: 'Te escuchamos y te explicamos cada paso.' },
-                  { t: 'Profesionalismo', d: 'Licenciados en fisioterapia a tu cuidado.' },
-                  { t: 'Constancia', d: 'Medimos tu evolución para ajustar el plan.' },
-                ].map((v, i) => (
+                {VALUES.map((v, i) => (
                   <li
                     key={v.t}
                     data-reveal
                     style={vars({ '--d': i + 1 })}
-                    className="rounded-xl border border-border bg-surface p-4"
+                    className="lp-card flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4"
                   >
-                    <p className="text-body-sm font-semibold text-primary">{v.t}</p>
-                    <p className="mt-1 text-caption text-fg-muted">{v.d}</p>
+                    <span
+                      aria-hidden="true"
+                      className="lp-icon-tile flex size-10 items-center justify-center rounded-xl"
+                    >
+                      <v.icon className="size-5" />
+                    </span>
+                    <p className="text-body-sm font-semibold text-fg">{v.t}</p>
+                    <p className="text-caption text-fg-muted">{v.d}</p>
                   </li>
                 ))}
               </ul>

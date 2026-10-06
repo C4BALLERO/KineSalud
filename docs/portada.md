@@ -15,6 +15,7 @@
 
 - **Fondo de ambiente** (`videos/kinesalud-ambient`, 1280 × 720, 12 s en bucle exacto): auroras, ondas de movimiento con destellos y partículas en la paleta de marca. Va a pantalla completa y translúcido en la portada (con un velo hacia el texto, acercamiento lento y paralaje al hacer scroll) y detrás de "Cómo trabajamos" y "Contacto". En la web: `kinesalud-ambient.webm` (206 KB) y `.mp4` (507 KB).
 - **Video de marca** (`videos/kinesalud-hero`): el recuadro con el logo, junto al titular.
+- **Videos de servicios** (`videos/kinesalud-fisioterapia`, `-rehabilitacion`, `-estetica`; 640 × 480, 6 s en bucle): pulsos de tratamiento sobre la columna y la onda de la electroterapia; una rodilla que se flexiona con el arco de su rango de movimiento; seda, burbujas y destellos. Encabezan cada tarjeta de servicio (`servicio-<área>.webm`, 65–110 KB).
 - **Artlist:** el conector está configurado, pero sus modelos de video con IA requieren una suscripción de pago (la cuenta actual es de prueba). Con suscripción, un video realista de fisioterapia puede reemplazar el fondo de ambiente: misma ruta en `/media`, mismo nombre.
 
 ### Video de marca

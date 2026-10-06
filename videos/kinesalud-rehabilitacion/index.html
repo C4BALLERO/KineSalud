@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=640, height=480" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* Rehabilitación: una rodilla que se flexiona y el arco de su rango de movimiento. */
+      :root {
+        --deep: #071f21;
+        --deep-2: #0f3b39;
+        --teal: #55a8ad;
+        --sage: #84c3a6;
+        --mint: #c9f1e0;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 640px;
+        height: 480px;
+        overflow: hidden;
+        background: var(--deep);
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        background: radial-gradient(90% 90% at 60% 40%, var(--deep-2) 0%, var(--deep) 70%);
+      }
+      #glow {
+        position: absolute;
+        width: 360px;
+        height: 360px;
+        left: 220px;
+        top: 60px;
+        border-radius: 50%;
+        background: var(--sage);
+        filter: blur(80px);
+        opacity: 0.3;
+      }
+      #art {
+        position: absolute;
+        inset: 0;
+        width: 640px;
+        height: 480px;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="6"
+      data-fps="30"
+      data-width="640"
+      data-height="480"
+    >
+      <div id="glow" data-layout-allow-overflow="true"></div>
+      <svg id="art" viewBox="0 0 640 480" aria-hidden="true">
+        <defs>
+          <linearGradient id="arc-grad" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0%" stop-color="#c9f1e0" />
+            <stop offset="100%" stop-color="#55a8ad" />
+          </linearGradient>
+        </defs>
+
+        <!-- Guías del rango: posiciones fantasma de la pierna. -->
+        <g id="ghosts" stroke="#84c3a6" stroke-width="10" stroke-linecap="round" opacity="0.14">
+          <line x1="330" y1="200" x2="510" y2="200" />
+          <line x1="330" y1="200" x2="457" y2="327" />
+          <line x1="330" y1="200" x2="330" y2="380" />
+          <line x1="330" y1="200" x2="299" y2="377" />
+        </g>
+
+        <!-- Pista y arco del ángulo (crece junto con la flexión). -->
+        <circle cx="330" cy="200" r="78" fill="none" stroke="#c9f1e0" stroke-opacity="0.1" stroke-width="10" />
+        <circle
+          id="arc"
+          cx="330"
+          cy="200"
+          r="78"
+          fill="none"
+          stroke="url(#arc-grad)"
+          stroke-width="10"
+          stroke-linecap="round"
+          pathLength="1"
+          stroke-dasharray="0 1"
+        />
+
+        <!-- Muslo fijo -->
+        <line x1="130" y1="200" x2="330" y2="200" stroke="#84c3a6" stroke-width="22" stroke-linecap="round" />
+        <circle cx="130" cy="200" r="16" fill="#55a8ad" />
+
+        <!-- Pierna: rota alrededor de la rodilla -->
+        <g id="shin">
+          <line x1="330" y1="200" x2="510" y2="200" stroke="#c9f1e0" stroke-width="18" stroke-linecap="round" />
+          <line x1="510" y1="200" x2="522" y2="160" stroke="#c9f1e0" stroke-width="14" stroke-linecap="round" />
+        </g>
+        <circle id="knee" cx="330" cy="200" r="20" fill="#0f3b39" stroke="#c9f1e0" stroke-width="5" />
+      </svg>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      const FLEX = 100; // grados de flexión
+      const half = 1.5; // segundos por medio ciclo (4 medios ciclos = 6 s, vuelve al inicio)
+
+      tl.fromTo('#shin', { rotation: 0, svgOrigin: '330 200' }, { rotation: FLEX, svgOrigin: '330 200', duration: half, ease: 'sine.inOut', yoyo: true, repeat: 3 }, 0);
+      tl.fromTo('#arc', { attr: { 'stroke-dasharray': '0 1' } }, { attr: { 'stroke-dasharray': `${(FLEX / 360).toFixed(4)} 1` }, duration: half, ease: 'sine.inOut', yoyo: true, repeat: 3 }, 0);
+      tl.fromTo('#knee', { scale: 1, transformOrigin: '50% 50%' }, { scale: 1.18, duration: half, ease: 'sine.inOut', yoyo: true, repeat: 3 }, 0);
+      tl.fromTo('#glow', { x: 0, y: 0 }, { x: -60, y: 40, duration: 3, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 0);
+
+      window.__timelines['main'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
