@@ -310,9 +310,9 @@ export function LandingPage() {
                   key={s.key}
                   data-reveal
                   style={vars({ '--d': i })}
-                  className="lp-card group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface"
+                  className="lp-card lp-round group flex flex-col overflow-hidden border border-border bg-surface"
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden">
+                  <div className="lp-service-media relative aspect-[4/3] overflow-hidden">
                     <LoopVideo
                       name={`servicio-${s.key}`}
                       className="lp-service-video size-full object-cover"
@@ -326,7 +326,7 @@ export function LandingPage() {
                     <span
                       aria-hidden="true"
                       className={cn(
-                        'lp-card-icon -mt-7 flex size-14 items-center justify-center rounded-2xl',
+                        'lp-card-icon -mt-7 flex size-14 items-center justify-center rounded-full',
                         SERVICE_TONES[s.tone],
                       )}
                     >
@@ -369,7 +369,7 @@ export function LandingPage() {
           title="Tu recuperación, paso a paso"
           muted
         >
-          <ol className="lp-steps relative grid gap-5 md:grid-cols-4">
+          <ol className="lp-steps relative grid gap-10 sm:grid-cols-2 md:grid-cols-4 md:gap-6">
             {STEPS.map((s, i) => {
               const Icon = STEP_ICONS[i] ?? Sparkles;
               return (
@@ -377,21 +377,14 @@ export function LandingPage() {
                   key={s.title}
                   data-reveal
                   style={vars({ '--d': i })}
-                  className="lp-card relative flex flex-col gap-3 rounded-3xl border border-border bg-surface p-6"
+                  className="group relative flex flex-col items-center gap-3 text-center"
                 >
-                  <div className="flex items-center justify-between">
-                    <span
-                      aria-hidden="true"
-                      className="lp-icon-tile flex size-12 items-center justify-center rounded-2xl"
-                    >
-                      <Icon className="size-6" />
-                    </span>
-                    <span className="lp-step-number tabular" aria-hidden="true">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                  </div>
-                  <h3 className="text-h2 text-fg">{s.title}</h3>
-                  <p className="text-body-sm text-fg-muted">{s.text}</p>
+                  <span aria-hidden="true" className="lp-orb">
+                    <Icon className="size-8" />
+                    <span className="lp-orb-number tabular">{i + 1}</span>
+                  </span>
+                  <h3 className="mt-2 text-h2 text-fg">{s.title}</h3>
+                  <p className="max-w-56 text-body-sm text-fg-muted">{s.text}</p>
                 </li>
               );
             })}
@@ -421,22 +414,23 @@ export function LandingPage() {
                 eso trabajamos con un plan claro para cada paciente y le damos seguimiento en cada
                 sesión.
               </p>
-              <ul className="grid gap-3 sm:grid-cols-3">
+              <ul className="flex flex-col gap-3">
                 {VALUES.map((v, i) => (
                   <li
                     key={v.t}
                     data-reveal
                     style={vars({ '--d': i + 1 })}
-                    className="lp-card flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4"
+                    className="lp-pill flex items-center gap-4 rounded-full border border-border bg-surface py-2.5 pr-6 pl-2.5"
                   >
                     <span
                       aria-hidden="true"
-                      className="lp-icon-tile flex size-10 items-center justify-center rounded-xl"
+                      className="lp-icon-tile flex size-12 shrink-0 items-center justify-center rounded-full"
                     >
                       <v.icon className="size-5" />
                     </span>
-                    <p className="text-body-sm font-semibold text-fg">{v.t}</p>
-                    <p className="text-caption text-fg-muted">{v.d}</p>
+                    <p className="text-body-sm text-fg-muted">
+                      <span className="font-semibold text-fg">{v.t}.</span> {v.d}
+                    </p>
                   </li>
                 ))}
               </ul>
@@ -455,7 +449,7 @@ export function LandingPage() {
           <div className="grid gap-6 md:grid-cols-[1.4fr_1fr]">
             <div
               data-reveal
-              className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm"
+              className="lp-round overflow-hidden border border-border bg-surface shadow-sm"
             >
               <iframe
                 title="Mapa de Kinesalud y Vida en Google Maps"
@@ -468,7 +462,7 @@ export function LandingPage() {
             <div
               data-reveal
               style={vars({ '--d': 1 })}
-              className="flex flex-col gap-5 rounded-2xl border border-border bg-surface p-6"
+              className="lp-round flex flex-col gap-5 border border-border bg-surface p-7"
             >
               <InfoRow icon={MapPin} title="Dirección">
                 {CLINIC.address}
@@ -507,7 +501,7 @@ export function LandingPage() {
 
         {/* ---------- Contacto ---------- */}
         <Section id="contacto" video eyebrow="Contacto" title="Escríbenos o llámanos">
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="lp-contact-grid grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <ContactCard
               index={0}
               href={LINKS.whatsapp}
@@ -701,7 +695,7 @@ function InfoRow({
     <div className="flex gap-3">
       <span
         aria-hidden="true"
-        className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary"
+        className="lp-icon-tile flex size-11 shrink-0 items-center justify-center rounded-full"
       >
         <Icon className="size-5" />
       </span>
@@ -742,7 +736,7 @@ function ContactCard({
           accent ? 'border-primary-border bg-primary-subtle' : 'border-border bg-surface',
         )}
       >
-        <span className="flex size-11 items-center justify-center rounded-xl bg-surface text-primary shadow-sm">
+        <span className="lp-icon-tile flex size-14 items-center justify-center rounded-full">
           {icon}
         </span>
         <span className="text-h3 text-fg">{title}</span>

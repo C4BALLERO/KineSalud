@@ -584,6 +584,103 @@ html[data-landing] {
   animation: lp-bob 7s ease-in-out infinite;
 }
 
+/* ---------- Formas orgánicas (menos cuadradas) ---------- */
+
+/* Tarjetas con esquinas amplias; las de información, en forma de hoja. */
+.lp-card {
+  border-radius: 2rem;
+}
+.lp-round {
+  border-radius: 2.25rem 2.25rem 2.25rem 0.9rem;
+}
+.lp-contact-grid > li:nth-child(even) .lp-card {
+  border-radius: 2.25rem 0.9rem 2.25rem 2.25rem;
+}
+@media (min-width: 64rem) {
+  /* Alturas escalonadas: la fila deja de ser una cuadrícula rígida. */
+  .lp-contact-grid > li:nth-child(even) {
+    margin-top: 2.5rem;
+  }
+}
+
+/* El video de cada servicio termina en curva. */
+.lp-service-media {
+  clip-path: ellipse(120% 100% at 50% 0%);
+}
+
+/* Pasos: esferas de vidrio unidas por la línea de luz. */
+.lp-orb {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 6.5rem;
+  height: 6.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: var(--lp-mint);
+  background:
+    radial-gradient(circle at 30% 25%, rgb(201 241 224 / 0.25), transparent 60%),
+    linear-gradient(145deg, rgb(132 195 166 / 0.25), rgb(40 114 122 / 0.25));
+  border: 1px solid rgb(132 195 166 / 0.4);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 0 0 8px rgb(132 195 166 / 0.06),
+    0 18px 40px -16px rgb(0 0 0 / 0.6),
+    0 0 50px -12px rgb(132 195 166 / 0.45);
+  transition:
+    transform 400ms var(--ease-spring),
+    box-shadow 300ms var(--ease-standard);
+}
+.lp-orb-number {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  display: flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--color-on-primary);
+  background: linear-gradient(135deg, var(--lp-mint), var(--lp-sage));
+  box-shadow: 0 6px 16px -6px rgb(0 0 0 / 0.6);
+}
+@media (hover: hover) {
+  .lp-steps li:hover .lp-orb {
+    transform: translateY(-6px) scale(1.06);
+    box-shadow:
+      0 0 0 10px rgb(132 195 166 / 0.1),
+      0 24px 48px -16px rgb(0 0 0 / 0.6),
+      0 0 70px -10px rgb(132 195 166 / 0.6);
+  }
+}
+@media (min-width: 48rem) {
+  .lp-steps::before {
+    top: 3.25rem !important;
+    left: 12% !important;
+    right: 12% !important;
+  }
+}
+
+/* Valores: píldoras de vidrio. */
+.lp-pill {
+  transition:
+    transform 320ms var(--ease-spring),
+    border-color 200ms var(--ease-standard),
+    background-color 200ms var(--ease-standard);
+}
+@media (hover: hover) {
+  .lp-pill:hover {
+    transform: translateX(6px);
+    border-color: var(--color-primary-border);
+    background-color: rgb(132 195 166 / 0.1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lp {
     scroll-behavior: auto;
@@ -606,7 +703,9 @@ html[data-landing] {
   .lp-about-logo {
     animation: none;
   }
-  .lp-service-video {
+  .lp-service-video,
+  .lp-orb,
+  .lp-pill {
     transition: none;
   }
   .lp [data-reveal] {
