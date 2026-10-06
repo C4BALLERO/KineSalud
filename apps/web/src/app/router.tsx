@@ -1,6 +1,6 @@
 import type { Permission } from '@kinesalud/shared';
 import type { ComponentType } from 'react';
-import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
+import { createBrowserRouter, type RouteObject } from 'react-router';
 import { RequirePermission } from '@/components/access/RequirePermission';
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/access/RouteGuards';
 import { AppShell } from '@/components/layout/AppShell';
@@ -30,7 +30,6 @@ function guarded(permission: Permission, load: () => Promise<ComponentType>) {
  * Rules y Cloud Functions son la barrera real.
  */
 const appRoutes: RouteObject[] = [
-  { index: true, element: <Navigate to="/inicio" replace /> },
   {
     path: 'inicio',
     lazy: async () => {
@@ -226,6 +225,14 @@ export const router = createBrowserRouter([
           { path: 'login', element: <LoginPage /> },
           { path: 'recuperar-contrasena', element: <ForgotPasswordPage /> },
         ],
+      },
+      // Portada pública del consultorio (con o sin sesión).
+      {
+        index: true,
+        lazy: async () => {
+          const { LandingPage } = await import('@/features/landing/LandingPage');
+          return { Component: LandingPage };
+        },
       },
       // Enlaces de Firebase Auth: accesibles con o sin sesión.
       { path: 'auth/accion', element: <AuthActionPage /> },

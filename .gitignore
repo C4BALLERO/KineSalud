@@ -37,3 +37,8 @@ Thumbs.db
 # Salida de compilación del despliegue gratuito (rama despliegue-gratuito)
 .vercel/
 .api-local/
+
+# Proyectos de video (HyperFrames): se versiona la fuente, no las salidas
+videos/*/renders/
+videos/*/snapshots/
+videos/*/.hyperframes/
