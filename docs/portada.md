@@ -7,6 +7,7 @@
 - Código: `apps/web/src/features/landing/` (`LandingPage.tsx`, `landing.css`).
 - Datos públicos en `content.ts`: dirección, celular, correo, Facebook, enlace de Google Maps, horario y textos de servicios. **El horario se copió de la configuración del sistema**: si cambia en Configuración, actualízalo aquí también.
 - Secciones: portada con video, servicios, cómo trabajamos, sobre nosotros, ubicación (mapa de Google), contacto y botón flotante de WhatsApp con un mensaje ya escrito.
+- Estética: la del video de marca en toda la página (verde azulado profundo `#0B2F31`, luces difusas que derivan, textos menta `#C9F1E0` y salvia `#84C3A6`, tarjetas de vidrio y etiquetas claras). Igual en modo claro y oscuro: `landing.css` redefine los tokens solo dentro de `.lp`. Contraste del texto sobre el fondo y el vidrio: principal 9,9:1 o más, secundario 6,9:1, salvia 5,1:1; botón salvia con texto oscuro 8,2:1.
 - Animaciones: titular palabra por palabra, bloques que aparecen al hacer scroll, cinta de especialidades, tarjetas que se elevan. Con "reducir movimiento", todo queda quieto y el video se reemplaza por su imagen fija.
 - La CSP permite `https://www.google.com` en `frame-src` para el mapa (`firebase.json`).
 
