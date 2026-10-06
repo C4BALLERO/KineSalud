@@ -444,6 +444,146 @@ html[data-landing] {
   }
 }
 
+/* ---------- Tarjetas mejoradas ---------- */
+
+/* Borde de luz que gira al señalar la tarjeta. */
+@property --lp-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.lp-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--lp-angle),
+    transparent 0 55%,
+    var(--lp-mint) 70%,
+    var(--lp-sage) 80%,
+    transparent 92%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms var(--ease-standard);
+  animation: lp-border-spin 4s linear infinite;
+}
+@keyframes lp-border-spin {
+  to {
+    --lp-angle: 360deg;
+  }
+}
+@media (hover: hover) {
+  .lp-card:hover::before {
+    opacity: 1;
+  }
+}
+
+/* Video de cada servicio: se acerca al señalar la tarjeta. */
+.lp-service-video {
+  transition: transform 900ms var(--ease-spring);
+}
+@media (hover: hover) {
+  .lp-card:hover .lp-service-video {
+    transform: scale(1.08);
+  }
+}
+.lp-service-shade {
+  background: linear-gradient(180deg, transparent 45%, rgb(11 47 49 / 0.85) 100%);
+}
+.lp-service-number {
+  position: absolute;
+  top: 1rem;
+  left: 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--lp-mint);
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background: rgb(7 31 33 / 0.55);
+  border: 1px solid rgb(201 241 224 / 0.25);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.lp-card-icon {
+  position: relative;
+  z-index: 2;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    inset 0 0 0 1px rgb(132 195 166 / 0.35),
+    0 10px 24px -10px rgb(0 0 0 / 0.6);
+}
+.lp-tag {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--lp-mint);
+  padding: 0.3rem 0.7rem;
+  border-radius: 9999px;
+  background: rgb(132 195 166 / 0.12);
+  border: 1px solid rgb(132 195 166 / 0.28);
+}
+.lp-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: fit-content;
+  font-size: var(--text-body-sm);
+  font-weight: 700;
+  color: var(--lp-sage);
+  border-radius: 0.5rem;
+}
+.lp-card-link:hover {
+  color: var(--lp-mint);
+}
+.lp-arrow {
+  display: inline-block;
+  transition: transform 300ms var(--ease-spring);
+}
+.lp-card:hover .lp-arrow,
+.lp-card-link:hover .lp-arrow {
+  transform: translateX(5px);
+}
+
+/* Pasos: una línea de luz los une (escritorio). */
+@media (min-width: 48rem) {
+  .lp-steps::before {
+    content: '';
+    position: absolute;
+    left: 6%;
+    right: 6%;
+    top: 3.1rem;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--lp-sage), var(--lp-teal), transparent);
+    background-size: 200% 100%;
+    opacity: 0.45;
+    animation: lp-line-flow 5s linear infinite;
+  }
+}
+@keyframes lp-line-flow {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Sobre nosotros: el logo sobre el video de ambiente. */
+.lp-about-shade {
+  background: radial-gradient(circle at 50% 50%, rgb(7 31 33 / 0.15), rgb(7 31 33 / 0.65) 75%);
+}
+.lp-about-logo {
+  filter: drop-shadow(0 10px 30px rgb(0 0 0 / 0.45));
+  animation: lp-bob 7s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lp {
     scroll-behavior: auto;
@@ -460,8 +600,14 @@ html[data-landing] {
   .lp-chip,
   .lp-marquee-track,
   .lp-wa,
-  .lp-about-art::before {
+  .lp-about-art::before,
+  .lp-card::before,
+  .lp-steps::before,
+  .lp-about-logo {
     animation: none;
+  }
+  .lp-service-video {
+    transition: none;
   }
   .lp [data-reveal] {
     opacity: 1;

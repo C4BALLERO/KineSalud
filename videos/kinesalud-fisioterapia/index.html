@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=640, height=480" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* Fisioterapia: columna en reposo, pulsos de tratamiento y la onda de la electroterapia. */
+      :root {
+        --deep: #071f21;
+        --deep-2: #0f3b39;
+        --teal: #55a8ad;
+        --sage: #84c3a6;
+        --mint: #c9f1e0;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 640px;
+        height: 480px;
+        overflow: hidden;
+        background: var(--deep);
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        background: radial-gradient(90% 90% at 35% 35%, var(--deep-2) 0%, var(--deep) 70%);
+      }
+      #glow {
+        position: absolute;
+        width: 340px;
+        height: 340px;
+        left: 120px;
+        top: 20px;
+        border-radius: 50%;
+        background: var(--teal);
+        filter: blur(70px);
+        opacity: 0.35;
+      }
+      #art {
+        position: absolute;
+        inset: 0;
+        width: 640px;
+        height: 480px;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="6"
+      data-fps="30"
+      data-width="640"
+      data-height="480"
+    >
+      <div id="glow" data-layout-allow-overflow="true"></div>
+      <svg id="art" viewBox="0 0 640 480" aria-hidden="true">
+        <defs>
+          <linearGradient id="wave-grad" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stop-color="#55a8ad" stop-opacity="0" />
+            <stop offset="40%" stop-color="#84c3a6" />
+            <stop offset="100%" stop-color="#c9f1e0" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+
+        <!-- Columna (como en el logo): vértebras en curva suave. -->
+        <g id="spine" fill="#84c3a6"></g>
+
+        <!-- Pulsos de tratamiento sobre el hombro: tres anillos que se relevan. -->
+        <g id="pulse" fill="none" stroke="#c9f1e0" stroke-width="2.5">
+          <circle id="ring-0" cx="380" cy="190" r="60" />
+          <circle id="ring-1" cx="380" cy="190" r="60" />
+          <circle id="ring-2" cx="380" cy="190" r="60" />
+        </g>
+        <circle id="point" cx="380" cy="190" r="9" fill="#c9f1e0" />
+
+        <!-- Onda de electroterapia con un destello que la recorre. -->
+        <path
+          id="wave-base"
+          d="M 40 400 L 120 400 L 120 360 L 150 360 L 150 400 L 230 400 L 230 340 L 260 340 L 260 400 L 340 400 L 340 360 L 370 360 L 370 400 L 450 400 L 450 340 L 480 340 L 480 400 L 600 400"
+          fill="none"
+          stroke="#55a8ad"
+          stroke-opacity="0.35"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+        <path
+          id="wave-spark"
+          d="M 40 400 L 120 400 L 120 360 L 150 360 L 150 400 L 230 400 L 230 340 L 260 340 L 260 400 L 340 400 L 340 360 L 370 360 L 370 400 L 450 400 L 450 340 L 480 340 L 480 400 L 600 400"
+          fill="none"
+          stroke="url(#wave-grad)"
+          stroke-width="4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          pathLength="1"
+          stroke-dasharray="0.25 0.75"
+        />
+      </svg>
+    </div>
+    <script>
+      // Vértebras: curva fija (determinista), tamaño decreciente hacia arriba.
+      const ns = 'http://www.w3.org/2000/svg';
+      const spine = document.getElementById('spine');
+      for (let i = 0; i < 11; i++) {
+        const t = i / 10;
+        const c = document.createElementNS(ns, 'circle');
+        c.setAttribute('id', 'vertebra-' + i);
+        c.setAttribute('cx', (250 + Math.sin(t * Math.PI * 1.1) * 38).toFixed(1));
+        c.setAttribute('cy', (340 - t * 270).toFixed(1));
+        c.setAttribute('r', (11 - t * 5).toFixed(1));
+        c.setAttribute('opacity', (0.95 - t * 0.35).toFixed(2));
+        spine.appendChild(c);
+      }
+
+      const tl = gsap.timeline({ paused: true });
+
+      // Anillos en relevo: cada uno termina donde empieza el siguiente (bucle exacto cada 2 s).
+      const stages = [
+        { from: { scale: 0.2, opacity: 0 }, to: { scale: 0.75, opacity: 0.9 } },
+        { from: { scale: 0.75, opacity: 0.9 }, to: { scale: 1.3, opacity: 0.45 } },
+        { from: { scale: 1.3, opacity: 0.45 }, to: { scale: 1.85, opacity: 0 } },
+      ];
+      stages.forEach((s, i) => {
+        tl.fromTo(
+          '#ring-' + i,
+          { ...s.from, transformOrigin: '50% 50%' },
+          { ...s.to, duration: 2, ease: 'none', repeat: 2 },
+          0,
+        );
+      });
+      tl.fromTo('#point', { scale: 1, transformOrigin: '50% 50%' }, { scale: 1.35, duration: 0.5, ease: 'sine.inOut', yoyo: true, repeat: 11 }, 0);
+
+      // Las vértebras laten juntas, al ritmo de los pulsos (ida y vuelta en 6 s).
+      tl.fromTo('#spine circle', { scale: 1, transformOrigin: '50% 50%' }, { scale: 1.25, duration: 0.75, ease: 'sine.inOut', yoyo: true, repeat: 7 }, 0);
+
+      // Destello que recorre la onda (desplazamiento entero = bucle sin salto).
+      tl.fromTo('#wave-spark', { attr: { 'stroke-dashoffset': 0 } }, { attr: { 'stroke-dashoffset': -2 }, duration: 6, ease: 'none' }, 0);
+
+      tl.fromTo('#glow', { x: 0, y: 0, scale: 1 }, { x: 60, y: 30, scale: 1.15, duration: 3, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 0);
+
+      window.__timelines['main'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
