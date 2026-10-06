@@ -89,7 +89,12 @@ export function TimeGrid({
           {hours.map((m) => (
             <span
               key={m}
-              className="tabular absolute right-2 -translate-y-1/2 text-caption text-fg-subtle"
+              // Cada hora va centrada en su línea; la primera, debajo de la línea
+              // (centrada quedaría medio tapada por el encabezado fijo).
+              className={cn(
+                'tabular absolute right-2 text-caption text-fg-subtle',
+                m === bounds.start ? 'translate-y-0.5' : '-translate-y-1/2',
+              )}
               style={{ top: minutesToPx(m - bounds.start) }}
             >
               {m < bounds.end ? minutesToTime(m) : ''}
