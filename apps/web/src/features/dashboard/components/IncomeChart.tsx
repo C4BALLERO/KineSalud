@@ -1,61 +1,40 @@
-import { Tooltip } from '@/components/ui/Tooltip';
-import { cn } from '@/utils/cn';
+import type { CSSProperties } from 'react';
+import { BarChart } from '@/components/charts/BarChart';
+import { compactMoney } from '@/components/charts/scale';
 import { formatDayMonth, formatMoney } from '@/utils/format';
 import type { IncomeDay } from '@/features/cash/model';
 
 /**
- * Ingresos por día del mes. Una sola serie (sin leyenda: el título la nombra);
- * con hasta 31 barras no se rotulan todas: el monto va en el tooltip y en el
- * nombre accesible, y el eje marca cada 5 días y hoy.
+ * Ingresos por día del mes, con el promedio diario de lo que va del mes.
+ * Con hasta 31 barras no se rotulan todas: el monto aparece al señalar (y en
+ * el nombre accesible) y el eje marca cada 5 días y hoy.
  */
 export function IncomeChart({ days, today }: { days: IncomeDay[]; today: string }) {
-  const max = Math.max(1, ...days.map((d) => d.cents));
+  const elapsed = days.filter((d) => d.date <= today);
+  const avg = elapsed.length > 0 ? elapsed.reduce((s, d) => s + d.cents, 0) / elapsed.length : 0;
   return (
-    <div className="flex flex-col gap-2">
-      <ol
-        aria-label="Ingresos por día"
-        className="flex h-36 items-end gap-px border-b border-border-strong sm:gap-1"
-      >
-        {days.map((d) => {
-          const isToday = d.date === today;
-          const label = `${formatDayMonth(d.date)}: ${d.cents > 0 ? formatMoney(d.cents) : 'sin ingresos'}`;
-          return (
-            <li key={d.date} className="flex h-full min-w-0 flex-1 items-end">
-              <Tooltip content={label}>
-                <span role="img" aria-label={label} className="flex h-full w-full items-end">
-                  <span
-                    className={cn(
-                      'w-full rounded-t-[3px] bg-chart-1',
-                      isToday && 'bg-primary',
-                      d.cents === 0 && 'bg-transparent',
-                    )}
-                    style={{ height: `${(d.cents / max) * 100}%` }}
-                  />
-                </span>
-              </Tooltip>
-            </li>
-          );
-        })}
-      </ol>
-      <ol aria-hidden="true" className="flex gap-px sm:gap-1">
-        {days.map((d) => {
-          const day = Number(d.date.slice(8, 10));
-          const isToday = d.date === today;
-          const show = isToday || day === 1 || day % 5 === 0;
-          return (
-            <li
-              key={d.date}
-              className={cn(
-                'tabular min-w-0 flex-1 text-center text-caption',
-                isToday ? 'font-semibold text-primary' : 'text-fg-muted',
-              )}
-            >
-              {show ? (isToday ? 'Hoy' : day) : ''}
-            </li>
-          );
-        })}
-      </ol>
-    </div>
+    <BarChart
+      caption="Ingresos por día"
+      heightClass="h-40"
+      formatValue={formatMoney}
+      formatTick={compactMoney}
+      data={days.map((d) => ({
+        key: d.date,
+        label: String(Number(d.date.slice(8, 10))),
+        longLabel: formatDayMonth(d.date),
+        segments: [{ key: 'income', label: 'Ingresos', value: d.cents, className: 'bg-chart-1' }],
+        highlight: d.date === today,
+      }))}
+      describe={(d, total) => `${d.longLabel}: ${total > 0 ? formatMoney(total) : 'sin ingresos'}`}
+      axisLabel={(d) => {
+        const day = Number(d.key.slice(8, 10));
+        if (d.highlight) return 'Hoy';
+        return day === 1 || day % 5 === 0 ? String(day) : '';
+      }}
+      reference={
+        avg > 0 ? { value: avg, label: `Promedio ${formatMoney(Math.round(avg))}` } : undefined
+      }
+    />
   );
 }
 
@@ -71,8 +50,11 @@ export function IncomeBreakdown({
   const max = Math.max(1, ...items.map((i) => i.cents));
   return (
     <ul aria-label={label} className="flex flex-col gap-3">
-      {items.map((i) => (
-        <li key={i.key} className="flex flex-col gap-1">
+      {items.map((i, index) => (
+        <li
+          key={i.key}
+          className="group -mx-2 flex flex-col gap-1.5 rounded-md px-2 py-1 transition-colors duration-150 hover:bg-surface-muted"
+        >
           <div className="flex items-baseline justify-between gap-3 text-body-sm">
             <span className="truncate text-fg">{i.label}</span>
             <span className="tabular shrink-0 text-fg">
@@ -84,11 +66,11 @@ export function IncomeBreakdown({
           </div>
           <span
             aria-hidden="true"
-            className="h-1.5 w-full overflow-hidden rounded-full bg-surface-muted"
+            className="h-2 w-full overflow-hidden rounded-full bg-surface-muted"
           >
             <span
-              className="block h-full rounded-full bg-chart-1"
-              style={{ width: `${(i.cents / max) * 100}%` }}
+              className="kv-bar-x block h-full rounded-full bg-chart-1 transition-[filter] duration-150 group-hover:brightness-110 group-hover:saturate-150"
+              style={{ width: `${(i.cents / max) * 100}%`, '--i': index } as CSSProperties}
             />
           </span>
         </li>

@@ -8,7 +8,7 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const base =
   'inline-flex shrink-0 items-center justify-center gap-2 rounded-md font-semibold whitespace-nowrap ' +
-  'transition-colors duration-150 ease-standard select-none cursor-pointer ' +
+  'kv-press duration-150 ease-standard select-none cursor-pointer ' +
   'disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 ' +
   '[&_svg]:size-4 [&_svg]:shrink-0';
 

@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ListSkeleton, LoadingRegion, Skeleton } from '@/components/ui/Skeleton';
+import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 import { Stat } from '@/components/ui/StatCard';
 import { useRequiredSession } from '@/features/auth/session';
 import { usePendingReminders } from '@/features/reminders/api/reminders';
@@ -202,12 +203,24 @@ export function DashboardPage() {
             <div className="grid grid-cols-2 gap-5 border-t border-border pt-5 sm:grid-cols-3 sm:gap-8">
               <Stat
                 label={clinicWide ? 'Clientes activos' : 'Tus pacientes'}
-                value={clientsCount.data ?? '—'}
+                value={
+                  clientsCount.data === undefined ? (
+                    '—'
+                  ) : (
+                    <AnimatedNumber value={clientsCount.data} />
+                  )
+                }
                 icon={<Users />}
               />
               <Stat
                 label={clinicWide ? 'Tratamientos activos' : 'Tus tratamientos'}
-                value={treatments.status === 'success' ? treatments.data.length : '—'}
+                value={
+                  treatments.status === 'success' ? (
+                    <AnimatedNumber value={treatments.data.length} />
+                  ) : (
+                    '—'
+                  )
+                }
                 icon={<HeartPulse />}
               />
               {clinicWide && (

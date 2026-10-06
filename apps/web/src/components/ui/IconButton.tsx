@@ -27,7 +27,7 @@ export function IconButton({
       aria-label={label}
       className={cn(
         'inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md md:size-9',
-        'transition-colors duration-150 ease-standard [&_svg]:size-5',
+        'kv-press duration-150 ease-standard [&_svg]:size-5',
         'disabled:cursor-not-allowed disabled:opacity-50',
         variant === 'ghost' && 'text-fg-muted hover:bg-surface-muted hover:text-fg',
         variant === 'secondary' &&

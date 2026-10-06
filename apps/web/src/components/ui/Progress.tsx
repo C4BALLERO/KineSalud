@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { cn } from '@/utils/cn';
 
 interface ProgressBarProps {
@@ -20,7 +21,7 @@ export function ProgressBar({ value, max, label, className }: ProgressBarProps) 
       className={cn('h-2 w-full overflow-hidden rounded-full bg-surface-muted', className)}
     >
       <div
-        className="h-full rounded-full bg-primary transition-[width] duration-300 ease-standard"
+        className="kv-progress-fill h-full rounded-full bg-primary transition-[width] duration-500 ease-standard"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -70,8 +71,11 @@ export function SessionProgress({ completed, planned, className, compact }: Sess
               key={i}
               className={cn(
                 'h-2 flex-1 rounded-full',
-                i < completed ? 'bg-primary' : 'bg-surface-muted ring-1 ring-border ring-inset',
+                i < completed
+                  ? 'kv-segment bg-primary'
+                  : 'bg-surface-muted ring-1 ring-border ring-inset',
               )}
+              style={{ '--i': i } as CSSProperties}
             />
           ))}
         </div>

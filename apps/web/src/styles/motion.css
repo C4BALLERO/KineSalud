@@ -1,0 +1,183 @@
+/*
+ * Movimiento de la interfaz (además de los iconos, ver icon-motion.css).
+ * Corto y con propósito: muestra de dónde vienen los datos y qué responde a la
+ * persona. Con "reducir movimiento" todo queda en su estado final.
+ */
+
+/* ---------- Páginas: entran suben y los bloques aparecen en cascada ---------- */
+
+@keyframes kv-page-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes kv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.kv-page {
+  animation: kv-page-in 260ms var(--ease-standard);
+}
+/* Un transform en un ancestro mueve los elementos fijos (botón flotante de la
+ * agenda): los bloques que los contienen solo se desvanecen. */
+.kv-page > * {
+  animation: kv-rise 420ms var(--ease-standard) backwards;
+}
+.kv-page > :has(.fixed) {
+  animation-name: kv-page-in;
+}
+.kv-page > :nth-child(2) {
+  animation-delay: 50ms;
+}
+.kv-page > :nth-child(3) {
+  animation-delay: 100ms;
+}
+.kv-page > :nth-child(4) {
+  animation-delay: 150ms;
+}
+.kv-page > :nth-child(5) {
+  animation-delay: 200ms;
+}
+.kv-page > :nth-child(n + 6) {
+  animation-delay: 240ms;
+}
+
+/* ---------- Gráficos ---------- */
+
+/* Las barras crecen desde la base, en cascada (--i = posición). */
+@keyframes kv-bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes kv-bar-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes kv-line-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes kv-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes kv-point-pop {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+.kv-bar {
+  transform-origin: 50% 100%;
+  animation: kv-bar-grow 700ms var(--ease-spring) backwards;
+  animation-delay: calc(min(var(--i, 0), 30) * 22ms);
+  transition:
+    height 500ms var(--ease-spring),
+    opacity 160ms var(--ease-standard),
+    filter 160ms var(--ease-standard);
+}
+.kv-bar-x {
+  transform-origin: 0% 50%;
+  animation: kv-bar-grow-x 750ms var(--ease-spring) backwards;
+  animation-delay: calc(var(--i, 0) * 60ms);
+  transition: width 500ms var(--ease-spring);
+}
+.kv-value-label {
+  animation: kv-fade-up 400ms var(--ease-standard) backwards;
+  animation-delay: calc(min(var(--i, 0), 30) * 22ms + 250ms);
+}
+/* Líneas con pathLength="1": se dibujan de izquierda a derecha. */
+.kv-line {
+  stroke-dasharray: 1;
+  animation: kv-line-draw 1100ms var(--ease-standard) backwards;
+}
+.kv-point {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: kv-point-pop 380ms var(--ease-spring) backwards;
+  animation-delay: calc(var(--i, 0) * 60ms + 300ms);
+  transition: r 200ms var(--ease-spring);
+}
+.kv-area {
+  animation: kv-fade-in 900ms var(--ease-standard) 200ms backwards;
+}
+.kv-tooltip {
+  animation: kv-fade-up 160ms var(--ease-standard);
+}
+
+/* ---------- Progreso ---------- */
+
+@keyframes kv-segment-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0.2);
+  }
+}
+.kv-progress-fill {
+  transform-origin: 0% 50%;
+  animation: kv-bar-grow-x 800ms var(--ease-spring) backwards;
+}
+.kv-segment {
+  transform-origin: 0% 50%;
+  animation: kv-segment-in 420ms var(--ease-spring) backwards;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/* ---------- Respuesta al tocar ---------- */
+
+.kv-press {
+  transition-property: color, background-color, border-color, box-shadow, transform;
+}
+.kv-press:not(:disabled, [aria-disabled='true']):active {
+  transform: scale(0.97);
+}
+
+/* Elementos de lista que se pueden abrir: se elevan apenas al señalarlos. */
+.kv-lift {
+  transition:
+    transform 260ms var(--ease-spring),
+    box-shadow 200ms var(--ease-standard),
+    border-color 200ms var(--ease-standard),
+    background-color 150ms var(--ease-standard);
+}
+@media (hover: hover) {
+  .kv-lift:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kv-page,
+  .kv-page > *,
+  .kv-bar,
+  .kv-bar-x,
+  .kv-value-label,
+  .kv-line,
+  .kv-point,
+  .kv-area,
+  .kv-tooltip,
+  .kv-progress-fill,
+  .kv-segment {
+    animation: none !important;
+  }
+  .kv-line {
+    stroke-dasharray: none;
+  }
+  .kv-press:active,
+  .kv-lift:hover {
+    transform: none;
+  }
+}

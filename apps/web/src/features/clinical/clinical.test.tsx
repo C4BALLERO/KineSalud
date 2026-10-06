@@ -1,5 +1,5 @@
 import type { SessionNoteView } from '@kinesalud/shared';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -87,6 +87,31 @@ describe('gráfico de evolución', () => {
     expect(screen.getByRole('img', { name: 'Dolor de 7 a 3 en 2 sesiones' })).toBeInTheDocument();
     expect(screen.getByRole('table', { name: 'Escala de dolor por sesión' })).toBeInTheDocument();
     expect(screen.getByRole('list', { name: 'Leyenda' })).toHaveTextContent('Antes de la sesión');
+  });
+});
+
+describe('gráfico de evolución: interacción', () => {
+  it('al señalar una sesión muestra antes, después y cuánto bajó', () => {
+    const { container } = render(
+      <PainChart
+        notes={[
+          note({
+            appointmentId: 'b',
+            sessionNumber: 5,
+            date: '2026-09-30',
+            painBefore: 5,
+            painAfter: 3,
+          }),
+          note(),
+        ]}
+      />,
+    );
+    const zones = container.querySelectorAll('rect[fill="transparent"]');
+    fireEvent.pointerEnter(zones[1]!);
+    const tooltip = container.querySelector('.kv-tooltip');
+    expect(tooltip).toHaveTextContent('S5');
+    expect(tooltip).toHaveTextContent('Antes de la sesión5');
+    expect(tooltip).toHaveTextContent('Bajó 2 en la sesión');
   });
 });
 

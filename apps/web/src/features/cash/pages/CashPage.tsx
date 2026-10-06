@@ -10,6 +10,7 @@ import { DataTable, type Column } from '@/components/ui/DataTable';
 import { InlineAlert } from '@/components/ui/InlineAlert';
 import { Panel } from '@/components/ui/Panel';
 import { ListSkeleton, LoadingRegion, Skeleton } from '@/components/ui/Skeleton';
+import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 import { Stat } from '@/components/ui/StatCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import type { AgendaAppointment } from '@/features/appointments/api/appointments';
@@ -174,16 +175,22 @@ function SessionSummary({ session, today }: { session: CashSession; today: strin
         <div className="grid grid-cols-2 gap-5 border-t border-border pt-5 lg:grid-cols-4 lg:gap-8">
           <Stat
             label="Efectivo en caja"
-            value={formatMoney(expectedCash(session))}
+            value={<AnimatedNumber value={expectedCash(session)} format={formatMoney} />}
             hint="Inicial + cobros en efectivo"
           />
           <Stat
             label="Cobrado"
-            value={formatMoney(total)}
+            value={<AnimatedNumber value={total} format={formatMoney} />}
             hint={`${session.paymentsCount} ${session.paymentsCount === 1 ? 'cobro' : 'cobros'}`}
           />
-          <Stat label="QR / transferencia" value={formatMoney(session.totals.QR)} />
-          <Stat label="Tarjeta" value={formatMoney(session.totals.TARJETA)} />
+          <Stat
+            label="QR / transferencia"
+            value={<AnimatedNumber value={session.totals.QR} format={formatMoney} />}
+          />
+          <Stat
+            label="Tarjeta"
+            value={<AnimatedNumber value={session.totals.TARJETA} format={formatMoney} />}
+          />
         </div>
       </div>
     </Panel>
