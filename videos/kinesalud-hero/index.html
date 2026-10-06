@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: 'Jakarta';
+        src: url('assets/plus-jakarta-sans.woff2') format('woff2');
+        font-weight: 200 800;
+        font-display: block;
+      }
+      :root {
+        /* Paleta de marca Kinesalud y Vida (turquesa y salvia del logo). */
+        --bg-a: #0b2f31;
+        --bg-b: #103f3d;
+        --teal: #55a8ad;
+        --teal-deep: #28727a;
+        --sage: #84c3a6;
+        --mint: #c9f1e0;
+        --ink: #f2fbf8;
+        --ink-soft: #b9d9d2;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--bg-a);
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        font-family: 'Jakarta', ui-sans-serif, system-ui, sans-serif;
+        background: radial-gradient(120% 90% at 30% 20%, var(--bg-b) 0%, var(--bg-a) 60%);
+      }
+
+      /* Formas de luz que derivan lentamente (decorativas). */
+      .blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(90px);
+        opacity: 0.55;
+      }
+      #blob-a {
+        width: 520px;
+        height: 520px;
+        left: -120px;
+        top: -80px;
+        background: var(--teal);
+      }
+      #blob-b {
+        width: 460px;
+        height: 460px;
+        right: -140px;
+        bottom: -60px;
+        background: var(--sage);
+        opacity: 0.45;
+      }
+      #blob-c {
+        width: 300px;
+        height: 300px;
+        right: 120px;
+        top: 160px;
+        background: var(--teal-deep);
+        opacity: 0.5;
+      }
+
+      /* Escena: todo centrado con flex y márgenes de seguridad. */
+      #scene {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 36px;
+        padding: 120px;
+      }
+      #mark {
+        position: relative;
+        width: 340px;
+        height: 340px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #ring {
+        position: absolute;
+        inset: 0;
+        width: 340px;
+        height: 340px;
+      }
+      #logo {
+        width: 230px;
+        height: 230px;
+        object-fit: contain;
+      }
+      #wordmark {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        font-size: 64px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+      #wordmark .vida {
+        font-weight: 500;
+        color: var(--sage);
+      }
+      /* Las tres áreas comparten la misma celda (grid), sin posiciones absolutas. */
+      #services {
+        display: grid;
+        place-items: center;
+        height: 96px;
+        width: 100%;
+      }
+      .service {
+        grid-area: 1 / 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+      .service-word {
+        font-size: 58px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--mint);
+      }
+      .service-bar {
+        width: 180px;
+        height: 6px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--teal), var(--sage));
+        transform-origin: 0% 50%;
+      }
+      #tagline {
+        font-size: 28px;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="10"
+      data-fps="30"
+      data-width="1080"
+      data-height="1080"
+    >
+      <div id="stage">
+        <div id="blob-a" class="blob" data-layout-allow-overflow="true"></div>
+        <div id="blob-b" class="blob" data-layout-allow-overflow="true"></div>
+        <div id="blob-c" class="blob" data-layout-allow-overflow="true"></div>
+
+        <div id="scene">
+          <div id="mark">
+            <svg id="ring" viewBox="0 0 340 340" aria-hidden="true">
+              <defs>
+                <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#84c3a6" />
+                  <stop offset="100%" stop-color="#55a8ad" />
+                </linearGradient>
+              </defs>
+              <circle
+                id="ring-track"
+                cx="170"
+                cy="170"
+                r="160"
+                fill="none"
+                stroke="rgba(242, 251, 248, 0.08)"
+                stroke-width="2"
+              />
+              <circle
+                id="ring-arc"
+                cx="170"
+                cy="170"
+                r="160"
+                fill="none"
+                stroke="url(#ring-grad)"
+                stroke-width="5"
+                stroke-linecap="round"
+                pathLength="1"
+                stroke-dasharray="1"
+                stroke-dashoffset="1"
+              />
+            </svg>
+            <img id="logo" src="assets/logo-icono.png" alt="Kinesalud y Vida" />
+          </div>
+
+          <div id="wordmark"><span>Kinesalud</span><span class="vida">y Vida</span></div>
+
+          <div id="services">
+            <div id="svc-1" class="service">
+              <span class="service-word">Fisioterapia</span>
+              <span class="service-bar"></span>
+            </div>
+            <div id="svc-2" class="service">
+              <span class="service-word">Rehabilitación</span>
+              <span class="service-bar"></span>
+            </div>
+            <div id="svc-3" class="service">
+              <span class="service-word">Estética</span>
+              <span class="service-bar"></span>
+            </div>
+          </div>
+
+          <div id="tagline">Cochabamba · Bolivia</div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      // Fondo vivo: las formas derivan durante todo el video (ida y vuelta, finito).
+      tl.fromTo('#blob-a', { x: 0, y: 0 }, { x: 140, y: 90, duration: 5, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 0);
+      tl.fromTo('#blob-b', { x: 0, y: 0 }, { x: -120, y: -110, duration: 5, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 0);
+      tl.fromTo('#blob-c', { x: 0, y: 0, scale: 1 }, { x: -80, y: 120, scale: 1.25, duration: 5, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 0);
+
+      // 0–2 s · Marca: el anillo se dibuja, el logo crece con un brillo y aparece el nombre.
+      tl.fromTo('#scene', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5, ease: 'power2.out' }, 0);
+      tl.fromTo('#ring-arc', { attr: { 'stroke-dashoffset': 1 } }, { attr: { 'stroke-dashoffset': 0 }, duration: 1.6, ease: 'power3.inOut' }, 0.2);
+      tl.fromTo('#ring', { rotation: -90 }, { rotation: 270, duration: 9.6, ease: 'none' }, 0.2);
+      tl.fromTo(
+        '#logo',
+        { scale: 0.55, autoAlpha: 0, filter: 'drop-shadow(0 0 0px rgba(132, 195, 166, 0))' },
+        { scale: 1, autoAlpha: 1, filter: 'drop-shadow(0 0 36px rgba(132, 195, 166, 0.75))', duration: 1.2, ease: 'back.out(1.6)' },
+        0.45,
+      );
+      tl.to('#logo', { filter: 'drop-shadow(0 0 14px rgba(132, 195, 166, 0.35))', duration: 1, ease: 'sine.out' }, 1.65);
+      tl.fromTo('#wordmark', { autoAlpha: 0, y: 28 }, { autoAlpha: 1, y: 0, duration: 0.8, ease: 'power3.out' }, 1.2);
+      tl.fromTo('#tagline', { autoAlpha: 0, y: 18, scale: 0.94 }, { autoAlpha: 1, y: 0, scale: 1, duration: 1, ease: 'power2.out' }, 1.8);
+
+      // 2,5–8,6 s · Servicios: cada palabra entra desde abajo desenfocada, su barra se dibuja y sale hacia arriba.
+      const services = ['#svc-1', '#svc-2', '#svc-3'];
+      services.forEach((id, i) => {
+        const at = 2.5 + i * 2;
+        const word = `${id} .service-word`;
+        const bar = `${id} .service-bar`;
+        tl.fromTo(
+          word,
+          { autoAlpha: 0, yPercent: 70, filter: 'blur(10px)' },
+          { autoAlpha: 1, yPercent: 0, filter: 'blur(0px)', duration: 0.6, ease: 'power3.out' },
+          at,
+        );
+        tl.fromTo(bar, { autoAlpha: 0, scaleX: 0 }, { autoAlpha: 1, scaleX: 1, duration: 0.7, ease: 'expo.out' }, at + 0.2);
+        tl.to(word, { autoAlpha: 0, yPercent: -70, filter: 'blur(8px)', duration: 0.5, ease: 'power2.in' }, at + 1.5);
+        tl.to(bar, { autoAlpha: 0, scaleX: 0, transformOrigin: '100% 50%', duration: 0.4, ease: 'power2.in' }, at + 1.5);
+      });
+
+      // 8,6–10 s · Cierre: el logo late una vez y todo se funde con el fondo (el bucle reinicia limpio).
+      tl.to('#logo', { scale: 1.08, filter: 'drop-shadow(0 0 40px rgba(132, 195, 166, 0.8))', duration: 0.5, ease: 'sine.out' }, 8.6);
+      tl.to('#logo', { scale: 1, duration: 0.5, ease: 'sine.in' }, 9.1);
+      tl.to('#scene', { autoAlpha: 0, duration: 0.6, ease: 'power2.in' }, 9.35);
+
+      window.__timelines['main'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

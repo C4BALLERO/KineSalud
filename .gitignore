@@ -37,3 +37,8 @@ Thumbs.db
 # Despliegue gratuito (salida de compilación de Vercel y servidor local)
 .vercel/
 .api-local/
+
+# Proyectos de video (HyperFrames): se versiona la fuente, no las salidas
+videos/*/renders/
+videos/*/snapshots/
+videos/*/.hyperframes/

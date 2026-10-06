@@ -1,0 +1,279 @@
+/*
+ * Página pública del consultorio: movimiento moderno pero sereno.
+ * Todo se apoya en los tokens (claro y oscuro) y respeta "reducir movimiento".
+ */
+
+.lp {
+  --lp-whatsapp: #128c4a; /* verde WhatsApp oscurecido: icono blanco ≥ 3:1 */
+  scroll-behavior: smooth;
+}
+
+/* ---------- Navegación: se vuelve "vidrio" al bajar ---------- */
+.lp-nav {
+  transition:
+    background-color 250ms var(--ease-standard),
+    border-color 250ms var(--ease-standard),
+    backdrop-filter 250ms var(--ease-standard);
+}
+.lp-nav[data-scrolled] {
+  background-color: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  border-color: var(--color-border);
+  backdrop-filter: blur(14px) saturate(1.4);
+}
+
+/* ---------- Portada ---------- */
+.lp-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.35;
+  animation: lp-float 16s ease-in-out infinite alternate;
+}
+.lp-blob-a {
+  width: 34rem;
+  height: 34rem;
+  left: -10rem;
+  top: -12rem;
+  background: var(--color-primary);
+}
+.lp-blob-b {
+  width: 28rem;
+  height: 28rem;
+  right: -8rem;
+  top: 6rem;
+  background: var(--color-secondary);
+  animation-duration: 20s;
+  animation-direction: alternate-reverse;
+}
+@keyframes lp-float {
+  to {
+    transform: translate(3rem, 2rem) scale(1.12);
+  }
+}
+
+.lp-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  animation: lp-dot 2s ease-in-out infinite;
+}
+@keyframes lp-dot {
+  50% {
+    transform: scale(1.6);
+    opacity: 0.5;
+  }
+}
+
+/* El titular entra palabra por palabra. */
+.lp-word {
+  display: inline-block;
+  animation: lp-word-in 900ms var(--ease-spring) backwards;
+  animation-delay: calc(var(--i, 0) * 75ms + 120ms);
+}
+@keyframes lp-word-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.55em) rotate(3deg);
+    filter: blur(6px);
+  }
+}
+.lp-gradient-text {
+  background: linear-gradient(100deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.lp-fade,
+.lp-eyebrow {
+  animation: lp-fade-up 800ms var(--ease-standard) backwards;
+  animation-delay: calc(var(--i, 0) * 75ms + 120ms);
+}
+@keyframes lp-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+.lp-hero-media {
+  animation: lp-media-in 1100ms var(--ease-spring) 250ms backwards;
+}
+@keyframes lp-media-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.94) rotate(-2deg);
+  }
+}
+.lp-video-frame {
+  background: var(--color-surface-muted);
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--color-primary) 10%, transparent),
+    var(--shadow-lg);
+}
+.lp-chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-md);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--color-fg);
+  animation: lp-bob 6s ease-in-out infinite;
+}
+/* Fuera del cuadro del video, para no tapar su texto. */
+.lp-chip-a {
+  left: -0.75rem;
+  bottom: -1.25rem;
+}
+.lp-chip-b {
+  right: -0.75rem;
+  top: -1.25rem;
+  animation-delay: -3s;
+}
+@keyframes lp-bob {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Cinta de especialidades */
+.lp-marquee-track {
+  animation: lp-marquee 36s linear infinite;
+}
+@keyframes lp-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- Bloques que aparecen al hacer scroll ---------- */
+.lp [data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 700ms var(--ease-standard),
+    transform 900ms var(--ease-spring);
+  transition-delay: calc(var(--d, 0) * 90ms);
+}
+.lp [data-reveal][data-revealed] {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Tarjetas ---------- */
+.lp-card {
+  transition:
+    transform 320ms var(--ease-spring),
+    box-shadow 260ms var(--ease-standard),
+    border-color 200ms var(--ease-standard);
+}
+@media (hover: hover) {
+  .lp-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary-border);
+  }
+  .lp-card:hover .lp-card-icon {
+    transform: rotate(-8deg) scale(1.08);
+  }
+}
+.lp-card-icon {
+  transition: transform 400ms var(--ease-spring);
+}
+.lp-step-number {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.lp-about-art::before {
+  content: '';
+  position: absolute;
+  inset: 8%;
+  border-radius: 9999px;
+  background: radial-gradient(circle, var(--color-primary-subtle), transparent 70%);
+  animation: lp-dot 6s ease-in-out infinite;
+}
+.lp-map {
+  border: 0;
+}
+:root[data-theme='dark'] .lp-map {
+  /* El mapa de Google no tiene modo oscuro: se atenúa para no encandilar. */
+  filter: invert(0.9) hue-rotate(180deg) saturate(0.8);
+}
+
+.lp-social {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-fg-muted);
+  transition:
+    color 150ms,
+    background-color 150ms,
+    transform 300ms var(--ease-spring);
+}
+.lp-social:hover {
+  color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  transform: translateY(-2px);
+}
+
+/* Botón flotante de WhatsApp con un pulso suave */
+.lp-wa {
+  background: var(--lp-whatsapp);
+  animation: lp-pulse 2.8s ease-out infinite;
+  transition: transform 300ms var(--ease-spring);
+}
+.lp-wa:hover {
+  transform: scale(1.08);
+}
+@keyframes lp-pulse {
+  0% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--lp-whatsapp) 45%, transparent),
+      var(--shadow-lg);
+  }
+  70%,
+  100% {
+    box-shadow:
+      0 0 0 18px transparent,
+      var(--shadow-lg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp {
+    scroll-behavior: auto;
+  }
+  .lp-blob,
+  .lp-dot,
+  .lp-word,
+  .lp-fade,
+  .lp-eyebrow,
+  .lp-hero-media,
+  .lp-chip,
+  .lp-marquee-track,
+  .lp-wa,
+  .lp-about-art::before {
+    animation: none;
+  }
+  .lp [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
